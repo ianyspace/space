@@ -61,6 +61,16 @@ cover: /blog/articleName/cover.svg # 封面，可省略
 
 图床等外链（`https://…`）也可以。
 
+数学公式用 LaTeX。行内写 `$O(\log n)$`；行间公式让两个 `$$` 各自独占一行（前后各空一行，写在列表里就缩进两格）：
+
+```md
+$$
+h \le \log_{\lceil m/2 \rceil} n
+$$
+```
+
+显示普通的 `$` 符号时写成 `\$`。
+
 ## 4. 组件
 
 文章自己的组件放在这篇文章的 `components/` 里，用 `components/index.js` 导出「标签名 → 组件」的映射：
@@ -88,8 +98,3 @@ private: true
 question: 提示问题？
 password: 答案
 ```
-
-## 6. 预览与发布
-
-在项目根目录执行 `npm run dev` 预览（<http://localhost:3000/space/>）；
-推送到 `master` 就会自动构建发布到 <https://ianyspace.github.io/space/>。

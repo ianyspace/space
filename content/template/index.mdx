@@ -44,6 +44,16 @@ relative: false
 const greet = (name) => `hi, ${name}`;
 ```
 
+数学公式直接写 LaTeX：行内 `$O(\log n)$`；行间公式让两个 `$$` 各自单独占一行（前后空一行）：
+
+```md
+$$
+h \le \log n
+$$
+```
+
+要显示普通的美元符号就写 `\$`。
+
 ## 图片
 
 本地图片放在同目录的 `images/` 下，用**相对路径**引用：
@@ -87,5 +97,5 @@ const greet = (name) => `hi, ${name}`;
 ## 几个约定
 
 - 正文按 MDX 解析：`import` / `export` 这类语句不会执行，需要组件就写到 `components/` 里。
-- 图片以文章目录下的 `images/` 为准，不用手动往 `public/` 里拷。
+- 图片以文章目录下的 `images/` 为准。
 - 组件样式写在该组件同目录的 `MyWidget.module.scss`。

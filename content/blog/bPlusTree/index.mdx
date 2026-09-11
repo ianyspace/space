@@ -222,7 +222,11 @@ function fixUnderflow(parent, i, order) {
 设阶为 $m$、总键数为 $n$。
 
 - **树高**：每个内部节点至少有 $\lceil m/2 \rceil$ 个孩子，所以高度满足
-  $$h \le \log_{\lceil m/2 \rceil} n$$
+
+  $$
+  h \le \log_{\lceil m/2 \rceil} n
+  $$
+
 - **查找**：$O(\log_m n)$ 次节点访问，每次节点内二分是 $O(\log m)$；
 - **插入 / 删除**：同样是 $O(\log_m n)$，且分裂/合并只在一条根到叶的路径上发生；
 - **范围查询**：$O(\log_m n + k)$，其中 $k$ 是结果条数，叶子链表让它退化成顺序扫描。

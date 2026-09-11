@@ -88,6 +88,13 @@
     background-color: var(--scrollbar-cl);
 }
 
+/* KaTeX 行间公式：长公式允许横向滚动，不撑破文章宽度 */
+.css-post .katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 0;
+}
+
 @media (max-width: 600px) {
     .css-post {
         overflow-wrap: anywhere;

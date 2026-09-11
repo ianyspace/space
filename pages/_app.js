@@ -5,6 +5,9 @@ import Script from 'next/script';
 import { LanguageProvider } from 'context/LanguageContext';
 import withBasePath from 'utils/basePath';
 
+// KaTeX 数学公式样式。放在项目样式之前，方便项目样式覆盖它
+import 'katex/dist/katex.min.css';
+
 import '../styles/typography.generated.css';
 import '../styles/index.scss';
 

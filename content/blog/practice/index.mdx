@@ -769,16 +769,16 @@ Vue会根据不同的标签自动设置相应的事件。
 # 组件通信
 
 [参考](https://juejin.cn/post/6844903887162310669#heading-0)
-[$attrs/$listeners参考](https://juejin.cn/post/6982727094937583647)
+[\$attrs/\$listeners参考](https://juejin.cn/post/6982727094937583647)
 
 * props/$emit
-* $children/$parent
+* \$children/\$parent
 * provide/inject （无响应式）
 * ref/refs
 * eventBus
 * Vuex等状态管理工具
 * localStorage/sessionStorage
-* $attrs/$listeners （一般用在爷孙组件传值）
+* \$attrs/\$listeners （一般用在爷孙组件传值）
 * 路由传参
 
 **vue遵循单向数据流原则，prop 只可以从上一级组件传递到下一级组件（父子组件），即所谓的单向数据流。而且 prop 只读，不可被修改，所有修改都会失效并警告。**
