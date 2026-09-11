@@ -249,6 +249,9 @@ pre[data-line] {
     position: relative;
 }
 
+/* 指定行高亮：```js {1,3-5} 时 rehype-prism-plus 会给这几行的 span 加 highlight-line
+   （gatsby-highlight-code-line 是原 Gatsby 管线的类名，一并保留） */
+.highlight-line,
 .gatsby-highlight-code-line {
     background-color: hsla(207, 95%, 15%, 1);
     display: block;
