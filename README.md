@@ -130,6 +130,21 @@ export default {
 推送到 `master` 后会触发 `.github/workflows/deploy.yml`，构建静态站点并发布到
 GitHub Pages：<https://ianyspace.github.io/space/>。
 
+### 换到新仓库后首次部署（一次性）
+
+Pages 必须手工开启一次：用 API 自动创建站点需要仓库管理员权限，工作流 token 拿不到，
+会报 `HttpError: Resource not accessible by integration`。
+
+1. **Settings → Pages → Build and deployment → Source** 选 **GitHub Actions**
+2. **Settings → Secrets and variables → Actions** 新建仓库变量
+   `NEXT_PUBLIC_MAPBOX_TOKEN`（Mapbox 公共 token；它是**构建期**注入的，所以**加完必须
+   重新跑一次 workflow**，否则地图页仍然白屏）
+3. 触发一次 workflow：push 到 `master`，或在 Actions 页点 **Re-run all jobs** / **Run workflow**
+
+`deploy` 只判断 `github.ref == 'refs/heads/master'`，所以手动 **Run workflow** 也会真正发布。
+（早期版本写成 `github.event_name == 'push' && ...`，手动跑的结果是"构建成功、artifact 上传了，
+但 deploy 被 skip"，站点一直 404。）
+
 因为站点是**项目页**（`/<repo>/` 子路径），构建时 `basePath` 为 `/space`（见
 `config/index.js` 的 `pathPrefix`）。Next 只会自动改写自己管的路径（`next/link`、
 `next/image`、`_next/*`），所以 `<img>`、`background-image`、`geojson`、看板娘脚本等
