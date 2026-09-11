@@ -165,13 +165,22 @@ pre[class*='language-'] {
     }
 }
 
-/* Inline code */
-:not(pre)>code[class*='language-'] {
-    border-radius: 0.3em;
+/* 行内代码：普通 `code` 和 Prism 高亮的 `code.language-*` 共用这一套
+   （`pre > code` 是代码块，交给 .gatsby-highlight 处理，这里用 :not(pre) 排除掉） */
+:not(pre) > code {
+    border-radius: 5px;
     background: var(--inlineCode-bg);
     color: var(--inlineCode-text);
-    padding: 0.15em 0.2em 0.05em;
+    border: 1px solid var(--hr);
+    font-family: Consolas, Menlo, Monaco, source-code-pro, 'Courier New', monospace;
+    font-size: 0.92em;
+    margin: 0 0.15em;
+    padding: 0.16em 0.38em;
     white-space: normal;
+    word-break: break-word;
+    /* 换行时每一段都保留圆角和背景，而不是只有首尾有 */
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
 }
 
 .token.attr-name {
