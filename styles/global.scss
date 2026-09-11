@@ -167,7 +167,7 @@ pre[class*='language-'] {
 
 /* 行内代码：普通 `code` 和 Prism 高亮的 `code.language-*` 共用这一套
    （`pre > code` 是代码块，交给 .gatsby-highlight 处理，这里用 :not(pre) 排除掉） */
-:not(pre) > code {
+:not(pre)>code {
     border-radius: 5px;
     background: var(--inlineCode-bg);
     color: var(--inlineCode-text);
