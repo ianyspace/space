@@ -67,7 +67,11 @@ jobs:
 
   deploy:
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # Only ever publish a build that came from `master`. A manual
+    # `workflow_dispatch` started from `master` is allowed too: with the previous
+    # `github.event_name == 'push'` check, a manual run built the site, uploaded
+    # the artifact and then silently skipped this job, which left Pages at 404.
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
