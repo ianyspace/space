@@ -95,8 +95,12 @@ const BlogPostTemplate = function ({
     // Covers from frontmatter may be local (`/blog/<dir>/cover.svg`) and then
     // need the deployment base path; remote covers are returned unchanged.
     const coverSrc = withBasePath(frontmatter.cover);
-    let lowCover;
-    if (frontmatter.cover) {
+    // Only remote hosts expose the `th` thumbnail variant, so a local cover uses
+    // the same file for the low resolution layer — deriving `cover.th.svg` would
+    // only produce a 404 for an image nobody ever sees (it sits under the full
+    // size one). Same rule as `components/PostAbbrev`.
+    let lowCover = coverSrc;
+    if (/^https?:\/\//i.test(frontmatter.cover)) {
         const arr = frontmatter.cover.split('.');
         arr.splice(arr.length - 1, 0, 'th');
         lowCover = withBasePath(arr.join('.'));
