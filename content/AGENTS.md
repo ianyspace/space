@@ -142,7 +142,7 @@ npm run build   # 生成静态站点到 out/
 
 > 如果 VS Code 里只打开了 `content/` 文件夹，需要先打开项目根目录才能执行上面两条命令。
 
-发布：提交并推送到 `master`，GitHub Actions 会自动构建部署到 <https://icpplus.github.io/space/>。
+发布：提交并推送到 `master`，GitHub Actions 会自动构建部署到 <https://ianyspace.github.io/space/>。
 
 ## 8. 写完自查
 

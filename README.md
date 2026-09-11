@@ -128,7 +128,7 @@ export default {
 ## 部署
 
 推送到 `master` 后会触发 `.github/workflows/deploy.yml`，构建静态站点并发布到
-GitHub Pages：<https://icpplus.github.io/space/>。
+GitHub Pages：<https://ianyspace.github.io/space/>。
 
 因为站点是**项目页**（`/<repo>/` 子路径），构建时 `basePath` 为 `/space`（见
 `config/index.js` 的 `pathPrefix`）。Next 只会自动改写自己管的路径（`next/link`、

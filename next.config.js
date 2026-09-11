@@ -15,7 +15,7 @@ const nextConfig = {
     // GitHub Pages only serves static files, so `next build` has to emit a fully
     // static site into `out/` instead of a server rendered app.
     output: 'export',
-    // Deployed as a project page (`https://icpplus.github.io/space/`), which
+    // Deployed as a project page (`https://ianyspace.github.io/space/`), which
     // requires every route and `_next/*` asset to be prefixed with the repo name.
     ...(basePath ? { basePath } : {}),
     reactStrictMode: false,

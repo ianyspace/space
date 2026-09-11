@@ -53,6 +53,11 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          # A freshly created repository has Pages switched off. `enablement` lets
+          # the first run turn on the "GitHub Actions" source by itself instead of
+          # failing with "Get Pages site failed / HttpError: Not Found".
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
