@@ -10,7 +10,7 @@ relative: false
 
 这是 `content/template/` 的内容，**和 `AGENTS.md` 同级**。它不会被扫描成真正的文章：
 只有 `content/blog/<目录名>/` 下的 `index.mdx` 才会发布。复制整个文件夹到 `content/blog/`
-并改成英文短横线的目录名，就可以开始写了。
+并改成**驼峰**形式的目录名（例如 `myArticle`），就可以开始写了。
 
 完整规范见同级目录的 `AGENTS.md`，下面是常用写法的示例。
 
@@ -84,9 +84,8 @@ const greet = (name) => `hi, ${name}`;
 如果这个组件多篇文章都要用，就放到 `content/components/` 并在 `content/components/index.js`
 里注册，写法完全一样。
 
-## 不要做的事
+## 几个约定
 
-- ❌ 不要写 `import` / `export`：正文按 Markdown + 原生 HTML 解析，导入语句只是普通文本。
-- ❌ 不要写 JSX 表达式：`{ 1 + 1 }` 不会执行，只会原样显示。
-- ❌ 不要手动往 `public/blog/` 里拷图片：那是构建产物，以文章目录里的 `images/` 为准。
-- ❌ 不要再写 Less：样式统一用 `.scss`，组件样式必须和组件放在同一个目录。
+- 正文按 MDX 解析：`import` / `export` 这类语句不会执行，需要组件就写到 `components/` 里。
+- 图片以文章目录下的 `images/` 为准，不用手动往 `public/` 里拷。
+- 组件样式写在该组件同目录的 `MyWidget.module.scss`。
