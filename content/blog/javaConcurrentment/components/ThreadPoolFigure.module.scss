@@ -1,0 +1,269 @@
+// Styles for the thread-pool submission simulator (`ThreadPoolFigure.js`).
+//
+// CSS module: class names are hashed and referenced via `styles[...]` in the
+// component. Theme colors live in CSS variables, overridden for `body.dark`.
+
+.tpf {
+  --tpf-text: #222222;
+  --tpf-panel-bg: rgba(127, 127, 127, 0.07);
+  --tpf-panel-border: rgba(127, 127, 127, 0.22);
+  --tpf-card-bg: #ffffff;
+  --tpf-accent: #f7a046;
+  --tpf-accent-bg: rgba(247, 160, 70, 0.16);
+  --tpf-core-line: #2f9e63;
+  --tpf-core-bg: rgba(56, 178, 120, 0.12);
+  --tpf-queue-line: #2b7cc7;
+  --tpf-queue-bg: rgba(66, 153, 225, 0.12);
+  --tpf-extra-line: #8055d6;
+  --tpf-extra-bg: rgba(159, 122, 234, 0.12);
+  --tpf-reject-line: #d64556;
+  --tpf-reject-bg: rgba(224, 86, 102, 0.12);
+
+  margin: 1.6rem 0 2.2rem;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--tpf-panel-border);
+  border-radius: 12px;
+  background: var(--tpf-panel-bg);
+  font-family: var(--systemFont, sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+// `body.dark` belongs to the page, not to the module, so it must stay global.
+:global(body.dark) .tpf {
+  --tpf-text: rgba(255, 255, 255, 0.92);
+  --tpf-panel-bg: rgba(255, 255, 255, 0.05);
+  --tpf-panel-border: rgba(255, 255, 255, 0.16);
+  --tpf-card-bg: rgba(255, 255, 255, 0.08);
+  --tpf-accent: #ffb066;
+  --tpf-accent-bg: rgba(255, 176, 102, 0.18);
+  --tpf-core-line: #4cd98c;
+  --tpf-core-bg: rgba(76, 217, 140, 0.14);
+  --tpf-queue-line: #6cb6ff;
+  --tpf-queue-bg: rgba(108, 182, 255, 0.14);
+  --tpf-extra-line: #b795ff;
+  --tpf-extra-bg: rgba(183, 149, 255, 0.14);
+  --tpf-reject-line: #ff7b8a;
+  --tpf-reject-bg: rgba(255, 123, 138, 0.14);
+}
+
+.tpf-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tpf-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--tpf-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.tpf-caption {
+  font-weight: 700;
+  color: var(--tpf-text);
+}
+
+.tpf-stats {
+  margin-left: auto;
+  color: var(--tpf-text);
+  opacity: 0.7;
+  font-size: 12.5px;
+}
+
+.tpf-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tpf-btn {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--tpf-panel-border);
+  border-radius: 6px;
+  background: var(--tpf-card-bg);
+  color: var(--tpf-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+.tpf-btn:hover:not(:disabled) {
+  border-color: var(--tpf-accent);
+  color: var(--tpf-accent);
+}
+
+.tpf-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.tpf-btn.primary {
+  background: var(--tpf-accent);
+  border-color: var(--tpf-accent);
+  color: #fff;
+}
+
+.tpf-btn.primary:hover:not(:disabled) {
+  color: #fff;
+  filter: brightness(1.06);
+}
+
+.tpf-rejected {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--tpf-reject-line);
+}
+
+/* --- pool groups --- */
+
+.tpf-group {
+  padding: 9px 11px;
+  border: 1px solid var(--tpf-panel-border);
+  border-radius: 8px;
+  background: var(--tpf-card-bg);
+  margin-bottom: 8px;
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.tpf-group.is-hot {
+  border-color: var(--tpf-accent);
+  background: var(--tpf-accent-bg);
+}
+
+.tpf-group.is-reject.is-hot {
+  border-color: var(--tpf-reject-line);
+  background: var(--tpf-reject-bg);
+}
+
+.tpf-group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.tpf-group-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tpf-text);
+}
+
+.tpf-group-sub {
+  font-size: 11.5px;
+  color: var(--tpf-text);
+  opacity: 0.6;
+}
+
+.tpf-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tpf-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 74px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px dashed var(--tpf-panel-border);
+  color: var(--tpf-text);
+  opacity: 0.55;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  transition: border-color 0.3s ease, color 0.3s ease, opacity 0.3s ease;
+}
+
+.tpf-slot.is-filled {
+  border-style: solid;
+  opacity: 1;
+  font-weight: 700;
+}
+
+.tpf-group.tone-core .tpf-slot.is-filled {
+  border-color: var(--tpf-core-line);
+  background: var(--tpf-core-bg);
+  color: var(--tpf-core-line);
+}
+
+.tpf-group.tone-queue .tpf-slot.is-filled {
+  border-color: var(--tpf-queue-line);
+  background: var(--tpf-queue-bg);
+  color: var(--tpf-queue-line);
+}
+
+.tpf-group.tone-extra .tpf-slot.is-filled {
+  border-color: var(--tpf-extra-line);
+  background: var(--tpf-extra-bg);
+  color: var(--tpf-extra-line);
+}
+
+.tpf-group.tone-reject .tpf-slot.is-filled {
+  border-color: var(--tpf-reject-line);
+  background: var(--tpf-reject-bg);
+  color: var(--tpf-reject-line);
+}
+
+.tpf-group.tone-reject {
+  border-style: dashed;
+}
+
+/* --- narration --- */
+
+.tpf-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: var(--tpf-card-bg);
+  border: 1px solid var(--tpf-panel-border);
+  margin-top: 10px;
+  min-height: 42px;
+}
+
+.tpf-note-tag {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 5px;
+  background: var(--tpf-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.tpf-note-text {
+  color: var(--tpf-text);
+}
+
+.tpf-hint {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  opacity: 0.7;
+  color: var(--tpf-text);
+}
+
+@media screen and (max-width: 650px) {
+  .tpf {
+    padding: 12px 12px 14px;
+  }
+
+  .tpf-stats {
+    margin-left: 0;
+  }
+}

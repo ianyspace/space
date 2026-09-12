@@ -1,0 +1,143 @@
+// Styles for the static object-header figure (`ObjectHeaderFigure.js`).
+//
+// CSS module: class names are hashed and referenced via `styles[...]` in the
+// component. Theme colors live in CSS variables, overridden for `body.dark`.
+
+.ohf {
+  --ohf-text: #222222;
+  --ohf-panel-bg: rgba(127, 127, 127, 0.07);
+  --ohf-panel-border: rgba(127, 127, 127, 0.22);
+  --ohf-accent: #f7a046;
+  --ohf-accent-bg: rgba(247, 160, 70, 0.16);
+  --ohf-info-line: #2b7cc7;
+  --ohf-info-bg: rgba(66, 153, 225, 0.12);
+  --ohf-dim-line: #98a2b3;
+  --ohf-dim-bg: rgba(152, 162, 179, 0.14);
+
+  margin: 1.6rem 0 2.2rem;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--ohf-panel-border);
+  border-radius: 12px;
+  background: var(--ohf-panel-bg);
+  font-family: var(--systemFont, sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+// `body.dark` belongs to the page, not to the module, so it must stay global.
+:global(body.dark) .ohf {
+  --ohf-text: rgba(255, 255, 255, 0.92);
+  --ohf-panel-bg: rgba(255, 255, 255, 0.05);
+  --ohf-panel-border: rgba(255, 255, 255, 0.16);
+  --ohf-accent: #ffb066;
+  --ohf-accent-bg: rgba(255, 176, 102, 0.18);
+  --ohf-info-line: #6cb6ff;
+  --ohf-info-bg: rgba(108, 182, 255, 0.14);
+  --ohf-dim-line: #aab3c4;
+  --ohf-dim-bg: rgba(168, 179, 196, 0.16);
+}
+
+.ohf-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ohf-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--ohf-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.ohf-caption {
+  font-weight: 700;
+  color: var(--ohf-text);
+}
+
+.ohf-stats {
+  margin-left: auto;
+  color: var(--ohf-text);
+  opacity: 0.7;
+  font-size: 12.5px;
+}
+
+.ohf-canvas {
+  overflow-x: auto;
+  padding: 4px 0 2px;
+}
+
+.ohf-canvas svg {
+  display: block;
+  min-width: 560px;
+  color: var(--ohf-text);
+}
+
+.ohf-field {
+  transition: fill 0.3s ease;
+}
+
+.ohf-field.tone-accent {
+  fill: var(--ohf-accent-bg);
+  stroke: var(--ohf-accent);
+  stroke-width: 1.4;
+}
+
+.ohf-field.tone-info {
+  fill: var(--ohf-info-bg);
+  stroke: var(--ohf-info-line);
+  stroke-width: 1.3;
+}
+
+.ohf-field.tone-dim {
+  fill: var(--ohf-dim-bg);
+  stroke: var(--ohf-dim-line);
+  stroke-width: 1.2;
+  stroke-dasharray: 5 4;
+}
+
+.ohf-field-name {
+  fill: var(--ohf-text);
+  font-size: 13px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  pointer-events: none;
+}
+
+.ohf-field-meta {
+  fill: var(--ohf-text);
+  font-size: 11px;
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.ohf-note {
+  fill: var(--ohf-text);
+  font-size: 12px;
+  opacity: 0.75;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.ohf-hint {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  opacity: 0.7;
+  color: var(--ohf-text);
+}
+
+@media screen and (max-width: 650px) {
+  .ohf {
+    padding: 12px 12px 14px;
+  }
+
+  .ohf-stats {
+    margin-left: 0;
+  }
+}

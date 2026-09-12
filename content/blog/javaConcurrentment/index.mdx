@@ -188,16 +188,7 @@ synchronized (lockObj) { ... }
 
 每个 Java 对象在内存中都有对象头（Object Header），其中包含：
 
-```
-对象头结构：
-┌──────────────────────────────────────┐
-│  Mark Word（8 字节/64 位）            │  ← 锁信息、hash、GC 年龄等
-├──────────────────────────────────────┤
-│  Klass Pointer（4 或 8 字节）         │  ← 指向类元数据
-├──────────────────────────────────────┤
-│  数组长度（仅数组对象，4 字节）         │
-└──────────────────────────────────────┘
-```
+<object-header-figure></object-header-figure>
 
 **Mark Word** 的结构随锁状态变化：
 
@@ -371,19 +362,7 @@ try {
 
 JMM 定义了多线程环境下变量的访问规则：
 
-```
-                    主内存（共享变量）
-                   ┌─────────────────┐
-                   │  int count = 0   │
-                   └───┬─────────┬───┘
-            read/write │         │ read/write
-              ┌────────┘         └────────┐
-              ↓                           ↓
-    ┌─────────────────┐        ┌─────────────────┐
-    │ 线程1 工作内存    │        │ 线程2 工作内存    │
-    │ count = 0 (副本) │        │ count = 0 (副本) │
-    └─────────────────┘        └─────────────────┘
-```
+<jmm-figure></jmm-figure>
 
 - **主内存**：所有线程共享的变量存储（概念上，对应堆内存）
 - **工作内存**：每个线程私有的变量副本（概念上，对应 CPU 缓存/寄存器）
@@ -508,14 +487,13 @@ volatile int count = 0;
 
 CAS（Compare And Swap）是一种无锁的原子操作，包含三个操作数：内存地址 V、预期旧值 A、要写入的新值 B。只有当 V 的当前值等于 A 时，才将 V 更新为 B，否则不做操作。
 
-```
-CAS(V, A, B):
-  if (V == A) {
-      V = B;  // 成功
-      return true;
-  } else {
-      return false;  // 失败（值已被其他线程改过）
-  }
+```java
+// CAS(V, A, B)：Compare And Swap，依赖 CPU 原子指令（如 x86 的 cmpxchg）保证不可分割
+if (memoryValue == expected) {
+    memoryValue = update;  // 相等才写入新值
+    return true;
+}
+return false;              // 不相等：值已被其他线程改过，本次失败
 ```
 
 ### 4.2 原理深入
@@ -665,18 +643,7 @@ AQS 的核心思想：维护一个**共享状态 state** 和一个**FIFO 等待�
 
 #### AQS 核心结构
 
-```
-AQS 内部结构：
-
-state（volatile int）— 共享状态，含义由子类定义
-  └── ReentrantLock：state > 0 表示锁被持有，值 = 重入次数
-  └── Semaphore：state = 剩余许可数
-  └── CountDownLatch：state = 剩余计数
-
-CLH 队列（双向链表）：
-  head ←→ Node(SIGNAL) ←→ Node(0) ←→ Node(0) ←→ tail
-           ↑ 前驱已唤醒    ↑ 等待中    ↑ 新加入
-```
+<aqs-structure-figure></aqs-structure-figure>
 
 **Node 节点关键字段**：
 - `waitStatus`：节点状态（0 初始、SIGNAL=-1 后继需要唤醒、CANCELLED=1 已取消、CONDITION=-2 在条件队列中）
@@ -882,24 +849,7 @@ public ThreadPoolExecutor(
 
 #### ⭐⭐⭐ 线程池工作流程（面试必考）
 
-```
-新任务提交
-    │
-    ↓
-当前线程数 < corePoolSize ?
-    ├── 是 → 创建核心线程执行任务
-    │
-    └── 否 ↓
-        工作队列 workQueue 是否已满 ?
-            ├── 未满 → 任务放入队列等待
-            │
-            └── 已满 ↓
-                当前线程数 < maximumPoolSize ?
-                    ├── 是 → 创建非核心线程执行任务
-                    │
-                    └── 否 ↓
-                        执行拒绝策略 handler
-```
+<thread-pool-figure></thread-pool-figure>
 
 **关键点**：
 - 核心线程优先创建，满了才用队列缓冲
@@ -1053,12 +1003,7 @@ System.out.println(userHolder.get());  // "用户B"，互不影响
 
 #### ThreadLocal 的存储结构
 
-```
-Thread 对象
-  └── threadLocals（ThreadLocalMap 类型）
-        └── Entry[] table（哈希表）
-              └── Entry（key = ThreadLocal 的弱引用, value = 实际值的强引用）
-```
+存储结构一层层展开：`Thread` → `threadLocals`（ThreadLocalMap）→ `Entry[]` 表 → `Entry`（key 弱引用 / value 强引用），完整引用关系见下方图解。
 
 **关键点**：
 - 每个 Thread 对象内部有一个 `ThreadLocalMap`
@@ -1091,11 +1036,7 @@ public T get() {
 
 #### 内存泄漏问题（高频考点）
 
-```
-Thread → ThreadLocalMap → Entry
-                            ├── key:   ThreadLocal（弱引用）← 可被 GC
-                            └── value: 实际值（强引用）    ← 不会被 GC
-```
+<thread-local-ref-figure></thread-local-ref-figure>
 
 **泄漏场景**：当 ThreadLocal 外部没有强引用时，GC 会回收 key（弱引用），但 value 是强引用不会被回收。如果线程一直不结束（比如线程池中的线程），value 就永远无法被回收，造成内存泄漏。
 
