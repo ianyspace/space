@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="MySQL：一条 SQL 从客户端到存储引擎的旅程">
+  <defs>
+    <linearGradient id="myCoverBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eef4ff"/>
+      <stop offset="55%" stop-color="#e5ecff"/>
+      <stop offset="100%" stop-color="#e6f7f3"/>
+    </linearGradient>
+    <marker id="myCoverArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#4a6fd4"/>
+    </marker>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#myCoverBg)"/>
+  <circle cx="706" cy="88" r="120" fill="#a8c0ff" opacity="0.3"/>
+  <circle cx="82" cy="520" r="140" fill="#7fd8c8" opacity="0.28"/>
+
+  <text x="400" y="70" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="38" font-weight="700" fill="#2f4a9e">MySQL</text>
+  <text x="400" y="106" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="17" fill="#5a6fb0">一条 SQL 的一生 · 事务的底牌 · 索引的脾气</text>
+
+  <!-- pipeline -->
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="600">
+    <rect x="70" y="200" width="118" height="56" rx="10" fill="#ffffff" stroke="#8fa5e8" stroke-width="1.8"/>
+    <text x="129" y="224" text-anchor="middle" fill="#2f4a9e">连接器</text>
+    <text x="129" y="243" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8ab8">握手 · 鉴权</text>
+
+    <rect x="222" y="200" width="118" height="56" rx="10" fill="#ffffff" stroke="#8fa5e8" stroke-width="1.8"/>
+    <text x="281" y="224" text-anchor="middle" fill="#2f4a9e">分析器</text>
+    <text x="281" y="243" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8ab8">词法 · 语法</text>
+
+    <rect x="374" y="200" width="118" height="56" rx="10" fill="#ffffff" stroke="#8fa5e8" stroke-width="1.8"/>
+    <text x="433" y="224" text-anchor="middle" fill="#2f4a9e">优化器</text>
+    <text x="433" y="243" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8ab8">选执行计划</text>
+
+    <rect x="526" y="200" width="118" height="56" rx="10" fill="#ffffff" stroke="#8fa5e8" stroke-width="1.8"/>
+    <text x="585" y="224" text-anchor="middle" fill="#2f4a9e">执行器</text>
+    <text x="585" y="243" text-anchor="middle" font-size="10.5" font-weight="400" fill="#7d8ab8">验权限 · 调引擎</text>
+  </g>
+
+  <g stroke="#4a6fd4" stroke-width="2.2" fill="none">
+    <line x1="188" y1="228" x2="216" y2="228" marker-end="url(#myCoverArrow)"/>
+    <line x1="340" y1="228" x2="368" y2="228" marker-end="url(#myCoverArrow)"/>
+    <line x1="492" y1="228" x2="520" y2="228" marker-end="url(#myCoverArrow)"/>
+    <line x1="644" y1="228" x2="676" y2="228" marker-end="url(#myCoverArrow)"/>
+  </g>
+
+  <!-- InnoDB box -->
+  <g font-family="Helvetica, Arial, sans-serif">
+    <rect x="680" y="186" width="86" height="84" rx="12" fill="#0e8a7d" opacity="0.92"/>
+    <text x="723" y="222" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">InnoDB</text>
+    <text x="723" y="242" text-anchor="middle" font-size="10.5" fill="#c9f2ec">Buffer Pool</text>
+    <text x="723" y="257" text-anchor="middle" font-size="10.5" fill="#c9f2ec">B+ 树 · 锁</text>
+  </g>
+
+  <!-- three logs under InnoDB -->
+  <g font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600">
+    <rect x="120" y="380" width="170" height="46" rx="9" fill="#fff7e8" stroke="#d9a13c" stroke-width="1.6"/>
+    <text x="205" y="408" text-anchor="middle" fill="#9a6b16">undo log · 回滚/MVCC</text>
+
+    <rect x="315" y="380" width="170" height="46" rx="9" fill="#ffecec" stroke="#cf6a66" stroke-width="1.6"/>
+    <text x="400" y="408" text-anchor="middle" fill="#a03a36">redo log · 崩溃恢复</text>
+
+    <rect x="510" y="380" width="170" height="46" rx="9" fill="#eef1ff" stroke="#7d86d8" stroke-width="1.6"/>
+    <text x="595" y="408" text-anchor="middle" fill="#43509e">binlog · 主从复制</text>
+  </g>
+
+  <line x1="723" y1="278" x2="723" y2="342" stroke="#4a6fd4" stroke-width="2" stroke-dasharray="6 5"/>
+  <line x1="723" y1="342" x2="600" y2="342" stroke="#4a6fd4" stroke-width="2" stroke-dasharray="6 5"/>
+  <line x1="723" y1="342" x2="723" y2="376" stroke="#4a6fd4" stroke-width="0" />
+  <line x1="205" y1="342" x2="723" y2="342" stroke="#4a6fd4" stroke-width="0"/>
+  <g stroke="#4a6fd4" stroke-width="2" stroke-dasharray="6 5" fill="none">
+    <line x1="205" y1="342" x2="205" y2="376"/>
+    <line x1="400" y1="342" x2="400" y2="376"/>
+    <line x1="595" y1="342" x2="595" y2="376"/>
+  </g>
+  <text x="464" y="336" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#5a6fb0">两阶段提交：prepare → binlog → commit</text>
+
+  <!-- footer tags -->
+  <g font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#2f4a9e">
+    <rect x="196" y="486" width="122" height="34" rx="17" fill="#ffffff" opacity="0.85" stroke="#8fa5e8"/>
+    <text x="257" y="508" text-anchor="middle">MVCC 快照</text>
+    <rect x="338" y="486" width="122" height="34" rx="17" fill="#ffffff" opacity="0.85" stroke="#8fa5e8"/>
+    <text x="399" y="508" text-anchor="middle">索引不失效</text>
+    <rect x="480" y="486" width="122" height="34" rx="17" fill="#ffffff" opacity="0.85" stroke="#8fa5e8"/>
+    <text x="541" y="508" text-anchor="middle">面试追问链</text>
+  </g>
+</svg>

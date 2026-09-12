@@ -10,7 +10,7 @@ import {
   treeStats,
 } from './bPlusTree';
 
-import styles from './BPlusTree.module.scss';
+import styles from './BPlusTreeLab.module.scss';
 
 /**
  * Joins CSS module class names. Names the stylesheet does not define (the
@@ -102,7 +102,7 @@ const STEP_LABEL = {
   done: '完成',
 };
 
-const BPlusTreeDemo = function ({ order: orderProp = 4, keys: keysProp = '', caption = '' }) {
+const BPlusTreeLab = function ({ order: orderProp = 4, keys: keysProp = '', caption = '' }) {
   const parsedOrder = Math.min(6, Math.max(3, Number(orderProp) || 4));
   const parsedKeys = useMemo(() => {
     const raw = String(keysProp || '').trim();
@@ -513,22 +513,22 @@ const BPlusTreeDemo = function ({ order: orderProp = 4, keys: keysProp = '', cap
       </div>
 
       <figcaption className={cx('bpt-hint')}>
-        小提示：把「阶」调到 3 更容易看到分裂与合并；插入连续递增的数（10、20、30…）会不断触发分裂。
+        小提示：演示里每个节点只有几个键；真实 InnoDB 的一个节点是一整个 16 KB 的页，能装上千个键，所以同样的数据量树高只有 3～4 层。把「阶」调到 3 最容易看清分裂与合并。
       </figcaption>
     </figure>
   );
 };
 
-BPlusTreeDemo.propTypes = {
+BPlusTreeLab.propTypes = {
   order: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   keys: PropTypes.string,
   caption: PropTypes.string,
 };
 
-BPlusTreeDemo.defaultProps = {
+BPlusTreeLab.defaultProps = {
   order: 4,
   keys: '',
   caption: '',
 };
 
-export default BPlusTreeDemo;
+export default BPlusTreeLab;
