@@ -1,0 +1,671 @@
+// Styles shared by this article's message-queue widgets
+// (MqRolesDemo / MqDeliveryDemo / MqReliabilityDemo / MqPartitionDemo).
+//
+// It is a CSS module: every class name is hashed, so these widgets can never
+// collide with the article body or with other articles' styles. Components
+// reference the names through `styles[...]` (see the small `cx` helper in each
+// of them), so a typo here shows up as an unstyled element, not as a build error.
+
+.mq {
+  --mq-accent: #4f6ef7;
+  --mq-accent-soft: rgba(79, 110, 247, 0.14);
+  --mq-ok: #2f9e68;
+  --mq-ok-soft: rgba(47, 158, 104, 0.14);
+  --mq-warn: #cf8a1c;
+  --mq-warn-soft: rgba(207, 138, 28, 0.16);
+  --mq-bad: #d9534f;
+  --mq-bad-soft: rgba(217, 83, 79, 0.14);
+  --mq-broker: #8b5cf6;
+  --mq-broker-soft: rgba(139, 92, 246, 0.14);
+  --mq-text: #222222;
+  --mq-muted: rgba(0, 0, 0, 0.55);
+  --mq-line: rgba(0, 0, 0, 0.2);
+  --mq-card: #ffffff;
+  --mq-panel: rgba(127, 127, 127, 0.07);
+  --mq-panel-border: rgba(127, 127, 127, 0.22);
+  --mq-grid: rgba(127, 127, 127, 0.16);
+
+  margin: 1.6rem 0 2.2rem;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--mq-panel-border);
+  border-radius: 12px;
+  background: var(--mq-panel);
+  color: var(--mq-text);
+  font-family: var(--systemFont, sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+// `body.dark` lives on the page, not in this module, so it has to stay global.
+:global(body.dark) .mq {
+  --mq-accent: #7d95ff;
+  --mq-accent-soft: rgba(125, 149, 255, 0.2);
+  --mq-ok: #4cc38a;
+  --mq-ok-soft: rgba(76, 195, 138, 0.18);
+  --mq-warn: #e8b04b;
+  --mq-warn-soft: rgba(232, 176, 75, 0.18);
+  --mq-bad: #f0736f;
+  --mq-bad-soft: rgba(240, 115, 111, 0.18);
+  --mq-broker: #b794f6;
+  --mq-broker-soft: rgba(183, 148, 246, 0.2);
+  --mq-text: rgba(255, 255, 255, 0.92);
+  --mq-muted: rgba(255, 255, 255, 0.6);
+  --mq-line: rgba(255, 255, 255, 0.28);
+  --mq-card: rgba(255, 255, 255, 0.06);
+  --mq-panel: rgba(255, 255, 255, 0.04);
+  --mq-panel-border: rgba(255, 255, 255, 0.16);
+  --mq-grid: rgba(255, 255, 255, 0.12);
+}
+
+/* ------------------------------------------------------------------ *
+ * Shell: head, tabs, toolbar, buttons
+ * ------------------------------------------------------------------ */
+
+.mq-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.mq-badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--mq-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.mq-caption {
+  font-weight: 700;
+}
+
+.mq-hint {
+  color: var(--mq-muted);
+  font-size: 12.5px;
+}
+
+.mq-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.mq-tab {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--mq-panel-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mq-text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.mq-tab:hover {
+  border-color: var(--mq-accent);
+  color: var(--mq-accent);
+}
+
+.mq-tab-on,
+.mq-tab-on:hover {
+  background: var(--mq-accent);
+  border-color: var(--mq-accent);
+  color: #fff;
+}
+
+.mq-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.mq-label {
+  color: var(--mq-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.mq-btn {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--mq-panel-border);
+  border-radius: 6px;
+  background: var(--mq-card);
+  color: var(--mq-text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+.mq-btn:hover:not(:disabled) {
+  border-color: var(--mq-accent);
+  color: var(--mq-accent);
+}
+
+.mq-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.mq-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mq-btn-on,
+.mq-btn-on:hover:not(:disabled) {
+  background: var(--mq-accent-soft);
+  border-color: var(--mq-accent);
+  color: var(--mq-accent);
+}
+
+.mq-btn-primary,
+.mq-btn-primary:hover:not(:disabled) {
+  background: var(--mq-accent);
+  border-color: var(--mq-accent);
+  color: #fff;
+}
+
+.mq-select {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--mq-panel-border);
+  border-radius: 6px;
+  background: var(--mq-card);
+  color: var(--mq-text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.mq-range {
+  width: 150px;
+  margin: 0;
+}
+
+.mq-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mq-text);
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mq-canvas {
+  overflow-x: auto;
+  padding: 2px 0;
+}
+
+.mq-canvas svg {
+  display: block;
+  min-width: 460px;
+  max-width: 100%;
+}
+
+/* ------------------------------------------------------------------ *
+ * Metrics + legends + notes
+ * ------------------------------------------------------------------ */
+
+.mq-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 2px;
+}
+
+.mq-stat {
+  padding: 6px 10px;
+  border: 1px solid var(--mq-panel-border);
+  border-radius: 8px;
+  background: var(--mq-card);
+}
+
+.mq-stat-k {
+  display: block;
+  color: var(--mq-muted);
+  font-size: 12px;
+}
+
+.mq-stat-v {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.mq-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+  color: var(--mq-muted);
+  font-size: 12px;
+}
+
+.mq-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mq-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.mq-note {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--mq-accent);
+  border-radius: 6px;
+  background: var(--mq-panel);
+  font-size: 13px;
+}
+
+.mq-note-ok {
+  border-left-color: var(--mq-ok);
+}
+
+.mq-note-warn {
+  border-left-color: var(--mq-warn);
+}
+
+.mq-note-bad {
+  border-left-color: var(--mq-bad);
+}
+
+/* ------------------------------------------------------------------ *
+ * Timeline lanes (MqRolesDemo · 异步)
+ * ------------------------------------------------------------------ */
+
+.mq-lanes {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 8px 0 4px;
+}
+
+.mq-lane {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mq-lane-name {
+  flex: 0 0 92px;
+  color: var(--mq-muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.mq-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--mq-grid);
+  overflow: hidden;
+}
+
+.mq-seg {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  display: flex;
+  align-items: center;
+  border-radius: 5px;
+  background: var(--mq-grid);
+  overflow: hidden;
+}
+
+.mq-seg-sync {
+  color: var(--mq-warn);
+}
+
+.mq-seg-main {
+  color: var(--mq-accent);
+}
+
+.mq-seg-async {
+  color: var(--mq-broker);
+}
+
+.mq-seg-fill {
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0.4;
+  transform-origin: left center;
+  transition: transform 0.06s linear, opacity 0.25s;
+}
+
+.mq-seg-name {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto;
+  padding: 0 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mq-seg-done .mq-seg-fill {
+  opacity: 0.92;
+}
+
+.mq-seg-done .mq-seg-name {
+  color: #fff;
+}
+
+.mq-axis {
+  position: relative;
+  height: 18px;
+  margin: 4px 0 0 100px;
+  border-top: 1px dashed var(--mq-panel-border);
+}
+
+.mq-axis-tick {
+  position: absolute;
+  top: 2px;
+  color: var(--mq-muted);
+  font-size: 11px;
+  transform: translateX(-50%);
+}
+
+.mq-axis-tick:first-child {
+  transform: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * Step log (MqDeliveryDemo)
+ * ------------------------------------------------------------------ */
+
+.mq-log {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 304px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--mq-panel-border);
+  overflow-y: auto;
+}
+
+.mq-log-item {
+  display: flex;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  opacity: 0.5;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.mq-log-item-on {
+  background: var(--mq-accent-soft);
+  opacity: 1;
+}
+
+.mq-log-idx {
+  flex: 0 0 18px;
+  color: var(--mq-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mq-log-main {
+  font-weight: 600;
+}
+
+.mq-log-detail {
+  color: var(--mq-muted);
+  font-size: 12.5px;
+}
+
+.mq-log-item-ok .mq-log-main {
+  color: var(--mq-ok);
+}
+
+.mq-log-item-warn .mq-log-main {
+  color: var(--mq-warn);
+}
+
+.mq-log-item-bad .mq-log-main {
+  color: var(--mq-bad);
+}
+
+/* ------------------------------------------------------------------ *
+ * Stage cards (MqReliabilityDemo)
+ * ------------------------------------------------------------------ */
+
+.mq-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.mq-card {
+  padding: 10px;
+  border: 1px solid var(--mq-panel-border);
+  border-radius: 10px;
+  background: var(--mq-card);
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+}
+
+.mq-card-on {
+  border-color: var(--mq-accent);
+  box-shadow: 0 0 0 3px var(--mq-accent-soft);
+  transform: translateY(-2px);
+}
+
+.mq-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.mq-card-sub {
+  margin: 4px 0 8px;
+  color: var(--mq-muted);
+  font-size: 12.5px;
+}
+
+.mq-card-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.mq-card-flag {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.mq-flag-ok {
+  background: var(--mq-ok-soft);
+  color: var(--mq-ok);
+}
+
+.mq-flag-warn {
+  background: var(--mq-warn-soft);
+  color: var(--mq-warn);
+}
+
+.mq-flag-bad {
+  background: var(--mq-bad-soft);
+  color: var(--mq-bad);
+}
+
+.mq-flag-idle {
+  background: var(--mq-panel);
+  color: var(--mq-muted);
+}
+
+.mq-verdict {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.mq-verdict-ok {
+  border-color: var(--mq-ok);
+  background: var(--mq-ok-soft);
+  color: var(--mq-ok);
+}
+
+.mq-verdict-warn {
+  border-color: var(--mq-warn);
+  background: var(--mq-warn-soft);
+  color: var(--mq-warn);
+}
+
+.mq-verdict-bad {
+  border-color: var(--mq-bad);
+  background: var(--mq-bad-soft);
+  color: var(--mq-bad);
+}
+
+/* ------------------------------------------------------------------ *
+ * Partitions (MqPartitionDemo)
+ * ------------------------------------------------------------------ */
+
+.mq-parts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.mq-part {
+  border: 1px solid var(--mq-panel-border);
+  border-radius: 10px;
+  background: var(--mq-card);
+  overflow: hidden;
+}
+
+.mq-part-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--mq-panel);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.mq-part-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 5px;
+  min-height: 68px;
+  padding: 8px;
+}
+
+.mq-msg {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--mq-accent-soft);
+  color: var(--mq-accent);
+  font-size: 12px;
+  font-weight: 700;
+  animation: mq-pop 0.28s ease-out;
+}
+
+@keyframes mq-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.mq-consumer {
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mq-idle {
+  padding: 2px 0;
+  color: var(--mq-muted);
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------------ *
+ * Travelling message token (MqDeliveryDemo)
+ * ------------------------------------------------------------------ */
+
+.mq-dot-g {
+  transition: transform 0.55s cubic-bezier(0.34, 0.1, 0.2, 1);
+}
+
+.mq-dot {
+  fill: currentColor;
+}
+
+.mq-halo {
+  fill: currentColor;
+  opacity: 0.3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mq-pulse 1.7s ease-out infinite;
+}
+
+@keyframes mq-pulse {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+
+/* Respect users who asked for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .mq-msg,
+  .mq-verdict,
+  .mq-halo {
+    animation: none;
+  }
+
+  .mq-seg-fill,
+  .mq-card,
+  .mq-dot-g {
+    transition: none;
+  }
+}
