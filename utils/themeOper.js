@@ -2,12 +2,12 @@
 export default function themeOper() {
     const onThemeChangeFuncObj = {};
     let preferredTheme;
-    // Body font choice (`utils/fontChoice.js`): 'system' adds the `font-system`
-    // class on <body>; anything else keeps the default LXGW WenKai Screen.
-    let fontSystem = false;
+    // Body font choice (`utils/fontChoice.js`): 'wenkai' adds the `font-wenkai`
+    // class on <body>; anything else keeps the default system font.
+    let fontWenkai = false;
 
     function render() {
-        document.body.className = preferredTheme + (fontSystem ? ' font-system' : '');
+        document.body.className = preferredTheme + (fontWenkai ? ' font-wenkai' : '');
     }
 
     function setTheme(newTheme) {
@@ -22,7 +22,7 @@ export default function themeOper() {
     } catch (err) { }
 
     try {
-        fontSystem = localStorage.getItem('fontChoice') === 'system';
+        fontWenkai = localStorage.getItem('fontChoice') === 'wenkai';
     } catch (err) { }
 
     window.__setPreferredTheme = function (newTheme) {
@@ -33,10 +33,10 @@ export default function themeOper() {
     };
 
     window.__setPreferredFont = function (choice) {
-        fontSystem = choice === 'system';
+        fontWenkai = choice === 'wenkai';
         render();
         try {
-            localStorage.setItem('fontChoice', fontSystem ? 'system' : 'wenkai');
+            localStorage.setItem('fontChoice', fontWenkai ? 'wenkai' : 'system');
         } catch (err) { }
     };
 

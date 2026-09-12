@@ -5,12 +5,20 @@
 $pink: rgb(255, 167, 196);
 $code-bg: #011627;
 $system-font: "LXGW WenKai Screen", sans-serif;
+$os-font: system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
 $breadcrumbs-divider-size: 20px;
 
 body {
     --pink: #{$pink};
     background-color: var(--bg);
     --breadcrumbsDividerSize: #{$breadcrumbs-divider-size};
+    // 默认正文用系统字体；settings 页选择「霞鹜文楷」时由 utils/themeOper.js
+    // 在 body 上加 `font-wenkai` 类，切换到下面的手写风格字体。
+    --systemFont: #{$os-font} !important;
+}
+
+body.font-wenkai {
     --systemFont: #{$system-font} !important;
 }
 
@@ -23,13 +31,8 @@ h6 {
     font-family: var(--systemFont) !important;
 }
 
-// 「正文字体 → 系统默认」选项：settings 页通过 `window.__setPreferredFont`
-// （utils/themeOper.js）在 body 上加 `font-system` 类，把 --systemFont 换成
-// 各平台的系统默认字体栈；默认不加类，仍是霞鹜文楷。
-body.font-system {
-    --systemFont: system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC',
-        'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif !important;
-}
+// 「正文字体」设置（utils/fontChoice.js）：默认不加类 = 系统默认字体，
+// `body.font-wenkai` 切回霞鹜文楷。
 
 .pio-container .pio-show {
     left: -1.2em !important;

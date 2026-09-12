@@ -1,26 +1,26 @@
 /**
  * Body font choice, persisted in localStorage and applied by toggling the
- * `font-system` class on <body> (see `styles/global.scss` for what that class
+ * `font-wenkai` class on <body> (see `styles/global.scss` for what that class
  * overrides).
  *
- * The default stays `wenkai` (LXGW WenKai Screen, loaded in `_document.js`);
- * the settings page offers `system` for readers who prefer the OS default
- * font. Kept in one place because both the settings page and the boot script
- * (`utils/themeOper.js`) have to agree on the key and the values.
+ * The default is the OS system font; the settings page offers `wenkai`
+ * (LXGW WenKai Screen, loaded in `_document.js`) for readers who prefer the
+ * handwriting style. Kept in one place because both the settings page and the
+ * boot script (`utils/themeOper.js`) have to agree on the key and the values.
  */
 export const FONT_CHOICE_KEY = 'fontChoice';
 export const FONT_WENKAI = 'wenkai';
 export const FONT_SYSTEM = 'system';
 
-/** @returns {'wenkai' | 'system'} the saved choice, defaulting to wenkai. */
+/** @returns {'wenkai' | 'system'} the saved choice, defaulting to system. */
 export function getFontChoice() {
-    if (typeof window === 'undefined') return FONT_WENKAI;
+    if (typeof window === 'undefined') return FONT_SYSTEM;
     try {
-        return window.localStorage.getItem(FONT_CHOICE_KEY) === FONT_SYSTEM
-            ? FONT_SYSTEM
-            : FONT_WENKAI;
+        return window.localStorage.getItem(FONT_CHOICE_KEY) === FONT_WENKAI
+            ? FONT_WENKAI
+            : FONT_SYSTEM;
     } catch (err) {
-        return FONT_WENKAI;
+        return FONT_SYSTEM;
     }
 }
 
@@ -32,7 +32,7 @@ export function getFontChoice() {
  */
 export function setFontChoice(choice) {
     if (typeof window === 'undefined') return;
-    const normalized = choice === FONT_SYSTEM ? FONT_SYSTEM : FONT_WENKAI;
+    const normalized = choice === FONT_WENKAI ? FONT_WENKAI : FONT_SYSTEM;
     if (typeof window.__setPreferredFont === 'function') {
         window.__setPreferredFont(normalized);
         return;
@@ -40,7 +40,7 @@ export function setFontChoice(choice) {
     /* Fallback for a stale cached document without the boot script. */
     try {
         window.localStorage.setItem(FONT_CHOICE_KEY, normalized);
-        document.body.classList.toggle('font-system', normalized === FONT_SYSTEM);
+        document.body.classList.toggle('font-wenkai', normalized === FONT_WENKAI);
     } catch (err) {
         /* storage disabled: keep the default instead of crashing */
     }

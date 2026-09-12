@@ -139,21 +139,6 @@ const SettingForm = function () {
                     <button
                         type="button"
                         role="radio"
-                        aria-checked={font === FONT_WENKAI}
-                        className={optionClass(font === FONT_WENKAI)}
-                        onClick={() => onSelectFont(FONT_WENKAI)}
-                    >
-                        <span className={styles['setting-option-title']}>
-                            {tWenkaiOption}
-                            <span className={styles['setting-option-mark']} aria-hidden="true">
-                                {font === FONT_WENKAI ? '✓' : ''}
-                            </span>
-                        </span>
-                        <span className={styles['setting-option-desc']}>{tWenkaiOptionDesc}</span>
-                    </button>
-                    <button
-                        type="button"
-                        role="radio"
                         aria-checked={font === FONT_SYSTEM}
                         className={optionClass(font === FONT_SYSTEM)}
                         onClick={() => onSelectFont(FONT_SYSTEM)}
@@ -165,6 +150,21 @@ const SettingForm = function () {
                             </span>
                         </span>
                         <span className={styles['setting-option-desc']}>{tSystemOptionDesc}</span>
+                    </button>
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={font === FONT_WENKAI}
+                        className={optionClass(font === FONT_WENKAI)}
+                        onClick={() => onSelectFont(FONT_WENKAI)}
+                    >
+                        <span className={styles['setting-option-title']}>
+                            {tWenkaiOption}
+                            <span className={styles['setting-option-mark']} aria-hidden="true">
+                                {font === FONT_WENKAI ? '✓' : ''}
+                            </span>
+                        </span>
+                        <span className={styles['setting-option-desc']}>{tWenkaiOptionDesc}</span>
                     </button>
                 </div>
                 <p className={styles['setting-current']}>{tCurrentFont}</p>
