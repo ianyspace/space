@@ -1,0 +1,189 @@
+// Standalone A4 resume page (`pages/resume.js`).
+//
+// The sheet mimics real A4 proportions at CSS 96dpi (794 × 1123 px) and prints
+// edge-accurate through the `@page` rule below: on print the toolbar disappears
+// and the sheet's own padding is replaced by the printer's paper margins.
+// The sheet intentionally stays white with fixed text colors in both themes —
+// paper is paper.
+
+.page {
+    min-height: 100vh;
+    padding: 24px 12px 56px;
+    background: #e8eaef;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.toolbar {
+    width: 794px;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.toolbar-link {
+    color: #222;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+        color: #d23669;
+    }
+}
+
+.toolbar-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.toolbar-hint {
+    font-size: 12.5px;
+    color: #555;
+}
+
+.toolbar-btn {
+    height: 32px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 6px;
+    background: #d23669;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.2s;
+
+    &:hover {
+        filter: brightness(1.08);
+    }
+}
+
+.sheet {
+    width: 794px;
+    max-width: 100%;
+    min-height: 1123px;
+    box-sizing: border-box;
+    padding: 52px 56px;
+    background: #fff;
+    color: #222;
+    border-radius: 4px;
+    box-shadow: 0 2px 18px rgba(0, 0, 0, 0.16);
+    font-family: var(--systemFont, sans-serif);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+/* --- content typography (standardized sizes) --- */
+
+.sheet-head {
+    margin-bottom: 6px;
+}
+
+.name {
+    margin: 0 0 8px;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.meta {
+    margin-bottom: 3px;
+    font-size: 13px;
+    color: #333;
+}
+
+.divider {
+    margin: 0 10px;
+    color: #bbb;
+}
+
+.section {
+    margin-top: 18px;
+}
+
+.section-title {
+    margin: 0 0 10px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #222;
+    font-size: 15.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.strong {
+    font-weight: 700;
+}
+
+.bullets {
+    margin: 0;
+    padding-left: 18px;
+
+    li {
+        margin-bottom: 4px;
+    }
+}
+
+.sub-bullets {
+    margin: 2px 0 0;
+    padding-left: 16px;
+    list-style: circle;
+
+    li {
+        margin-bottom: 3px;
+    }
+}
+
+@media screen and (max-width: 650px) {
+    .page {
+        padding: 16px 10px 40px;
+    }
+
+    .sheet {
+        padding: 28px 24px;
+    }
+}
+
+/* --- print: clean A4 output --- */
+
+@media print {
+    .page {
+        background: none;
+        padding: 0;
+        display: block;
+    }
+
+    .toolbar {
+        display: none;
+    }
+
+    .sheet {
+        width: 100%;
+        max-width: none;
+        min-height: auto;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 0;
+    }
+}
+
+// Margins are provided by the paper, not the sheet, so `打印 → 另存为 PDF`
+// yields a properly paginated A4 document.
+@page {
+    size: A4;
+    margin: 14mm;
+}
