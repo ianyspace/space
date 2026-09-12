@@ -59,6 +59,14 @@ pool.submit(() -> System.out.println("线程池任务"));
 
 #### 线程的 6 种状态及转换
 
+**转换速览**（先记主干，下面的演示用于辅助理解）：
+
+- `NEW` — start() → `RUNNABLE`
+- `RUNNABLE` ↔ `BLOCKED`：抢 synchronized 锁失败 / 拿到锁
+- `RUNNABLE` ↔ `WAITING`：wait()·join()·park() / notify()·unpark()
+- `RUNNABLE` ↔ `TIMED_WAITING`：sleep(t)·wait(t)·join(t) / 超时或被唤醒
+- `RUNNABLE` — run() 执行完毕 → `TERMINATED`
+
 <thread-state-figure></thread-state-figure>
 
 | 状态 | 说明 |
@@ -210,7 +218,7 @@ synchronized (lockObj) { ... }
 
 JDK 1.6 引入锁优化，synchronized 不再是一上来就加重量级锁，而是根据竞争程度逐步升级：
 
-<lock-upgrade-figure></lock-upgrade-figure>
+**无锁 → 偏向锁 → 轻量级锁 → 重量级锁**（单向升级，不可降级）
 
 **偏向锁**：
 - 适用场景：只有一个线程反复进入同步块（无竞争）
@@ -234,6 +242,10 @@ JDK 1.6 引入锁优化，synchronized 不再是一上来就加重量级锁，�
 | 偏向锁 | 零同步开销 | 有竞争时撤销开销大 | 单线程反复进入 |
 | 轻量级锁 | 自旋不阻塞 | 自旋消耗 CPU | 竞争不激烈，短暂同步 |
 | 重量级锁 | 不消耗 CPU | 阻塞唤醒开销大 | 激烈竞争 |
+
+文字看完后，用下面的演示跟着线程 A、B 的竞争把整个升级过程走一遍，重点看 Mark Word 每一步被改写成了什么：
+
+<lock-upgrade-figure></lock-upgrade-figure>
 
 #### ReentrantLock：显式加锁带来了什么
 
@@ -362,14 +374,16 @@ try {
 
 JMM 定义了多线程环境下变量的访问规则：
 
-<jmm-figure></jmm-figure>
-
 - **主内存**：所有线程共享的变量存储（概念上，对应堆内存）
 - **工作内存**：每个线程私有的变量副本（概念上，对应 CPU 缓存/寄存器）
 - 线程对变量的操作必须在工作内存中进行，不能直接操作主内存
 - 变量的传递：主内存 → (read) → 工作内存 → (use) → 工作内存 → (assign) → 工作内存 → (write) → 主内存
 
 **可见性问题**：线程 1 修改了 count，但只更新了工作内存，线程 2 读到的还是旧值。
+
+下面亲手操作一遍这个问题的发生与解决——先普通变量，再切 volatile 对比：
+
+<jmm-figure></jmm-figure>
 
 #### happens-before 原则
 
@@ -849,6 +863,15 @@ public ThreadPoolExecutor(
 
 #### ⭐⭐⭐ 线程池工作流程（面试必考）
 
+任务提交后按以下顺序判断，命中即停：
+
+1. 当前线程数 < corePoolSize？是 → **创建核心线程**执行（即使有空闲核心线程也新建）
+2. 工作队列 workQueue 未满？是 → **任务入队**等待
+3. 当前线程数 < maximumPoolSize？是 → **创建非核心线程**执行
+4. 都不满足 → 执行**拒绝策略** handler
+
+下面的模拟器把线程池缩小到 core=2、队列=2、max=4，连点「提交任务」即可看到每个任务命中了哪一步：
+
 <thread-pool-figure></thread-pool-figure>
 
 **关键点**：
@@ -1036,8 +1059,6 @@ public T get() {
 
 #### 内存泄漏问题（高频考点）
 
-<thread-local-ref-figure></thread-local-ref-figure>
-
 **泄漏场景**：当 ThreadLocal 外部没有强引用时，GC 会回收 key（弱引用），但 value 是强引用不会被回收。如果线程一直不结束（比如线程池中的线程），value 就永远无法被回收，造成内存泄漏。
 
 **解决方案**：使用完 ThreadLocal 后务必调用 `remove()`：
@@ -1052,6 +1073,10 @@ try {
 ```
 
 > 实际上 ThreadLocalMap 的 get/set/remove 方法内部也有清理 stale entry 的逻辑（探测式清理 + 启发式清理），但不可靠，不能完全依赖。
+
+下面的图解把这条引用链画了出来——切到「GC 之后」，亲眼看 key 和 value 的不同命运：
+
+<thread-local-ref-figure></thread-local-ref-figure>
 
 #### 线程池中使用 ThreadLocal 的坑
 
