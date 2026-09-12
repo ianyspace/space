@@ -1,0 +1,494 @@
+// Styles for the lock-upgrade interactive figure (`LockUpgradeFigure.js`).
+//
+// CSS module: every class is hashed, so the widget cannot collide with the
+// article's own styles. Class names are referenced through `styles[...]` in the
+// component (see the `cx` helper there). Theme colors live in CSS variables on
+// the root class and are overridden for `body.dark` below.
+
+.luf {
+  --luf-text: #222222;
+  --luf-panel-bg: rgba(127, 127, 127, 0.07);
+  --luf-panel-border: rgba(127, 127, 127, 0.22);
+  --luf-card-bg: #ffffff;
+  --luf-accent: #f7a046;
+
+  --luf-dim-line: #98a2b3;
+  --luf-dim-bg: rgba(152, 162, 179, 0.15);
+  --luf-info-line: #2b7cc7;
+  --luf-info-bg: rgba(66, 153, 225, 0.14);
+  --luf-ok-line: #2f9e63;
+  --luf-ok-bg: rgba(56, 178, 120, 0.16);
+  --luf-warn-line: #e0821f;
+  --luf-warn-bg: rgba(247, 160, 70, 0.18);
+  --luf-flag-line: #8055d6;
+  --luf-flag-bg: rgba(159, 122, 234, 0.16);
+  --luf-ptr-line: #0d9488;
+  --luf-ptr-bg: rgba(13, 148, 136, 0.14);
+  --luf-heavy-line: #d64556;
+  --luf-heavy-bg: rgba(224, 86, 102, 0.16);
+
+  margin: 1.6rem 0 2.2rem;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--luf-panel-border);
+  border-radius: 12px;
+  background: var(--luf-panel-bg);
+  font-family: var(--systemFont, sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+// `body.dark` belongs to the page, not to the module, so it must stay global —
+// otherwise the `.dark` class itself would be hashed and never match.
+:global(body.dark) .luf {
+  --luf-text: rgba(255, 255, 255, 0.92);
+  --luf-panel-bg: rgba(255, 255, 255, 0.05);
+  --luf-panel-border: rgba(255, 255, 255, 0.16);
+  --luf-card-bg: rgba(255, 255, 255, 0.08);
+  --luf-accent: #ffb066;
+
+  --luf-dim-line: #aab3c4;
+  --luf-dim-bg: rgba(168, 179, 196, 0.18);
+  --luf-info-line: #6cb6ff;
+  --luf-info-bg: rgba(108, 182, 255, 0.16);
+  --luf-ok-line: #4cd98c;
+  --luf-ok-bg: rgba(76, 217, 140, 0.18);
+  --luf-warn-line: #ffb066;
+  --luf-warn-bg: rgba(255, 176, 102, 0.2);
+  --luf-flag-line: #b795ff;
+  --luf-flag-bg: rgba(183, 149, 255, 0.18);
+  --luf-ptr-line: #2dd4bf;
+  --luf-ptr-bg: rgba(45, 212, 191, 0.16);
+  --luf-heavy-line: #ff7b8a;
+  --luf-heavy-bg: rgba(255, 123, 138, 0.18);
+}
+
+.luf-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.luf-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--luf-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.luf-caption {
+  font-weight: 700;
+  color: var(--luf-text);
+}
+
+.luf-stats {
+  margin-left: auto;
+  color: var(--luf-text);
+  opacity: 0.7;
+  font-size: 12.5px;
+}
+
+/* --- stage chain --- */
+
+.luf-chain {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.luf-chain-node {
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--luf-panel-border);
+  background: var(--luf-card-bg);
+  color: var(--luf-text);
+  font-size: 12.5px;
+  font-weight: 700;
+  opacity: 0.55;
+  transition: opacity 0.3s ease, background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.luf-chain-node.is-done {
+  opacity: 0.9;
+  border-color: var(--luf-ok-line);
+  background: var(--luf-ok-bg);
+  color: var(--luf-ok-line);
+}
+
+.luf-chain-node.is-current {
+  opacity: 1;
+  border-color: var(--luf-accent);
+  background: var(--luf-accent);
+  color: #fff;
+}
+
+.luf-chain-arrow {
+  color: var(--luf-text);
+  opacity: 0.4;
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.luf-chain-arrow.is-passed {
+  color: var(--luf-ok-line);
+  opacity: 1;
+}
+
+.luf-chain-note {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--luf-heavy-line);
+  font-weight: 700;
+}
+
+/* --- main grid: threads + Mark Word --- */
+
+.luf-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.luf-threads {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.luf-thread {
+  padding: 8px 10px;
+  border: 1px solid var(--luf-panel-border);
+  border-radius: 8px;
+  background: var(--luf-card-bg);
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.luf-thread-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.luf-thread.is-a .luf-thread-name {
+  color: var(--luf-info-line);
+}
+
+.luf-thread.is-b .luf-thread-name {
+  color: var(--luf-flag-line);
+}
+
+.luf-thread-state {
+  display: block;
+  font-size: 12.5px;
+  color: var(--luf-text);
+  opacity: 0.8;
+}
+
+.luf-thread.is-acting {
+  border-color: var(--luf-accent);
+  background: var(--luf-warn-bg);
+}
+
+.luf-thread.is-acting .luf-thread-state {
+  opacity: 1;
+  font-weight: 700;
+  color: var(--luf-warn-line);
+}
+
+.luf-monitor {
+  padding: 8px 10px;
+  border: 1px solid var(--luf-heavy-line);
+  border-radius: 8px;
+  background: var(--luf-heavy-bg);
+  animation: luf-fade 0.35s ease;
+}
+
+.luf-monitor-title {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--luf-heavy-line);
+  margin-bottom: 4px;
+}
+
+.luf-monitor-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--luf-text);
+  margin-top: 2px;
+}
+
+.luf-monitor-key {
+  flex: none;
+  min-width: 52px;
+  padding: 0 5px;
+  border-radius: 4px;
+  border: 1px solid var(--luf-panel-border);
+  background: var(--luf-card-bg);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-align: center;
+}
+
+/* --- Mark Word bar --- */
+
+.luf-mw {
+  padding: 10px 12px;
+  border: 1px solid var(--luf-panel-border);
+  border-radius: 8px;
+  background: var(--luf-card-bg);
+}
+
+.luf-mw-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--luf-text);
+  margin-bottom: 8px;
+}
+
+.luf-mw-badge {
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: var(--luf-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.luf-mw-bar {
+  display: flex;
+  gap: 3px;
+  min-height: 48px;
+  animation: luf-fade 0.35s ease;
+}
+
+.luf-mw-seg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 52px;
+  padding: 4px 4px;
+  border-radius: 6px;
+  text-align: center;
+  transition: background 0.35s ease, border-color 0.35s ease;
+}
+
+.luf-mw-seg-name {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.luf-mw-seg-bits {
+  font-size: 10px;
+  opacity: 0.65;
+  font-variant-numeric: tabular-nums;
+}
+
+.luf-mw-seg.tone-dim {
+  background: var(--luf-dim-bg);
+  color: var(--luf-dim-line);
+}
+
+.luf-mw-seg.tone-info {
+  background: var(--luf-info-bg);
+  color: var(--luf-info-line);
+}
+
+.luf-mw-seg.tone-ok {
+  background: var(--luf-ok-bg);
+  color: var(--luf-ok-line);
+}
+
+.luf-mw-seg.tone-warn {
+  background: var(--luf-warn-bg);
+  color: var(--luf-warn-line);
+}
+
+.luf-mw-seg.tone-flag {
+  background: var(--luf-flag-bg);
+  color: var(--luf-flag-line);
+}
+
+.luf-mw-seg.tone-ptr {
+  background: var(--luf-ptr-bg);
+  color: var(--luf-ptr-line);
+}
+
+.luf-mw-seg.tone-heavy {
+  background: var(--luf-heavy-bg);
+  color: var(--luf-heavy-line);
+}
+
+.luf-mw-legend {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--luf-text);
+  opacity: 0.7;
+}
+
+@keyframes luf-fade {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* --- toolbar / progress / narration --- */
+
+.luf-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.luf-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--luf-text);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.luf-field input[type='range'] {
+  width: 90px;
+  margin: 0;
+}
+
+.luf-speed-hint {
+  width: 2em;
+  opacity: 0.7;
+}
+
+.luf-btn {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--luf-panel-border);
+  border-radius: 6px;
+  background: var(--luf-card-bg);
+  color: var(--luf-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+.luf-btn:hover:not(:disabled) {
+  border-color: var(--luf-accent);
+  color: var(--luf-accent);
+}
+
+.luf-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.luf-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.luf-btn.primary {
+  background: var(--luf-accent);
+  border-color: var(--luf-accent);
+  color: #fff;
+}
+
+.luf-btn.primary:hover:not(:disabled) {
+  color: #fff;
+  filter: brightness(1.06);
+}
+
+.luf-step-counter {
+  margin-left: auto;
+  color: var(--luf-text);
+  opacity: 0.75;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.luf-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--luf-panel-border);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.luf-progress-bar {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--luf-accent);
+  transition: width 0.3s ease;
+}
+
+.luf-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: var(--luf-card-bg);
+  border: 1px solid var(--luf-panel-border);
+  min-height: 42px;
+}
+
+.luf-note-tag {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 5px;
+  background: var(--luf-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.luf-note-text {
+  color: var(--luf-text);
+}
+
+.luf-hint {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  opacity: 0.7;
+  color: var(--luf-text);
+}
+
+@media screen and (max-width: 650px) {
+  .luf {
+    padding: 12px 12px 14px;
+  }
+
+  .luf-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .luf-stats,
+  .luf-step-counter {
+    margin-left: 0;
+  }
+}

@@ -217,12 +217,9 @@ synchronized (lockObj) { ... }
 
 #### 锁升级（重点）
 
-JDK 1.6 引入锁优化，synchronized 不再是一上来就加重量级锁，而是逐步升级：
+JDK 1.6 引入锁优化，synchronized 不再是一上来就加重量级锁，而是根据竞争程度逐步升级：
 
-```
-无锁 → 偏向锁 → 轻量级锁 → 重量级锁
-（单向升级，不可降级）
-```
+<lock-upgrade-figure></lock-upgrade-figure>
 
 **偏向锁**：
 - 适用场景：只有一个线程反复进入同步块（无竞争）
