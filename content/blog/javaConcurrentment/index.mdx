@@ -65,30 +65,7 @@ pool.submit(() -> System.out.println("线程池任务"));
 
 #### 线程的 6 种状态及转换
 
-```
-        start()
-NEW ──────────→ RUNNABLE ←──────────────┐
-                    │                     │
-        获取锁失败  │    获取到锁          │ 唤醒/超时/获取锁
-                    ↓                     │
-                BLOCKED ──────────────────┘
-                    │
-                    │ (回到 RUNNABLE)
-                    │
-        wait()/join()/LockSupport.park()
-                    │
-                    ↓
-               WAITING ──→ notify()/unpark() ──→ RUNNABLE
-
-        sleep(t)/wait(t)/join(t)
-                    │
-                    ↓
-            TIMED_WAITING ──→ 超时/唤醒 ──→ RUNNABLE
-
-        run() 执行完毕
-                    ↓
-              TERMINATED
-```
+<thread-state-figure></thread-state-figure>
 
 | 状态 | 说明 |
 |------|------|

@@ -1,0 +1,476 @@
+// Styles for the interactive Java thread-state figure (`ThreadStateFigure.js`).
+//
+// CSS module: every class is hashed, so the widget cannot collide with the
+// article's own styles. Class names are referenced through `styles[...]` in the
+// component (see the `cx` helper there). Theme colors live in CSS variables on
+// the root class and are overridden for `body.dark` below; the SVG only ever
+// reads `var(--tsf-*)`.
+
+.tsf {
+  --tsf-text: #222222;
+  --tsf-panel-bg: rgba(127, 127, 127, 0.07);
+  --tsf-panel-border: rgba(127, 127, 127, 0.22);
+  --tsf-card-bg: #ffffff;
+  --tsf-edge: rgba(0, 0, 0, 0.42);
+  --tsf-accent: #f7a046;
+
+  --tsf-new-bg: rgba(152, 162, 179, 0.16);
+  --tsf-new-line: #8a94a6;
+  --tsf-runnable-bg: rgba(56, 178, 120, 0.16);
+  --tsf-runnable-line: #2f9e63;
+  --tsf-blocked-bg: rgba(247, 160, 70, 0.18);
+  --tsf-blocked-line: #e0821f;
+  --tsf-waiting-bg: rgba(66, 153, 225, 0.16);
+  --tsf-waiting-line: #2b7cc7;
+  --tsf-timed-bg: rgba(159, 122, 234, 0.16);
+  --tsf-timed-line: #8055d6;
+  --tsf-terminated-bg: rgba(224, 86, 102, 0.16);
+  --tsf-terminated-line: #d64556;
+
+  margin: 1.6rem 0 2.2rem;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--tsf-panel-border);
+  border-radius: 12px;
+  background: var(--tsf-panel-bg);
+  font-family: var(--systemFont, sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+// `body.dark` belongs to the page, not to the module, so it must stay global —
+// otherwise the `.dark` class itself would be hashed and never match.
+:global(body.dark) .tsf {
+  --tsf-text: rgba(255, 255, 255, 0.92);
+  --tsf-panel-bg: rgba(255, 255, 255, 0.05);
+  --tsf-panel-border: rgba(255, 255, 255, 0.16);
+  --tsf-card-bg: rgba(255, 255, 255, 0.08);
+  --tsf-edge: rgba(255, 255, 255, 0.4);
+  --tsf-accent: #ffb066;
+
+  --tsf-new-bg: rgba(168, 179, 196, 0.2);
+  --tsf-new-line: #aab3c4;
+  --tsf-runnable-bg: rgba(76, 217, 140, 0.18);
+  --tsf-runnable-line: #4cd98c;
+  --tsf-blocked-bg: rgba(255, 176, 102, 0.2);
+  --tsf-blocked-line: #ffb066;
+  --tsf-waiting-bg: rgba(108, 182, 255, 0.18);
+  --tsf-waiting-line: #6cb6ff;
+  --tsf-timed-bg: rgba(183, 149, 255, 0.18);
+  --tsf-timed-line: #b795ff;
+  --tsf-terminated-bg: rgba(255, 123, 138, 0.18);
+  --tsf-terminated-line: #ff7b8a;
+}
+
+.tsf-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tsf-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--tsf-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.tsf-caption {
+  font-weight: 700;
+  color: var(--tsf-text);
+}
+
+.tsf-stats {
+  margin-left: auto;
+  color: var(--tsf-text);
+  opacity: 0.7;
+  font-size: 12.5px;
+}
+
+.tsf-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tsf-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--tsf-text);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.tsf-field input[type='range'] {
+  width: 90px;
+  margin: 0;
+}
+
+.tsf-speed-hint {
+  width: 2em;
+  opacity: 0.7;
+}
+
+.tsf-btn {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--tsf-panel-border);
+  border-radius: 6px;
+  background: var(--tsf-card-bg);
+  color: var(--tsf-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+.tsf-btn:hover:not(:disabled) {
+  border-color: var(--tsf-accent);
+  color: var(--tsf-accent);
+}
+
+.tsf-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.tsf-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tsf-btn.primary {
+  background: var(--tsf-accent);
+  border-color: var(--tsf-accent);
+  color: #fff;
+}
+
+.tsf-btn.primary:hover:not(:disabled) {
+  color: #fff;
+  filter: brightness(1.06);
+}
+
+.tsf-step-counter {
+  margin-left: auto;
+  color: var(--tsf-text);
+  opacity: 0.75;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tsf-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--tsf-panel-border);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.tsf-progress-bar {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--tsf-accent);
+  transition: width 0.3s ease;
+}
+
+.tsf-canvas {
+  overflow-x: auto;
+  padding: 6px 0 2px;
+}
+
+// Keep a comfortable minimum width so labels stay legible; narrow viewports
+// scroll horizontally instead of shrinking the text into noise.
+.tsf-canvas svg {
+  display: block;
+  min-width: 640px;
+  color: var(--tsf-text);
+}
+
+/* --- edges --- */
+
+.tsf-edge {
+  stroke: var(--tsf-edge);
+  stroke-width: 1.5;
+  transition: stroke 0.3s ease, stroke-width 0.3s ease;
+}
+
+.tsf-edge.is-related {
+  stroke: var(--tsf-accent);
+  stroke-width: 2;
+  opacity: 0.55;
+}
+
+.tsf-edge.is-active {
+  stroke: var(--tsf-accent);
+  stroke-width: 2.6;
+  stroke-dasharray: 7 5;
+  animation: tsf-march 0.6s linear infinite;
+}
+
+@keyframes tsf-march {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+.tsf-edge-label {
+  fill: var(--tsf-text);
+  font-size: 12.5px;
+  opacity: 0.78;
+  transition: fill 0.3s ease, opacity 0.3s ease;
+}
+
+.tsf-edge-label.is-active {
+  fill: var(--tsf-accent);
+  opacity: 1;
+  font-weight: 700;
+}
+
+/* --- nodes --- */
+
+.tsf-node {
+  cursor: pointer;
+  outline: none;
+}
+
+.tsf-node-bg {
+  transition: fill 0.3s ease, stroke 0.3s ease, stroke-width 0.15s ease;
+}
+
+.tsf-node-bg.tone-new {
+  fill: var(--tsf-new-bg);
+  stroke: var(--tsf-new-line);
+}
+
+.tsf-node-bg.tone-runnable {
+  fill: var(--tsf-runnable-bg);
+  stroke: var(--tsf-runnable-line);
+}
+
+.tsf-node-bg.tone-blocked {
+  fill: var(--tsf-blocked-bg);
+  stroke: var(--tsf-blocked-line);
+}
+
+.tsf-node-bg.tone-waiting {
+  fill: var(--tsf-waiting-bg);
+  stroke: var(--tsf-waiting-line);
+}
+
+.tsf-node-bg.tone-timed {
+  fill: var(--tsf-timed-bg);
+  stroke: var(--tsf-timed-line);
+}
+
+.tsf-node-bg.tone-terminated {
+  fill: var(--tsf-terminated-bg);
+  stroke: var(--tsf-terminated-line);
+}
+
+.tsf-node:hover .tsf-node-bg {
+  stroke-width: 2.4;
+}
+
+.tsf-node:focus-visible .tsf-node-bg {
+  stroke-width: 2.4;
+}
+
+.tsf-node.is-selected .tsf-node-bg {
+  stroke-width: 2.6;
+}
+
+.tsf-node.is-playing .tsf-node-bg.tone-new {
+  fill: var(--tsf-new-line);
+}
+
+.tsf-node.is-playing .tsf-node-bg.tone-runnable {
+  fill: var(--tsf-runnable-line);
+}
+
+.tsf-node.is-playing .tsf-node-bg.tone-blocked {
+  fill: var(--tsf-blocked-line);
+}
+
+.tsf-node.is-playing .tsf-node-bg.tone-waiting {
+  fill: var(--tsf-waiting-line);
+}
+
+.tsf-node.is-playing .tsf-node-bg.tone-timed {
+  fill: var(--tsf-timed-line);
+}
+
+.tsf-node.is-playing .tsf-node-bg.tone-terminated {
+  fill: var(--tsf-terminated-line);
+}
+
+.tsf-node-name {
+  fill: var(--tsf-text);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+  transition: fill 0.3s ease;
+}
+
+.tsf-node-zh {
+  fill: var(--tsf-text);
+  font-size: 10.5px;
+  opacity: 0.72;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+  transition: fill 0.3s ease;
+}
+
+.tsf-node.is-playing .tsf-node-name,
+.tsf-node.is-playing .tsf-node-zh {
+  fill: #ffffff;
+  opacity: 1;
+}
+
+/* --- detail panel --- */
+
+.tsf-detail {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--tsf-panel-border);
+  border-radius: 8px;
+  background: var(--tsf-card-bg);
+}
+
+.tsf-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tsf-detail-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.tsf-detail-chip.tone-new {
+  background: var(--tsf-new-line);
+}
+
+.tsf-detail-chip.tone-runnable {
+  background: var(--tsf-runnable-line);
+}
+
+.tsf-detail-chip.tone-blocked {
+  background: var(--tsf-blocked-line);
+}
+
+.tsf-detail-chip.tone-waiting {
+  background: var(--tsf-waiting-line);
+}
+
+.tsf-detail-chip.tone-timed {
+  background: var(--tsf-timed-line);
+}
+
+.tsf-detail-chip.tone-terminated {
+  background: var(--tsf-terminated-line);
+}
+
+.tsf-detail-close {
+  border: 0;
+  background: transparent;
+  color: var(--tsf-text);
+  opacity: 0.55;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.tsf-detail-close:hover {
+  opacity: 1;
+}
+
+.tsf-detail-desc {
+  margin: 8px 0;
+  color: var(--tsf-text);
+}
+
+.tsf-detail-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--tsf-text);
+}
+
+.tsf-detail-key {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 5px;
+  background: var(--tsf-panel-bg);
+  border: 1px solid var(--tsf-panel-border);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* --- narration / hint --- */
+
+.tsf-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 9px 11px;
+  border-radius: 8px;
+  background: var(--tsf-card-bg);
+  border: 1px solid var(--tsf-panel-border);
+  margin-top: 10px;
+  min-height: 42px;
+}
+
+.tsf-note-tag {
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 5px;
+  background: var(--tsf-accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.tsf-note-text {
+  color: var(--tsf-text);
+}
+
+.tsf-hint {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  opacity: 0.7;
+  color: var(--tsf-text);
+}
+
+@media screen and (max-width: 650px) {
+  .tsf {
+    padding: 12px 12px 14px;
+  }
+
+  .tsf-stats,
+  .tsf-step-counter {
+    margin-left: 0;
+  }
+}
