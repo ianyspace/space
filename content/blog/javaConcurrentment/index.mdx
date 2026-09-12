@@ -244,6 +244,56 @@ JDK 1.6 引入锁优化，synchronized 不再是一上来就加重量级锁，�
 | 轻量级锁 | 自旋不阻塞 | 自旋消耗 CPU | 竞争不激烈，短暂同步 |
 | 重量级锁 | 不消耗 CPU | 阻塞唤醒开销大 | 激烈竞争 |
 
+#### ReentrantLock：显式加锁带来了什么
+
+ReentrantLock 是 JDK 层面（`java.util.concurrent.locks` 包）提供的可重入互斥锁，底层基于 AQS 实现（第五章详讲）。它和 synchronized 一样互斥、可重入，区别是：**加锁从「语法结构」变成了「方法调用」**——synchronized 由 JVM 自动加自动放，ReentrantLock 全靠代码显式控制，灵活性正是从这一点来的。
+
+**基本用法**（模板固定：`lock()` 之后立刻 `try/finally`）：
+
+```java
+private final ReentrantLock lock = new ReentrantLock();
+
+public void doSomething() {
+    lock.lock();          // 加锁，等价于进入 synchronized 块
+    try {
+        // 临界区
+    } finally {
+        lock.unlock();    // 必须手动释放，且必须放 finally，否则异常时锁永远不释放
+    }
+}
+```
+
+**可重入的本质**：同一线程可以重复获取自己持有的锁——每 `lock()` 一次，AQS 的 state 计数 +1，`unlock()` 一次 −1，减到 0 才真正释放。synchronized 道理相同，靠的是 Monitor 的重入计数。这就是为什么两个线程互相等对方的锁会死锁，而同一个线程反复拿同一把锁不会。
+
+**比 synchronized 多出的四种能力**：
+
+| 能力 | 用法 | 解决什么问题 |
+|------|------|-------------|
+| 可中断 | `lockInterruptibly()` | 死锁等锁时，被 interrupt 能直接退出，不至于永久卡死 |
+| 超时获取 | `tryLock(1, TimeUnit.SECONDS)` | 等不到就放弃（返回 false），可以做降级，避免无限等待 |
+| 公平锁 | `new ReentrantLock(true)` | 先来先服务，避免线程饥饿（吞吐量略低，默认仍是非公平） |
+| 多条件变量 | `lock.newCondition()` | 按条件分组唤醒，而不是 notifyAll 惊群 |
+
+**Condition：wait/notify 的分组加强版**。一个 ReentrantLock 可以创建多个 Condition，把等待的线程按条件放进不同队列，`signal()` 只唤醒指定队列——而 synchronized 只有一套 wait/notify，想唤醒特定线程只能全部唤醒重新竞争：
+
+```java
+private final ReentrantLock lock = new ReentrantLock();
+private final Condition notFull  = lock.newCondition();  // 「队列没满」队列
+private final Condition notEmpty = lock.newCondition();  // 「队列不空」队列
+
+// 生产者线程
+lock.lock();
+try {
+    while (isFull()) notFull.await();  // 类似 wait()：释放锁并进入 notFull 队列
+    put(data);
+    notEmpty.signal();                 // 只唤醒等「不空」的消费者
+} finally {
+    lock.unlock();
+}
+```
+
+> 第八章的 ArrayBlockingQueue 内部正是用「锁 + 两个 Condition」实现的满/空双向阻塞，可以对照着看。
+
 #### synchronized 与 ReentrantLock 对比
 
 | 对比项 | synchronized | ReentrantLock |
@@ -305,7 +355,7 @@ JDK 1.6 引入锁优化，synchronized 不再是一上来就加重量级锁，�
 | 重量级锁 | 操作系统 Mutex，阻塞线程，不耗 CPU 但切换开销大 |
 | 自适应自旋 | JVM 根据历史成功率动态调整自旋次数 |
 | synchronized vs ReentrantLock | 自动释放 vs 手动释放；功能单一 vs 灵活（超时/中断/公平/多条件） |
-| 可重入 | 两者都支持，同一线程可重复获取同一把锁 |
+| 可重入 | 都支持：同线程重复获取计数 +1，退出 −1，减到 0 才真正释放 |
 
 ---
 
