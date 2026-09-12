@@ -8,9 +8,27 @@ article:hover {
     opacity: 0.7;
 }
 
+// Blockquotes carry long interview answers in the posts. The generated
+// typography styles them italic at a washed-out opacity, which reads terribly
+// in CJK; frame them as a quote card instead, upright and readable.
 blockquote {
+    margin: 0 0 1.75rem;
+    padding: 0.85rem 1.15rem;
     color: inherit;
-    opacity: 0.8;
+    background: var(--bg-article);
+    border-left: 4px solid var(--pink);
+    border-radius: 0 8px 8px 0;
+    font-size: 1rem;
+    font-style: normal;
+    line-height: 1.85;
+
+    p {
+        margin-bottom: 0.85rem;
+    }
+
+    p:last-child {
+        margin-bottom: 0;
+    }
 }
 
 h4 {

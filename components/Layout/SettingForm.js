@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { formatMessage } from 'utils/i18n';
 import { getSimpleTheme, setSimpleTheme } from 'utils/simpleTheme';
 import { getThemeBackground, setThemeBackground } from 'utils/themeBackground';
+import { getFontChoice, setFontChoice, FONT_WENKAI, FONT_SYSTEM } from 'utils/fontChoice';
 
 import styles from './Setting.module.scss';
 
@@ -18,11 +19,13 @@ import styles from './Setting.module.scss';
 const SettingForm = function () {
     const [simple, setSimple] = useState(true);
     const [background, setBackground] = useState('');
+    const [font, setFont] = useState(FONT_WENKAI);
     const [saved, setSaved] = useState(false);
 
     useEffect(() => {
         setSimple(getSimpleTheme());
         setBackground(getThemeBackground());
+        setFont(getFontChoice());
     }, []);
 
     useEffect(() => {
@@ -35,6 +38,13 @@ const SettingForm = function () {
         if (enabled === simple) return;
         setSimple(enabled);
         setSimpleTheme(enabled);
+        setSaved(true);
+    };
+
+    const onSelectFont = (choice) => {
+        if (choice === font) return;
+        setFont(choice);
+        setFontChoice(choice);
         setSaved(true);
     };
 
@@ -65,6 +75,13 @@ const SettingForm = function () {
     const tCustomBackground = formatMessage('tCustomBackground');
     const tCustomBackgroundDesc = formatMessage('tCustomBackgroundDesc');
     const tBackgroundPlaceholder = formatMessage('tBackgroundPlaceholder');
+    const tFontTitle = formatMessage('tFontTitle');
+    const tFontDesc = formatMessage('tFontDesc');
+    const tWenkaiOption = formatMessage('tWenkaiOption');
+    const tWenkaiOptionDesc = formatMessage('tWenkaiOptionDesc');
+    const tSystemOption = formatMessage('tSystemOption');
+    const tSystemOptionDesc = formatMessage('tSystemOptionDesc');
+    const tCurrentFont = formatMessage('tfCurrentFont', font === FONT_SYSTEM ? tSystemOption : tWenkaiOption);
     const tConfirm = formatMessage('tConfirm');
     const tClear = formatMessage('tClear');
     const tSaved = formatMessage('tSaved');
@@ -113,6 +130,44 @@ const SettingForm = function () {
                     </button>
                 </div>
                 <p className={styles['setting-current']}>{tCurrentStyle}</p>
+            </section>
+
+            <section className={styles['setting-card']}>
+                <h2>{tFontTitle}</h2>
+                <p className={styles['setting-hint']}>{tFontDesc}</p>
+                <div className={styles['setting-options']} role="radiogroup" aria-label={tFontTitle}>
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={font === FONT_WENKAI}
+                        className={optionClass(font === FONT_WENKAI)}
+                        onClick={() => onSelectFont(FONT_WENKAI)}
+                    >
+                        <span className={styles['setting-option-title']}>
+                            {tWenkaiOption}
+                            <span className={styles['setting-option-mark']} aria-hidden="true">
+                                {font === FONT_WENKAI ? '✓' : ''}
+                            </span>
+                        </span>
+                        <span className={styles['setting-option-desc']}>{tWenkaiOptionDesc}</span>
+                    </button>
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={font === FONT_SYSTEM}
+                        className={optionClass(font === FONT_SYSTEM)}
+                        onClick={() => onSelectFont(FONT_SYSTEM)}
+                    >
+                        <span className={styles['setting-option-title']}>
+                            {tSystemOption}
+                            <span className={styles['setting-option-mark']} aria-hidden="true">
+                                {font === FONT_SYSTEM ? '✓' : ''}
+                            </span>
+                        </span>
+                        <span className={styles['setting-option-desc']}>{tSystemOptionDesc}</span>
+                    </button>
+                </div>
+                <p className={styles['setting-current']}>{tCurrentFont}</p>
             </section>
 
             <section className={styles['setting-card']}>
