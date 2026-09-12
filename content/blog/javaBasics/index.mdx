@@ -1,0 +1,1426 @@
+---
+title: JAVA基础
+date: "2026-09-12"
+description: 学完将理解Java 0.5%
+tags: ['Java']
+disqus: false
+relative: false
+# cover: /blog/template/cover.svg   # 需要封面时取消注释，并把 cover.svg 放进本目录，路径里的目录名要和文章目录一致
+---
+
+## 第一章：数据类型与变量
+
+### 1.1 基础概念
+
+Java 的数据类型分为两大类：**基本类型（Primitive）** 和 **引用类型（Reference）**。
+
+#### 八大基本类型
+
+| 类型 | 大小 | 默认值 | 取值范围 |
+|------|------|--------|----------|
+| byte | 1 字节 | 0 | -128 ~ 127 |
+| short | 2 字节 | 0 | -32768 ~ 32767 |
+| int | 4 字节 | 0 | -2^31 ~ 2^31-1 |
+| long | 8 字节 | 0L | -2^63 ~ 2^63-1 |
+| float | 4 字节 | 0.0f | IEEE 754 |
+| double | 8 字节 | 0.0d | IEEE 754 |
+| boolean | JVM 未明确规定 | false | true / false |
+| char | 2 字节 | '\u0000' | 0 ~ 65535（Unicode） |
+
+> **面试加分点**：boolean 在 JVM 中用 int 代替（4 字节），在数组中用 byte 代替（1 字节）。HotSpot 没有专门为 boolean 设计的字节码指令。
+
+### 1.2 包装类与自动装箱/拆箱
+
+Java 为每个基本类型提供了对应的包装类：
+
+```
+int → Integer, long → Long, double → Double, boolean → Boolean ...
+```
+
+**自动装箱（Autoboxing）**：基本类型 → 包装类，编译器自动调用 `valueOf()`
+
+**自动拆箱（Unboxing）**：包装类 → 基本类型，编译器自动调用 `xxxValue()`
+
+```java
+Integer a = 100;        // 装箱：Integer.valueOf(100)
+int b = a;              // 拆箱：a.intValue()
+```
+
+#### Integer 缓存池（高频考点）
+
+`Integer.valueOf()` 对 **-128 ~ 127** 范围内的值做了缓存，相同值返回同一个对象：
+
+```java
+Integer a = 127;
+Integer b = 127;
+System.out.println(a == b);      // true（缓存池同一对象）
+
+Integer c = 128;
+Integer d = 128;
+System.out.println(c == d);      // false（超出缓存，新建对象）
+```
+
+**原理**：`IntegerCache` 内部维护一个 `Integer[] cache`，默认范围 -128 ~ 127，可通过 JVM 参数 `-XX:AutoBoxCacheMax=<size>` 调整上限。
+
+### 1.3 String 深入
+
+#### 不可变性
+
+String 被 `final` 修饰，内部是 `final char[] value`（JDK 9+ 改为 `byte[]`），一旦创建不可修改。
+
+**不可变的好处**：
+- 线程安全，无需同步
+- 可缓存 hash 值（适合做 HashMap 的 key）
+- 字符串常量池的基础
+
+#### 字符串常量池
+
+```java
+String s1 = "hello";           // 常量池
+String s2 = "hello";           // 常量池（同一对象）
+String s3 = new String("hello"); // 堆上新对象
+String s4 = s3.intern();       // 返回常量池引用
+
+System.out.println(s1 == s2);  // true
+System.out.println(s1 == s3);  // false
+System.out.println(s1 == s4);  // true
+```
+
+#### StringBuilder vs StringBuffer vs String
+
+| 对比项 | String | StringBuilder | StringBuffer |
+|--------|--------|---------------|--------------|
+| 可变性 | 不可变 | 可变 | 可变 |
+| 线程安全 | 安全 | 不安全 | 安全（synchronized） |
+| 性能 | 拼接产生新对象，慢 | 最快 | 略慢于 StringBuilder |
+| 使用场景 | 少量操作 | 单线程字符串拼接 | 多线程字符串拼接 |
+
+**原理**：编译器会把 `"a" + "b" + "c"` 优化为 `new StringBuilder().append("a").append("b").append("c").toString()`。但**循环内拼接**不会自动优化，应手动使用 StringBuilder。
+
+### 1.4 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐：`Integer a = 127; Integer b = 127; a == b 结果是什么？如果是 128 呢？`
+
+**面试官意图**：考察对 Integer 缓存池机制和自动装箱的理解深度。
+
+**推荐回答**：
+
+> 127 时结果是 true，128 时是 false。
+>
+> 原因是 Integer 的 valueOf 方法内部维护了一个缓存池 IntegerCache，默认缓存 -128 到 127 之间的 Integer 对象。当值在这个范围内时，valueOf 返回缓存中的同一个对象引用，所以 == 比较为 true。超出这个范围就会 new 一个新的 Integer 对象，两个对象的引用地址不同，== 就是 false。
+>
+> 实际项目中，比较 Integer 应该始终用 equals 而不是 ==，或者用 int 基本类型来比较。
+
+**追问准备**：
+- "这个缓存范围能改吗？" → 可以通过 JVM 启动参数 `-XX:AutoBoxCacheMax=256` 来调整上限，但下限 -128 不能改。
+- "为什么只缓存这个范围？" → 因为实际使用中较小的整数值出现频率最高，缓存这个范围能在内存和性能之间取得最好的平衡。
+
+---
+
+#### 题目 2 ⭐⭐：`String s = new String("abc")` 创建了几个对象？
+
+**面试官意图**：考察对字符串常量池和堆内存分配的理解。
+
+**推荐回答**：
+
+> 创建了一到两个对象，取决于常量池中是否已存在 "abc"。
+>
+> 第一步，"abc" 这个字面量会先检查字符串常量池。如果池中不存在 "abc"，就在池中创建一个 String 对象。第二步，`new String("abc")` 在堆上创建一个新的 String 对象，其内部的 char 数组指向常量池中 "abc" 的内容。
+>
+> 所以如果常量池里已有 "abc"（比如之前有 `String s1 = "abc"`），则只创建了 1 个对象（堆上的那个）；如果常量池里没有，则创建了 2 个对象（池中 1 个 + 堆上 1 个）。
+
+**追问准备**：
+- "intern() 是做什么的？" → intern() 会检查常量池中是否已有相同内容的字符串。如果有，返回常量池中的引用；如果没有，在 JDK 7+ 中会在常量池中记录这个堆对象的引用（不会复制），然后返回该引用。
+
+---
+
+#### 题目 3 ⭐：String、StringBuilder、StringBuffer 的区别？
+
+**面试官意图**：基础功底 + 线程安全意识。
+
+**推荐回答**：
+
+> 三者最核心的区别在三个维度：可变性、线程安全、性能。
+>
+> String 是不可变的，每次拼接都会产生新对象，频繁操作时性能差。但不可变带来了线程安全和 hash 可缓存的优点，所以 String 适合做 HashMap 的 key。
+>
+> StringBuilder 和 StringBuffer 都是可变的，内部维护一个 char 数组，拼接时在原数组上追加。区别是 StringBuffer 的方法都加了 synchronized，线程安全但性能略低；StringBuilder 没有加锁，单线程下性能最好。
+>
+> 实际开发中，绝大多数场景用 StringBuilder 就够了，因为字符串拼接通常在单线程方法内完成。
+
+### 1.5 面试速查表
+
+| 考点 | 一句话答案 |
+|------|-----------|
+| Integer 缓存池 | valueOf 缓存 -128~127，范围内 == 为 true，范围外为 false |
+| 自动装箱拆箱 | 装箱调 valueOf()，拆箱调 xxxValue()，编译器自动插入 |
+| String 不可变 | final byte[]，线程安全，可缓存 hash，常量池基础 |
+| 字符串常量池 | 字面量走池中复用，new String 在堆上创建新对象 |
+| intern() | 返回常量池中的引用，JDK 7+ 不复制只记录引用 |
+| String vs Builder vs Buffer | 不可变/可变不安全/可变安全，单线程拼接用 Builder |
+| == vs equals | == 比引用地址，equals 比值内容（需重写） |
+| boolean 占多少字节 | JVM 未明确规定，用 int 代替(4字节)，数组中用 byte(1字节) |
+
+---
+
+## 第二章：面向对象
+
+### 2.1 基础概念
+
+面向对象三大特征：**封装、继承、多态**。
+
+- **封装**：隐藏内部实现，通过 getter/setter 暴露安全接口
+- **继承**：子类继承父类属性和方法，Java 单继承
+- **多态**：同一方法调用，运行时根据实际类型执行不同逻辑（核心是方法重写 + 向上转型）
+
+### 2.2 原理深入
+
+#### 抽象类 vs 接口
+
+| 对比项 | 抽象类（abstract class） | 接口（interface） |
+|--------|-------------------------|-------------------|
+| 实例化 | 不能 | 不能 |
+| 构造器 | 有 | 无 |
+| 成员变量 | 任意 | 默认 public static final |
+| 方法 | 可以有具体方法和抽象方法 | Java 8 前只能 abstract；8+ 支持 default / static |
+| 继承 | 单继承 | 多实现 |
+| 设计理念 | is-a 关系 | has-a / can-do 能力 |
+
+**Java 8+ 接口变化**：
+- `default` 方法：接口可以有默认实现，解决接口演化问题
+- `static` 方法：接口中可以定义静态方法
+- Java 9 增加了 `private` 方法，用于 default 方法内部复用
+
+#### 重写 vs 重载
+
+| 对比项 | 重写（Override） | 重载（Overload） |
+|--------|-----------------|-----------------|
+| 位置 | 父子类之间 | 同一个类中 |
+| 方法名 | 相同 | 相同 |
+| 参数列表 | 必须相同 | 必须不同 |
+| 返回值 | 相同或子类型（协变） | 无要求 |
+| 访问修饰符 | 不能比父类更严格 | 无要求 |
+| 异常 | 不能抛出更多受检异常 | 无要求 |
+| 绑定 | 动态绑定（运行时） | 静态绑定（编译时） |
+
+#### Object 类核心方法
+
+```java
+// equals — 默认实现就是 ==，需要按业务重写
+public boolean equals(Object obj) { return this == obj; }
+
+// hashCode — 与 equals 有契约关系
+public native int hashCode();
+
+// 契约：equals 相等的对象 hashCode 必须相同
+//       hashCode 相同的对象 equals 不一定相同（哈希冲突）
+```
+
+**重写 equals 必须重写 hashCode 的原因**：HashMap / HashSet 先比较 hashCode 定位桶，再用 equals 判断相等。如果两个对象 equals 返回 true 但 hashCode 不同，会被放到不同的桶里，导致 HashMap 查不到。
+
+#### 深拷贝 vs 浅拷贝
+
+- **浅拷贝**：新对象的基本类型字段会复制值，引用类型字段复制引用（共享同一对象）
+- **深拷贝**：递归复制所有层级，完全独立的新对象
+
+```java
+// 浅拷贝：Object.clone() 默认行为
+// 深拷贝方式：手动递归克隆、序列化反序列化、拷贝构造函数
+```
+
+### 2.3 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐：抽象类和接口的区别？什么时候用哪个？
+
+**面试官意图**：考察 OOP 设计能力和 Java 8+ 接口变化的了解程度。
+
+**推荐回答**：
+
+> 两者的核心区别在于设计意图：抽象类表达的是 is-a 关系，描述"这个子类是什么"；接口表达的是 can-do 能力，描述"这个类能做什么"。
+>
+> 技术层面的区别：Java 只支持单继承但可以多实现，所以接口更灵活；抽象类可以有构造器、成员变量和具体方法，接口在 Java 8 之前只能有常量和抽象方法，Java 8 之后支持 default 方法和 static 方法。
+>
+> 选择原则：如果是同一类事物的不同形态（比如 Dog 和 Cat 都是 Animal），用抽象类；如果是跨类型的通用能力（比如 Comparable、Serializable），用接口。实际项目中接口用得更多，因为它不占用继承名额，组合更灵活。
+
+---
+
+#### 题目 2 ⭐⭐：重写 equals 为什么要重写 hashCode？
+
+**面试官意图**：考察对哈希表底层原理的理解。
+
+**推荐回答**：
+
+> 这是 Java 的一个硬性契约：如果两个对象 equals 返回 true，它们的 hashCode 必须相同。
+>
+> 原因在于 HashMap 和 HashSet 的实现机制。它们先通过 hashCode 计算对象应该放在哪个桶里，再在桶内用 equals 逐个比较。如果两个逻辑上相等的对象 hashCode 不同，它们会被放到不同的桶里，equals 根本没机会执行，导致 HashMap 查不到已存入的 key，HashSet 出现重复元素。
+>
+> 反过来，hashCode 相同的对象 equals 不一定相同，这叫哈希冲突，是正常的，HashMap 通过链表或红黑树来处理冲突。
+
+### 2.4 面试速查表
+
+| 考点 | 一句话答案 |
+|------|-----------|
+| 封装 | 隐藏实现细节，通过 getter/setter 暴露安全接口 |
+| 继承 | 单继承，子类复用父类代码，extends 关键字 |
+| 多态 | 方法重写 + 向上转型 + 动态绑定，运行时决定调用哪个方法 |
+| 抽象类 vs 接口 | is-a vs can-do；单继承 vs 多实现；抽象类可有构造器和状态 |
+| 重写 vs 重载 | 父子类同名同参(运行时) vs 同类同名不同参(编译时) |
+| equals 与 hashCode | equals 相等则 hashCode 必须相同，否则 HashMap/HashSet 出错 |
+| 深拷贝 vs 浅拷贝 | 浅拷贝共享引用对象，深拷贝递归完全独立复制 |
+| Object 类方法 | equals/hashCode/toString/clone/wait/notify/getClass |
+
+---
+
+## 第三章：集合框架（核心重点）
+
+### 3.1 基础概念
+
+Java 集合框架的两大体系：
+
+```
+Collection（存储单个元素）
+├── List — 有序、可重复
+│   ├── ArrayList
+│   ├── LinkedList
+│   └── Vector（线程安全，已过时）
+├── Set — 无序、不重复
+│   ├── HashSet
+│   ├── LinkedHashSet（保持插入顺序）
+│   └── TreeSet（有序）
+└── Queue — 队列
+    ├── PriorityQueue
+    └── ArrayDeque
+
+Map（存储键值对）
+├── HashMap
+├── LinkedHashMap（保持插入/访问顺序）
+├── TreeMap（有序）
+└── Hashtable（线程安全，已过时）
+```
+
+### 3.2 原理深入
+
+#### ArrayList vs LinkedList
+
+| 对比项 | ArrayList | LinkedList |
+|--------|-----------|------------|
+| 底层结构 | 动态数组（Object[]） | 双向链表 |
+| 随机访问 | O(1)（实现 RandomAccess） | O(n) |
+| 头部插入/删除 | O(n)（数组移动） | O(1) |
+| 尾部插入 | 均摊 O(1) | O(1) |
+| 内存占用 | 连续内存，有预留空间 | 每个节点额外 prev/next 指针 |
+| 缓存友好 | 好（连续内存） | 差（节点分散） |
+
+**ArrayList 扩容机制**：
+1. 默认初始容量为 10（第一次 add 时创建）
+2. 扩容时新容量 = 旧容量的 1.5 倍（`oldCapacity + (oldCapacity >> 1)`）
+3. 通过 `Arrays.copyOf()` 将旧数组元素复制到新数组
+
+#### ⭐⭐ HashMap 深度剖析（面试最高频）
+
+**JDK 1.8 实现：数组 + 链表 + 红黑树**
+
+```
+结构：Node<K,V>[] table，每个槽位是链表或红黑树的头节点
+
+Node 结构：
+- int hash
+- K key
+- V value
+- Node<K,V> next
+```
+
+**put 流程（核心，必须能说清楚）**：
+
+```
+1. 计算 hash：(key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16)
+   —— 高 16 位与低 16 位异或，称为"扰动函数"，减少哈希冲突
+
+2. 计算下标：(n - 1) & hash（n 必须是 2 的幂，等价于取模但更快）
+
+3. 如果该位置为空，直接放入新节点
+
+4. 如果该位置有节点：
+   a. key 相同（hash 相等 && equals 为 true）→ 覆盖 value
+   b. 如果是红黑树节点 → 走红黑树插入逻辑
+   c. 如果是链表 → 遍历到末尾插入（尾插法，1.7 是头插法）
+
+5. 插入后判断：如果链表长度 >= 8 且数组长度 >= 64 → 链表转红黑树
+   （如果数组长度 < 64 → 先扩容而不是转树）
+
+6. 最后判断 size > threshold（capacity × loadFactor）→ 扩容
+```
+
+**扩容机制（resize）**：
+1. 新容量 = 旧容量的 2 倍
+2. 新阈值 = 新容量 × 负载因子（默认 0.75）
+3. 重新计算每个元素的位置：要么在原位，要么在 原位 + 旧容量 的位置
+4. JDK 1.8 优化：通过 `(e.hash & oldCap) == 0` 判断，不用重新计算 hash
+
+**链表转红黑树**：
+- 链表长度 >= 8 且数组长度 >= 64 → 转红黑树
+- 红黑树节点数 <= 6 → 退化回链表
+- 8 和 6 不一样是为了避免频繁转换（迟滞策略）
+
+**为什么线程不安全**：
+- JDK 1.7：头插法在并发扩容时会形成环形链表，导致死循环
+- JDK 1.8：改为尾插法解决了环形链表问题，但仍有数据覆盖丢失问题（两个线程同时 put 到同一位置）
+
+#### ConcurrentHashMap
+
+**JDK 1.7 — 分段锁（Segment）**：
+- 内部维护 Segment[]，每个 Segment 继承 ReentrantLock
+- 默认 16 个 Segment，最多允许 16 个线程并发写入
+- 定位元素需要两次 hash：第一次定位 Segment，第二次定位桶
+
+**JDK 1.8 — CAS + synchronized**：
+- 抛弃 Segment，直接对 Node[] 中的每个桶加锁
+- put 时：如果桶为空，用 CAS 写入；如果有节点，用 synchronized 锁住链表/红黑树的头节点
+- 锁粒度从 Segment 级别细化到桶级别，并发度大幅提升
+- size() 通过 baseCount + CounterCell[] 实现（类似 LongAdder 的分段思想）
+
+#### HashSet 原理
+
+HashSet 内部维护一个 HashMap，元素作为 key 存入，value 统一用一个叫 PRESENT 的 Object 常量。所以 HashSet 的底层就是 HashMap。
+
+### 3.3 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐⭐：说一下 HashMap 的 put 流程
+
+**面试官意图**：这是 Java 基础中最高频的题，考察对 HashMap 底层实现的掌握深度。
+
+**推荐回答**：
+
+> HashMap 的 put 流程可以分几步来说。
+>
+> 第一步，对 key 做哈希计算。先拿 key 的 hashCode，然后用高 16 位异或低 16 位做扰动，目的是让哈希值分布更均匀，减少冲突。
+>
+> 第二步，用 `(n - 1) & hash` 计算在数组中的下标。这要求数组长度必须是 2 的幂，这个位运算等价于取模但效率更高。
+>
+> 第三步，看目标位置有没有元素。如果为空，直接放入新节点。如果有元素，分三种情况：一是 key 相同，直接用新 value 覆盖旧 value；二是当前节点是红黑树类型，走红黑树的插入逻辑；三是链表，就遍历到链表末尾用尾插法插入新节点。
+>
+> 第四步，链表插入后检查，如果链表长度达到 8 并且数组长度达到 64，就把链表转成红黑树来优化查询效率。如果数组长度不到 64，则优先扩容。
+>
+> 第五步，判断当前元素总数是否超过阈值，也就是容量乘以负载因子 0.75，超过了就扩容为原来的 2 倍，所有元素重新分布。
+
+**追问准备**：
+- "扰动函数的作用？" → 让 hashCode 的高位也参与下标计算，减少只用低位导致的冲突。
+- "为什么数组长度必须是 2 的幂？" → 因为 `(n-1) & hash` 只在 n 是 2 的幂时才等价于 `hash % n`，位运算比取模快很多。
+- "1.7 和 1.8 的 put 有什么区别？" → 1.7 是头插法，1.8 改为尾插法。头插法在并发扩容时会形成环形链表导致死循环。
+
+---
+
+#### 题目 2 ⭐⭐：ConcurrentHashMap 如何实现线程安全？
+
+**面试官意图**：考察对并发容器的理解，以及对 JDK 版本演进的了解。
+
+**推荐回答**：
+
+> ConcurrentHashMap 在 1.7 和 1.8 的实现思路完全不同。
+>
+> 1.7 用的是分段锁。内部有一个 Segment 数组，每个 Segment 继承 ReentrantLock，相当于把整个 Map 分成若干段，每段有自己的锁。put 时先定位到哪个 Segment，再对这个 Segment 加锁。默认 16 个 Segment，理论上允许 16 个线程并发写入。
+>
+> 1.8 放弃了 Segment，改成了更细粒度的锁。底层结构跟 HashMap 一样是 Node 数组加链表加红黑树。put 时，如果目标桶是空的，用 CAS 操作写入，无锁；如果桶里已有元素，就用 synchronized 锁住这个桶的头节点，然后做链表或红黑树操作。这样锁粒度从 Segment 级别细化到了单个桶级别，并发度等于数组长度，比 1.7 高得多。
+>
+> 另外 1.8 的 size 计算也有意思，借鉴了 LongAdder 的思想，用一个 baseCount 加一个 CounterCell 数组来分段计数，最后汇总，避免了全局锁。
+
+### 3.4 面试速查表
+
+| 考点 | 一句话答案 |
+|------|-----------|
+| HashMap 底层 | 数组 + 链表 + 红黑树（JDK 1.8） |
+| put 流程 | hash→下标→空则放→同 key 覆盖→链表尾插→判断转树→判断扩容 |
+| 扰动函数 | `(h = hashCode()) ^ (h >>> 16)`，高低位异或减少冲突 |
+| 下标计算 | `(n-1) & hash`，n 为 2 的幂，等价取模更快 |
+| 链表转红黑树 | 链表 >= 8 且数组 >= 64，阈值 8 由泊松分布得出 |
+| 红黑树退链表 | 节点数 <= 6 时退化，6 和 8 不同避免频繁转换 |
+| 扩容 | 2 倍扩容，阈值 = 容量 × 0.75，元素重新分布 |
+| 线程不安全 | 1.7 头插法环形链表死循环；1.8 尾插法仍有数据覆盖 |
+| ConcurrentHashMap 1.7 | Segment 分段锁，最多 16 线程并发 |
+| ConcurrentHashMap 1.8 | CAS + synchronized 锁头节点，粒度更细 |
+| ArrayList vs LinkedList | 动态数组 O(1) 访问 vs 双向链表 O(1) 头尾操作 |
+| ArrayList 扩容 | 1.5 倍扩容，Arrays.copyOf 复制 |
+| HashSet | 内部就是 HashMap，元素做 key，value 用常量 PRESENT |
+
+---
+
+## 第四章：异常体系
+
+### 4.1 基础概念
+
+```
+Throwable
+├── Error — JVM 层面的严重错误，程序不应试图捕获
+│   ├── OutOfMemoryError
+│   ├── StackOverflowError
+│   └── NoClassDefFoundError
+└── Exception — 程序层面的异常，可以且应该处理
+    ├── 受检异常（Checked） — 编译时强制处理
+    │   ├── IOException
+    │   ├── SQLException
+    │   └── ClassNotFoundException
+    └── RuntimeException（非受检） — 运行时异常，不强制处理
+        ├── NullPointerException
+        ├── ArrayIndexOutOfBoundsException
+        ├── ClassCastException
+        ├── IllegalArgumentException
+        └── ConcurrentModificationException
+```
+
+### 4.2 原理深入
+
+#### 受检异常 vs 非受检异常
+
+| 对比项 | 受检异常（Checked） | 非受检异常（Runtime） |
+|--------|-------------------|---------------------|
+| 继承关系 | Exception 的子类（非 RuntimeException） | RuntimeException 的子类 |
+| 编译检查 | 必须 try-catch 或 throws 声明 | 不强制处理 |
+| 设计理念 | 可预见的外部异常（IO、网络） | 程序逻辑错误（空指针、越界） |
+| 是否应恢复 | 通常可以恢复 | 通常应修复代码而非捕获 |
+
+#### try-catch-finally 执行顺序
+
+**规则**：finally 块几乎总会执行，即使 try 或 catch 中有 return。
+
+```java
+public static int test() {
+    try {
+        return 1;
+    } finally {
+        return 2;  // finally 中的 return 会覆盖 try 中的 return
+    }
+}
+// 结果：2
+```
+
+**执行顺序**：
+1. try 块中代码执行
+2. 如有异常 → 跳到匹配的 catch
+3. 无论是否异常 → 执行 finally
+4. 如果 try/catch 有 return，先暂存返回值 → 执行 finally → 如果 finally 也有 return 则覆盖之前的
+
+**唯一不执行 finally 的情况**：`System.exit()` 或 JVM 崩溃
+
+#### 自定义异常最佳实践
+
+```java
+public class BusinessException extends RuntimeException {
+    private final int code;
+
+    public BusinessException(int code, String message) {
+        super(message);
+        this.code = code;
+    }
+
+    public int getCode() { return code; }
+}
+```
+
+**原则**：
+- 业务异常继承 RuntimeException（非受检），避免到处 throws
+- 带错误码，方便上层区分和国际化
+- 不要吞异常（空 catch 块），至少记录日志
+
+### 4.3 面试实战（精讲及回答）
+
+#### 题目 1 ⭐：Error 和 Exception 的区别？
+
+**面试官意图**：考察异常体系的基本理解。
+
+**推荐回答**：
+
+> Error 和 Exception 都继承自 Throwable，但含义完全不同。
+>
+> Error 是 JVM 层面的严重错误，比如 OutOfMemoryError、StackOverflowError，这些情况下程序已经无法正常运行，不应该也不可能在代码中捕获和恢复。
+>
+> Exception 是程序层面的异常，是可以预见和处理的。比如 IO 异常、空指针异常，程序可以通过 try-catch 来捕获并做相应的恢复或降级处理。
+>
+> 简单说，Error 是"系统出大事了"，Exception 是"代码遇到了意外情况"。
+
+---
+
+#### 题目 2 ⭐：try-catch-finally 中 finally 一定执行吗？
+
+**面试官意图**：考察对 finally 语义的精确理解。
+
+**推荐回答**：
+
+> 几乎总是执行，但有两个例外。
+>
+> 正常流程中，无论 try 块是否抛异常，无论 catch 是否匹配，finally 都会执行。甚至 try 或 catch 里有 return，finally 也会在 return 之前执行。如果 finally 中也有 return，会覆盖 try/catch 中的返回值。
+>
+> 不执行的情况有两种：一是 try 或 catch 中调用了 System.exit()，JVM 直接退出了；二是执行到 try 块时线程被杀死或 JVM 崩溃。另外如果 try 块本身就没进入（比如方法提前 return），finally 也不会执行。
+
+### 4.4 面试速查表
+
+| 考点 | 一句话答案 |
+|------|-----------|
+| Error vs Exception | Error 是 JVM 严重错误不可恢复，Exception 是程序异常可处理 |
+| 受检 vs 非受检 | 编译时强制处理 vs 运行时不强制；IOException vs NPE |
+| finally 执行 | 几乎总执行，除了 System.exit / JVM 崩溃 |
+| finally return | 会覆盖 try/catch 的 return |
+| 自定义异常 | 继承 RuntimeException，带错误码，不吞异常 |
+| NoClassDefFoundError | 编译时存在但运行时找不到类 |
+| ClassNotFoundException | Class.forName / ClassLoader.loadClass 找不到类时抛的受检异常 |
+
+---
+
+## 第五章：泛型
+
+### 5.1 基础概念
+
+泛型是 Java 5 引入的类型参数化机制，让类、接口、方法可以操作任意类型，同时保持编译期的类型安全。
+
+```java
+// 泛型类
+public class Box<T> {
+    private T value;
+    public T get() { return value; }
+    public void set(T value) { this.value = value; }
+}
+
+// 泛型方法（T 的作用域仅限此方法）
+public <T> T getFirst(List<T> list) {
+    return list.isEmpty() ? null : list.get(0);
+}
+```
+
+### 5.2 原理深入
+
+#### 类型擦除
+
+Java 泛型是**编译期**机制，编译器在生成字节码时会擦除泛型信息：
+
+- `List<String>` 和 `List<Integer>` 在运行时都是 `List`（raw type）
+- 无界类型参数 `<T>` 擦除为 `Object`
+- 有界类型参数 `<T extends Comparable>` 擦除为 `Comparable`
+- 编译器自动插入类型转换（bridge method）
+
+```java
+// 源码
+List<String> list = new ArrayList<>();
+String s = list.get(0);
+
+// 擦除后等价于
+List list = new ArrayList();
+String s = (String) list.get(0);  // 编译器自动加的强制转换
+```
+
+**类型擦除的影响**：
+- 不能用基本类型做类型参数：`List<int>` 不行，必须 `List<Integer>`
+- 不能创建泛型类型的实例：`new T()` 不行
+- 不能创建泛型数组：`new T[]` 不行
+- 不能对泛型类型用 instanceof：`obj instanceof List<String>` 不行
+- 泛型类的静态成员不能用类的类型参数
+
+#### 通配符与 PECS 原则
+
+```java
+? extends T  — 上界通配符，只能读（Producer）
+? super T    — 下界通配符，只能写（Consumer）
+```
+
+**PECS = Producer Extends, Consumer Super**
+
+```java
+// 从 src 读取（Producer）放入 dest（Consumer）
+public static <T> void copy(List<? extends T> src, List<? super T> dest) {
+    for (T item : src) {
+        dest.add(item);
+    }
+}
+```
+
+- `? extends T`：只知道是 T 的子类，读出来可以当 T 用，但不知道具体是哪个子类所以不能写入
+- `? super T`：只知道是 T 的父类，可以安全写入 T 或 T 的子类，但读出来只能当 Object 用
+
+### 5.3 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐：什么是类型擦除？有什么影响？
+
+**面试官意图**：考察对泛型底层实现的理解，而不是停留在会用泛型。
+
+**推荐回答**：
+
+> Java 的泛型是伪泛型，只在编译期做类型检查，编译后会把类型参数擦除掉。List\<String\> 和 List\<Integer\> 在字节码层面都是 List，类型信息在运行时不可见。
+>
+> 擦除的影响主要有几点：第一，不能用基本类型做类型参数，只能放包装类；第二，不能在代码里 new T() 或者 new T[]，因为运行时不知道 T 是什么类型；第三，不能对泛型做 instanceof 判断，比如 instanceof List\<String\> 是不合法的；第四，泛型类的静态成员不能用类声明的类型参数。
+>
+> 编译器在擦除后会自动插入类型转换的桥接代码，所以正常使用时开发者感知不到擦除的存在。
+
+---
+
+#### 题目 2 ⭐：`? extends T` 和 `? super T` 的区别？
+
+**面试官意图**：考察泛型通配符和 PECS 原则。
+
+**推荐回答**：
+
+> 这两个是泛型的上下界通配符，核心区别在于读写限制。
+>
+> `? extends T` 是上界通配符，表示这个集合里的元素是 T 或 T 的子类。读出来一定是 T 类型，可以安全使用。但因为不知道具体是哪个子类，所以不能往里写东西（除了 null）。适合做数据源，也就是 Producer。
+>
+> `? super T` 是下界通配符，表示集合里的元素是 T 或 T 的父类。可以安全地往里写 T 或 T 的子类，因为不管实际类型是哪个父类，T 都能放进去。但读出来只能当 Object 用，因为不知道具体是哪个父类。适合做数据目标，也就是 Consumer。
+>
+> 记忆方式就是 PECS：Producer Extends, Consumer Super。Collections.copy 方法的签名就是这个原则的经典应用。
+
+### 5.4 面试速查表
+
+| 考点 | 一句话答案 |
+|------|-----------|
+| 泛型 | 编译期类型参数化，提供类型安全，运行时擦除 |
+| 类型擦除 | 编译后擦除为 Object 或有界类型，自动插入转型代码 |
+| 擦除影响 | 不能用基本类型、不能 new T、不能泛型数组、不能 instanceof |
+| `? extends T` | 上界，只能读（Producer），读出来是 T |
+| `? super T` | 下界，只能写（Consumer），写入 T 或 T 子类 |
+| PECS | Producer Extends, Consumer Super |
+| List\<Object\> vs List\<?\> | Object 可读写但不能接受子类 List 赋值；? 只能读不能写 |
+
+---
+
+## 第六章：IO 与 NIO
+
+### 6.1 基础概念
+
+Java IO 按数据单位分为**字节流**和**字符流**，按方向分为**输入流**和**输出流**。
+
+```
+字节流：InputStream / OutputStream（处理二进制数据：图片、音频、视频）
+字符流：Reader / Writer（处理文本数据，自动处理编码）
+```
+
+IO 流的设计使用了**装饰者模式**：
+
+```java
+// 层层装饰，增强功能
+BufferedReader reader = new BufferedReader(
+    new InputStreamReader(
+        new FileInputStream("data.txt"), "UTF-8"
+    )
+);
+```
+
+### 6.2 原理深入
+
+#### BIO vs NIO vs AIO
+
+| 对比项 | BIO | NIO | AIO |
+|--------|-----|-----|-----|
+| 模型 | 同步阻塞 | 同步非阻塞（多路复用） | 异步非阻塞 |
+| 线程 | 一连接一线程 | 一请求一线程（多路复用） | 系统回调 |
+| 数据单位 | 流（Stream） | 块（Buffer） | 块（Buffer） |
+| 编程复杂度 | 简单 | 中等 | 复杂 |
+| 适用场景 | 连接数少、短连接 | 连接数多、长连接 | 连接数多且重操作 |
+
+#### NIO 三大核心
+
+**1. Channel（通道）** — 双向的数据传输通道
+- `FileChannel`：文件读写
+- `SocketChannel`：TCP 连接
+- `ServerSocketChannel`：TCP 服务端监听
+
+**2. Buffer（缓冲区）** — 数据的容器
+- 核心属性：capacity、limit、position、mark
+- 最常用 `ByteBuffer`，还有 `CharBuffer`、`IntBuffer` 等
+
+**3. Selector（选择器）** — 多路复用器
+- 一个线程通过 Selector 监控多个 Channel 的事件（连接、读、写）
+- 基于操作系统的 epoll（Linux）/ kqueue（Mac）/ select（Windows）
+
+```java
+// 简化的 NIO 服务端模型
+Selector selector = Selector.open();
+ServerSocketChannel serverChannel = ServerSocketChannel.open();
+serverChannel.configureBlocking(false);
+serverChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+while (true) {
+    selector.select();  // 阻塞直到有事件
+    Set<SelectionKey> keys = selector.selectedKeys();
+    for (SelectionKey key : keys) {
+        if (key.isAcceptable()) { /* 处理新连接 */ }
+        if (key.isReadable())   { /* 处理读事件 */ }
+    }
+}
+```
+
+#### 序列化与反序列化
+
+```java
+// 实现 Serializable 接口（标记接口，无方法）
+public class User implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private String name;
+    private transient String password;  // transient 字段不参与序列化
+}
+```
+
+**serialVersionUID 的作用**：序列化时写入版本号，反序列化时校验。如果类结构变了但 serialVersionUID 相同，可以兼容反序列化（部分字段可能丢失）。如果不声明，JVM 会根据类结构自动生成，类一改就变了，导致旧数据反序列化失败。
+
+### 6.3 面试实战（精讲及回答）
+
+#### 题目 1 ⭐：BIO、NIO、AIO 的区别？
+
+**面试官意图**：考察对 Java IO 模型演进的理解，也是 Netty 话题的引子。
+
+**推荐回答**：
+
+> BIO 是同步阻塞模型，每个客户端连接都需要一个独立线程来处理，连接空闲时线程也在等待，连接数多时线程资源浪费严重。
+>
+> NIO 是同步非阻塞模型，核心是 Selector 多路复用器。一个线程通过 Selector 可以同时监控多个 Channel 的 IO 事件，有事件时才处理，没事件时线程不会阻塞在某个连接上。底层依赖操作系统的 epoll（Linux）或 kqueue（Mac）实现高效的事件通知。适合连接数多但数据量不大的场景，比如聊天服务器。
+>
+> AIO 是异步非阻塞模型，发起 IO 操作后直接返回，操作系统完成后通过回调通知应用。编程模型最复杂但理论上性能最好。不过 Java 的 AIO 在 Linux 上表现一般，实际项目中用得少。
+>
+> 实际项目中，Netty 框架基于 NIO 封装，解决了 NIO 原生 API 复杂、epoll 空轮询 bug 等问题，是目前主流的选择。
+
+### 6.4 面试速查表
+
+| 考点 | 一句话答案 |
+|------|-----------|
+| 字节流 vs 字符流 | 字节流处理二进制，字符流处理文本（自动编码转换） |
+| 装饰者模式 | FileInputStream → InputStreamReader → BufferedReader 层层增强 |
+| BIO | 同步阻塞，一连接一线程，适合连接少的短连接场景 |
+| NIO | 同步非阻塞，Selector 多路复用，一线程管多连接 |
+| AIO | 异步非阻塞，系统回调通知，实际用得少 |
+| NIO 三件套 | Channel（通道）、Buffer（缓冲区）、Selector（选择器） |
+| Serializable | 标记接口，实现序列化能力 |
+| transient | 标记字段不参与序列化 |
+| serialVersionUID | 版本校验，不声明则类一改就反序列化失败 |
+
+---
+
+## 第七章：反射与注解
+
+### 7.1 基础概念
+
+**反射**：在运行时动态获取类的信息（字段、方法、构造器）并操作对象，无需在编译期知道类的具体类型。
+
+**注解（Annotation）**：代码的元数据标记，本身不影响程序逻辑，但可以被编译器或框架在编译期/运行时读取和处理。
+
+### 7.2 原理深入
+
+#### 获取 Class 对象的三种方式
+
+```java
+// 1. 类名.class（编译期确定）
+Class<?> clazz = String.class;
+
+// 2. 对象.getClass()（已有实例）
+Class<?> clazz = "hello".getClass();
+
+// 3. Class.forName()（运行时加载，最常用）
+Class<?> clazz = Class.forName("java.lang.String");
+```
+
+#### 反射核心 API
+
+```java
+Class<?> clazz = Class.forName("com.example.User");
+
+// 创建实例
+Object obj = clazz.getDeclaredConstructor().newInstance();
+
+// 获取字段并修改
+Field nameField = clazz.getDeclaredField("name");
+nameField.setAccessible(true);  // 突破 private 限制
+nameField.set(obj, "张三");
+
+// 调用方法
+Method getName = clazz.getDeclaredMethod("getName");
+String name = (String) getName.invoke(obj);
+```
+
+#### 反射的性能问题
+
+反射比直接调用慢几十倍，原因：
+1. 方法调用要经过安全检查（setAccessible）
+2. 参数需要装箱/拆箱
+3. 方法查找是字符串匹配
+4. 无法被 JIT 内联优化
+
+**优化手段**：
+- 缓存 Method / Field 对象，避免重复查找
+- 使用 `setAccessible(true)` 跳过安全检查
+- 高性能场景用 `MethodHandle`（JDK 7+）或字节码生成（如 CGLIB、ByteBuddy）
+
+#### 注解体系
+
+```java
+// 自定义注解
+@Target(ElementType.METHOD)         // 能标注在方法上
+@Retention(RetentionPolicy.RUNTIME) // 运行时保留
+public @interface MyAnnotation {
+    String value() default "";
+    int priority() default 0;
+}
+```
+
+**元注解**（注解的注解）：
+
+| 元注解 | 作用 |
+|--------|------|
+| @Target | 注解可以标注的位置（TYPE/METHOD/FIELD/PARAMETER 等） |
+| @Retention | 注解的保留策略（SOURCE/CLASS/RUNTIME） |
+| @Inherited | 子类是否继承父类的注解 |
+| @Documented | 是否出现在 Javadoc 中 |
+| @Repeatable（Java 8） | 允许在同一位置重复标注 |
+
+**运行时处理注解**：
+
+```java
+Method method = obj.getClass().getMethod("doSomething");
+if (method.isAnnotationPresent(MyAnnotation.class)) {
+    MyAnnotation anno = method.getAnnotation(MyAnnotation.class);
+    System.out.println(anno.value());
+}
+```
+
+#### 反射与注解在框架中的应用
+
+- **Spring IOC**：扫描 @Component/@Service 注解 → 反射创建 Bean 实例 → 注入依赖
+- **Spring AOP**：扫描 @Aspect/@Before/@After 注解 → JDK 动态代理或 CGLIB 生成代理类
+- **MyBatis**：扫描 Mapper 接口的 @Select/@Insert 注解 → 反射调用方法 → 映射 SQL 结果
+
+### 7.3 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐：反射的原理？有什么性能问题？
+
+**面试官意图**：考察是否只停留在会用反射，还是理解底层机制和代价。
+
+**推荐回答**：
+
+> 反射的原理是在运行时通过 Class 对象获取类的结构信息，包括字段、方法、构造器等，然后动态地创建对象、访问字段、调用方法。Java 的每个类在加载后都会在方法区生成一个 Class 对象，反射就是围绕这个 Class 对象做查询和操作。
+>
+> 性能问题主要有几个方面：方法调用要经过安全检查，比如 private 方法要 setAccessible；参数需要自动装箱拆箱；方法查找是基于字符串匹配的，没有编译期优化；反射调用无法被 JIT 编译器内联优化。综合下来，反射调用比直接调用慢几十倍。
+>
+> 优化方式主要是缓存反射对象避免重复查找，以及在高性能场景改用 MethodHandle 或字节码生成技术，比如 Spring 和 MyBatis 底层就用 CGLIB 来生成代理类，避免每次都走反射。
+
+---
+
+#### 题目 2 ⭐：反射在框架中的应用？
+
+**面试官意图**：考察理论联系实际的能力。
+
+**推荐回答**：
+
+> 反射是几乎所有 Java 框架的基石。
+>
+> Spring 的 IOC 容器通过扫描 @Component、@Service、@Bean 等注解发现需要管理的类，然后用反射创建实例并注入依赖。AOP 通过扫描 @Aspect 注解找到切面类，再结合 JDK 动态代理或 CGLIB 生成代理对象。
+>
+> MyBatis 通过扫描 Mapper 接口上的 @Select、@Insert 等注解或 XML 映射文件，在运行时用反射调用接口方法并将 SQL 结果映射为 Java 对象。
+>
+> 简单来说，注解告诉框架"做什么"，反射让框架"能做到"。没有反射和注解，就没有 Java 生态中这些声明式的编程体验。
+
+### 7.4 面试速查表
+
+| 考点 | 一句话答案 |
+|------|-----------|
+| 获取 Class | 类名.class / obj.getClass() / Class.forName() |
+| 反射核心 API | Constructor.newInstance / Field.set / Method.invoke |
+| setAccessible | 突破 private 限制，但也跳过安全检查有安全隐患 |
+| 反射性能 | 比直接调用慢几十倍：安全检查、装箱拆箱、字符串查找、无法 JIT 内联 |
+| 注解本质 | 代码元数据标记，不影响逻辑，被框架在编译/运行时读取处理 |
+| @Target | 控制注解能标注在哪（类/方法/字段/参数） |
+| @Retention | SOURCE(编译丢弃) / CLASS(字节码保留) / RUNTIME(运行时可读) |
+| 框架应用 | Spring IOC 用反射创建 Bean，AOP 用代理，MyBatis 用反射映射 |
+
+---
+
+## 第八章：Java 8+ 新特性
+
+### 8.1 基础概念
+
+Java 8 是 Java 历史上最重要的一次升级，引入了函数式编程、Stream API、新日期 API 等革命性特性。
+
+### 8.2 原理深入
+
+#### Lambda 表达式
+
+```java
+// 传统写法
+Collections.sort(list, new Comparator<String>() {
+    @Override
+    public int compare(String a, String b) {
+        return a.length() - b.length();
+    }
+});
+
+// Lambda 写法
+Collections.sort(list, (a, b) -> a.length() - b.length());
+
+// 方法引用（进一步简化）
+list.sort(Comparator.comparingInt(String::length));
+```
+
+**Lambda 本质**：编译器将 Lambda 编译为一个函数式接口的实现类（通过 `invokedynamic` 指令），不是匿名内部类。
+
+**常用函数式接口**：
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `Function<T,R>` | `R apply(T t)` | 输入 T 输出 R |
+| `Consumer<T>` | `void accept(T t)` | 消费一个值 |
+| `Supplier<T>` | `T get()` | 提供一个值 |
+| `Predicate<T>` | `boolean test(T t)` | 判断条件 |
+| `BiFunction<T,U,R>` | `R apply(T t, U u)` | 双输入 |
+
+#### Stream API
+
+```java
+List<String> names = users.stream()
+    .filter(u -> u.getAge() > 18)         // 过滤
+    .sorted(Comparator.comparing(User::getAge).reversed())  // 排序
+    .map(User::getName)                    // 映射
+    .distinct()                            // 去重
+    .limit(10)                             // 取前 10 个
+    .collect(Collectors.toList());         // 收集结果
+```
+
+**Stream 的执行模型**：惰性求值，中间操作（filter/map/sorted）不会立即执行，只有终端操作（collect/count/forEach）触发时才真正计算。这允许流水线优化，比如 filter + limit 可以提前终止。
+
+**并行流**：`parallelStream()` 利用 Fork/Join 框架并行处理，适合数据量大且无状态操作的场景。注意线程安全和共享状态问题。
+
+#### Optional
+
+```java
+// 防止 NullPointerException
+Optional<User> opt = Optional.ofNullable(user);
+
+String name = opt
+    .map(User::getName)
+    .orElse("未知用户");
+
+// 链式安全调用
+String city = Optional.ofNullable(user)
+    .map(User::getAddress)
+    .map(Address::getCity)
+    .orElse("未知");
+```
+
+**注意**：Optional 不是用来替代 null 做字段类型的，它的设计目的是作为方法返回值，明确表达"可能没有值"的语义。
+
+#### 新日期时间 API（java.time）
+
+```java
+LocalDate date = LocalDate.now();                    // 2026-09-12
+LocalTime time = LocalTime.of(14, 30);               // 14:30:00
+LocalDateTime dateTime = LocalDateTime.now();         // 日期+时间
+ZonedDateTime zoned = ZonedDateTime.now(ZoneId.of("Asia/Shanghai"));
+
+// 不可变、线程安全，替代 Date / Calendar / SimpleDateFormat
+DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+String formatted = dateTime.format(fmt);
+```
+
+#### CompletableFuture 异步编程
+
+```java
+CompletableFuture.supplyAsync(() -> fetchUser(id))        // 异步获取用户
+    .thenApplyAsync(user -> fetchOrders(user))             // 再异步获取订单
+    .thenApply(orders -> orders.stream().count())           // 统计订单数
+    .exceptionally(e -> { log.error("失败", e); return 0; }) // 异常处理
+    .thenAccept(count -> System.out.println("订单数：" + count)); // 消费结果
+```
+
+### 8.3 面试实战（精讲及回答）
+
+#### 题目 1 ⭐：Lambda 表达式的本质是什么？
+
+**面试官意图**：区分会用 Lambda 和理解 Lambda 的候选人。
+
+**推荐回答**：
+
+> Lambda 表达式的本质是函数式接口的一个简洁实现。编译器在处理 Lambda 时，不会像匿名内部类那样为每个 Lambda 生成一个独立的 class 文件，而是通过 invokedynamic 指令在运行时动态生成函数式接口的实现类。
+>
+> 这意味着 Lambda 比普通匿名内部类更轻量：不产生额外的 class 文件，没有类加载开销。invokedynamic 是 Java 7 引入的字节码指令，原本是为动态语言设计的，Java 8 借用来实现 Lambda 的高效调用。
+>
+> 使用 Lambda 的前提是目标类型必须是函数式接口，也就是只有一个抽象方法的接口。Java 8 提供了 @FunctionalInterface 注解来做编译期校验。
+
+---
+
+#### 题目 2 ⭐：Stream API 的中间操作和终端操作？
+
+**面试官意图**：考察对 Stream 惰性求值模型的理解。
+
+**推荐回答**：
+
+> Stream 的操作分为两类：中间操作和终端操作。
+>
+> 中间操作比如 filter、map、sorted、distinct、limit，它们都返回一个新的 Stream，可以链式调用。关键点在于中间操作是惰性的，调用时不会立即处理数据，只是把操作记录下来。
+>
+> 终端操作比如 collect、count、forEach、reduce、findFirst，它们触发整个流水线的实际计算。执行时，数据元素依次经过所有中间操作的处理，最终由终端操作收集结果。
+>
+> 惰性求值的好处是可以做流水线优化。比如 filter 后接 limit(5)，一旦满足 5 个元素就提前终止，不需要处理全部数据。再比如 map 和 filter 可以合并，减少遍历次数。
+
+### 8.4 面试速查表
+
+| 考点 | 一句话答案 |
+|------|-----------|
+| Lambda | 函数式接口的简洁实现，编译为 invokedynamic，不生成额外 class |
+| 函数式接口 | 只有一个抽象方法的接口，@FunctionalInterface 校验 |
+| 四大函数式接口 | Function(转换)/Consumer(消费)/Supplier(供给)/Predicate(判断) |
+| Stream 中间操作 | filter/map/sorted/distinct/limit/peek，惰性不立即执行 |
+| Stream 终端操作 | collect/count/forEach/reduce/findFirst，触发实际计算 |
+| 并行流 | parallelStream()，基于 Fork/Join，适合大数据量无状态操作 |
+| Optional | 方法返回值表达"可能无值"，防 NPE，不用做字段类型 |
+| 新日期 API | 不可变、线程安全、API 清晰，替代 Date/Calendar |
+| CompletableFuture | 异步编程，链式 thenApply/thenAccept/exceptionally |
+
+---
+
+## 第九章：关键字与语法细节
+
+### 9.1 基础概念
+
+Java 中有一些看似简单但面试高频考察的关键字和语法细节，需要精确理解。
+
+### 9.2 原理深入
+
+#### final / finally / finalize
+
+| 关键字 | 作用 | 要点 |
+|--------|------|------|
+| final | 修饰类/方法/变量 | 类不可继承、方法不可重写、变量不可重新赋值（引用不变但内容可变） |
+| finally | try-catch 的收尾块 | 几乎总是执行，用于资源清理 |
+| finalize | Object 类方法（JDK 9+ 已废弃） | GC 回收对象前调用，不可靠，用 AutoCloseable 替代 |
+
+**final 变量的"不可变"**：
+```java
+final List<String> list = new ArrayList<>();
+list.add("hello");     // ✅ 可以修改内容
+list = new ArrayList<>(); // ❌ 不能重新赋值引用
+```
+
+#### static 关键字全场景
+
+| 用法 | 说明 |
+|------|------|
+| 静态变量 | 类级别共享，所有实例共用 |
+| 静态方法 | 不依赖实例，通过类名调用 |
+| 静态代码块 | 类加载时执行一次，用于初始化 |
+| 静态内部类 | 不持有外部类引用，可独立创建 |
+| 静态导入 | `import static java.lang.Math.*` |
+
+**静态代码块执行时机**：类加载的初始化阶段，只执行一次，在构造器之前。
+
+#### Java 只有值传递
+
+这是面试中一个容易掉坑的点。**Java 的参数传递始终是值传递**：
+
+```java
+// 基本类型：传递值的副本，修改不影响原值
+void change(int x) { x = 100; }
+
+// 引用类型：传递引用的副本（地址值），可以通过引用修改对象内容，
+// 但不能让原引用指向新对象
+void change(List<String> list) {
+    list.add("new");      // ✅ 影响原对象（操作的是同一个对象）
+    list = new ArrayList<>(); // ❌ 不影响原引用（只是修改了副本）
+}
+```
+
+#### volatile 关键字（简要，并发部分深入）
+
+- 保证可见性：一个线程修改后，其他线程立即看到最新值
+- 禁止指令重排序
+- **不保证原子性**（`i++` 仍然不安全，用 AtomicInteger）
+- 底层通过内存屏障（Memory Barrier）实现
+
+### 9.3 面试实战（精讲及回答）
+
+#### 题目 1 ⭐：Java 是值传递还是引用传递？
+
+**面试官意图**：高频陷阱题，很多人直觉上觉得是引用传递。
+
+**推荐回答**：
+
+> Java 只有值传递，没有引用传递。这一点很确定。
+>
+> 对于基本类型，传递的是值的副本，方法内修改不影响原变量。
+>
+> 对于引用类型，传递的是引用的副本，也就是对象地址的拷贝。方法内通过这个副本引用可以操作原对象的内容，比如往 List 里 add 元素，外部看得到变化。但是如果在方法内让这个副本指向一个新对象，比如 list = new ArrayList()，外部的原引用不受影响，仍然指向原来的对象。
+>
+> 如果是引用传递，方法内让参数指向新对象时，外部引用也应该跟着变，但 Java 中不会。所以 Java 传递的是"引用的值"，而不是"引用本身"，本质上还是值传递。
+
+---
+
+#### 题目 2 ⭐：volatile 的作用？和 synchronized 的区别？
+
+**面试官意图**：考察对并发编程基础概念的理解。
+
+**推荐回答**：
+
+> volatile 有两个作用：保证可见性和禁止指令重排序。
+>
+> 可见性方面，当一个线程修改了 volatile 变量的值，新值会立即写回主内存，其他线程读取时会直接从主内存获取，不会读到缓存中的旧值。
+>
+> 指令重排序方面，编译器和 CPU 可能会为了性能优化而重排指令顺序。volatile 通过内存屏障阻止特定的重排序。典型例子是双重检查锁定的单例模式中，instance = new Singleton() 这一步可能被重排导致拿到半初始化对象，volatile 可以防止。
+>
+> 和 synchronized 的区别：volatile 只能修饰变量，synchronized 可以修饰方法和代码块；volatile 不保证原子性，比如 volatile int 做 i++ 操作仍然不安全，synchronized 保证原子性；volatile 不会阻塞，synchronized 会阻塞。简单说 volatile 是轻量级的可见性保证，synchronized 是重量级的互斥锁。
+
+### 9.4 面试速查表
+
+| 考点 | 一句话答案 |
+|------|-----------|
+| final 类 | 不可继承（String 就是 final） |
+| final 方法 | 不可重写 |
+| final 变量 | 引用不可变，但对象内容可变 |
+| finally | try-catch 收尾块，几乎总执行 |
+| finalize | GC 前调用，已废弃，用 AutoCloseable 替代 |
+| static | 类级别共享，静态变量/方法/代码块/内部类 |
+| 值传递 | Java 只有值传递，引用类型传的是引用的副本 |
+| volatile | 保证可见性 + 禁止重排序，不保证原子性 |
+| volatile vs synchronized | 轻量级只保可见性 vs 重量级保原子性+可见性 |
+| this / super | 当前实例引用 / 父类引用 |
+
+---
+
+## 第十章：设计模式（Java 基础常考）
+
+### 10.1 基础概念
+
+设计模式是前人总结的、经过反复验证的面向对象设计经验。初中级面试最常考的是**单例、工厂、代理、观察者、模板方法、策略**这六种。
+
+### 10.2 原理深入
+
+#### 单例模式（5 种写法对比）
+
+**1. 饿汉式** — 类加载时创建，简单安全
+```java
+public class Singleton {
+    private static final Singleton INSTANCE = new Singleton();
+    private Singleton() {}
+    public static Singleton getInstance() { return INSTANCE; }
+}
+```
+
+**2. 懒汉式（synchronized）** — 线程安全但性能差
+```java
+public class Singleton {
+    private static Singleton instance;
+    private Singleton() {}
+    public static synchronized Singleton getInstance() {
+        if (instance == null) instance = new Singleton();
+        return instance;
+    }
+}
+```
+
+**3. 双重检查锁定（DCL）** ⭐ — 推荐写法
+```java
+public class Singleton {
+    private static volatile Singleton instance;  // 必须 volatile！
+    private Singleton() {}
+    public static Singleton getInstance() {
+        if (instance == null) {                    // 第一次检查（无锁）
+            synchronized (Singleton.class) {
+                if (instance == null) {             // 第二次检查（有锁）
+                    instance = new Singleton();
+                }
+            }
+        }
+        return instance;
+    }
+}
+```
+> **为什么必须 volatile**：`instance = new Singleton()` 不是原子操作，JVM 可能重排为 ①分配内存 ②引用赋值 ③初始化。如果 ②③ 重排，其他线程可能拿到未初始化的对象。volatile 禁止这个重排。
+
+**4. 静态内部类** — 懒加载 + 线程安全
+```java
+public class Singleton {
+    private Singleton() {}
+    private static class Holder {
+        private static final Singleton INSTANCE = new Singleton();
+    }
+    public static Singleton getInstance() { return Holder.INSTANCE; }
+}
+```
+
+**5. 枚举** — 最安全，防反射防序列化
+```java
+public enum Singleton {
+    INSTANCE;
+    public void doSomething() { }
+}
+```
+
+| 写法 | 懒加载 | 线程安全 | 防反射 | 防序列化 | 推荐度 |
+|------|--------|---------|--------|---------|--------|
+| 饿汉式 | 否 | 是 | 否 | 否 | 一般 |
+| 懒汉式 synchronized | 是 | 是 | 否 | 否 | 不推荐 |
+| DCL | 是 | 是 | 否 | 否 | ⭐推荐 |
+| 静态内部类 | 是 | 是 | 否 | 否 | 推荐 |
+| 枚举 | 否 | 是 | 是 | 是 | ⭐最推荐 |
+
+#### 工厂模式
+
+**简单工厂** — 一个工厂根据参数决定创建哪个产品
+```java
+public class ShapeFactory {
+    public static Shape create(String type) {
+        switch (type) {
+            case "circle": return new Circle();
+            case "square": return new Square();
+            default: throw new IllegalArgumentException();
+        }
+    }
+}
+```
+
+**工厂方法** — 每个产品对应一个工厂类，符合开闭原则
+```java
+public interface ShapeFactory { Shape create(); }
+public class CircleFactory implements ShapeFactory {
+    public Shape create() { return new Circle(); }
+}
+```
+
+**抽象工厂** — 创建一系列相关产品（产品族）
+
+#### 代理模式（面试高频）
+
+**静态代理** — 编译时确定代理关系
+```java
+public class UserServiceProxy implements UserService {
+    private UserService target;
+    public UserServiceProxy(UserService target) { this.target = target; }
+    public void save(User user) {
+        log.info("开始保存");
+        target.save(user);
+        log.info("保存完成");
+    }
+}
+```
+
+**JDK 动态代理** — 运行时生成代理类，要求目标类实现接口
+```java
+Object proxy = Proxy.newProxyInstance(
+    target.getClass().getClassLoader(),
+    target.getClass().getInterfaces(),
+    (proxyObj, method, args) -> {
+        log.info("前置处理");
+        Object result = method.invoke(target, args);
+        log.info("后置处理");
+        return result;
+    }
+);
+```
+
+**CGLIB 动态代理** — 通过生成子类实现，不要求接口
+- Spring AOP 默认策略：目标类有接口用 JDK 动态代理，没有则用 CGLIB
+- Spring Boot 2.x 起默认使用 CGLIB
+
+#### 观察者模式
+
+```java
+// 事件源发布事件，所有监听者自动收到通知
+public class EventBus {
+    private List<Listener> listeners = new ArrayList<>();
+    public void subscribe(Listener l) { listeners.add(l); }
+    public void publish(Event e) { listeners.forEach(l -> l.onEvent(e)); }
+}
+```
+应用：Spring 的 ApplicationEvent / ApplicationListener
+
+#### 模板方法模式
+
+```java
+public abstract class DataExporter {
+    // 模板方法：定义算法骨架
+    public final void export() {
+        List<Data> data = queryData();     // 子类实现
+        byte[] file = generateFile(data);  // 子类实现
+        upload(file);                       // 子类实现
+    }
+    protected abstract List<Data> queryData();
+    protected abstract byte[] generateFile(List<Data> data);
+    protected abstract void upload(byte[] file);
+}
+```
+
+#### 策略模式
+
+```java
+// 定义策略接口
+public interface PayStrategy { void pay(BigDecimal amount); }
+
+// 不同实现
+public class AliPay implements PayStrategy { ... }
+public class WeChatPay implements PayStrategy { ... }
+
+// 上下文使用
+public class OrderService {
+    private PayStrategy payStrategy;
+    public void checkout(BigDecimal amount) { payStrategy.pay(amount); }
+}
+```
+应用：消除大量 if-else，Spring 中配合 Map 注入多种实现
+
+### 10.3 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐：单例模式双重检查锁定为什么要用 volatile？
+
+**面试官意图**：考察对并发编程和指令重排的深度理解，区分"背过代码"和"理解原理"。
+
+**推荐回答**：
+
+> 因为 `instance = new Singleton()` 这一行在 JVM 层面不是原子操作，它分三步执行：第一步分配内存空间，第二步把 instance 引用指向这块内存，第三步调用构造方法初始化对象。
+>
+> 问题在于第二步和第三步可能被 JVM 重排序，变成先赋值引用再初始化。这时候如果另一个线程进来，第一次检查 instance != null（因为引用已经赋值了），就直接返回 instance，但这个对象还没初始化完成，使用它会出问题。
+>
+> volatile 通过内存屏障禁止第二步和第三步的重排序，确保对象完全初始化后才把引用赋值给 instance。这样其他线程看到 instance 不为 null 时，对象一定是完整初始化的。
+
+**追问准备**：
+- "枚举单例为什么最安全？" → 枚举实例在类加载时由 JVM 保证只创建一次，天然防反射（枚举构造器只能由 JVM 调用）、防序列化（枚举的序列化机制保证反序列化后还是同一个实例）。
+
+---
+
+#### 题目 2 ⭐⭐：JDK 动态代理和 CGLIB 的区别？
+
+**面试官意图**：Spring AOP 的核心，面试高频。
+
+**推荐回答**：
+
+> 两者都是运行时生成代理类，但实现方式不同。
+>
+> JDK 动态代理基于 Java 标准库的 Proxy 类，要求目标类必须实现至少一个接口。它在运行时生成一个实现了相同接口的代理类，所有方法调用都转发到 InvocationHandler 的 invoke 方法。优点是 JDK 原生支持不需要额外依赖，缺点是只能代理接口方法。
+>
+> CGLIB 是一个第三方库，通过 ASM 字节码框架在运行时生成目标类的子类作为代理类，重写父类方法来实现增强。所以 CGLIB 不要求目标类有接口，但无法代理 final 类和 final 方法。
+>
+> Spring AOP 的策略是：如果目标类实现了接口，默认用 JDK 动态代理；如果没有接口，就用 CGLIB。Spring Boot 2.x 开始默认改为 CGLIB，因为很多类不一定都实现了接口。性能方面，CGLIB 生成代理类的时间稍长，但方法调用速度比 JDK 动态代理快。
+
+### 10.4 面试速查表
+
+| 考点 | 一句话答案 |
+|------|-----------|
+| 单例-饿汉 | 类加载创建，简单线程安全，非懒加载 |
+| 单例-DCL | 双重检查 + volatile，推荐写法，懒加载线程安全 |
+| 单例-枚举 | 最安全，防反射防序列化，Effective Java 推荐 |
+| DCL 要 volatile | 禁止 new 操作的重排序，防止拿到半初始化对象 |
+| 简单工厂 | 一个工厂根据参数创建产品，违反开闭原则 |
+| 工厂方法 | 每个产品一个工厂类，符合开闭原则 |
+| 抽象工厂 | 创建一系列相关产品（产品族） |
+| JDK 动态代理 | 基于 Proxy + InvocationHandler，需要接口 |
+| CGLIB | 生成目标类子类，不需要接口，不能代理 final |
+| 观察者 | 发布-订阅，事件源通知所有监听者，Spring Event |
+| 模板方法 | 父类定义算法骨架(final)，子类实现具体步骤 |
+| 策略 | 接口+多实现，消除 if-else，运行时切换算法 |
+
+---
+
+## 全书面试速查总表
+
+| 章节 | 最高频考点 |
+|------|-----------|
+| 数据类型 | Integer 缓存池、String 常量池、== vs equals |
+| 面向对象 | 抽象类 vs 接口、equals 与 hashCode、深拷贝浅拷贝 |
+| 集合框架 | HashMap put 流程、ConcurrentHashMap、扩容机制 |
+| 异常体系 | Error vs Exception、受检 vs 非受检、finally 执行 |
+| 泛型 | 类型擦除、PECS 原则、通配符 |
+| IO 与 NIO | BIO/NIO/AIO 区别、NIO 三件套、序列化 |
+| 反射与注解 | 反射原理与性能、RetentionPolicy、框架中的应用 |
+| Java 8+ | Lambda 本质、Stream 惰性求值、Optional、CompletableFuture |
+| 关键字细节 | final/finally/finalize、值传递、volatile |
+| 设计模式 | 单例 5 种写法、JDK 代理 vs CGLIB、策略模式 |
+
+---
