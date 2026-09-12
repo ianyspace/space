@@ -27,39 +27,66 @@
 }
 
 @media screen and (min-width: 1200px) {
+    // Article TOC: a slim floating card on the right. Items are flat rows with
+    // a 3px left rail; the current section (toggled by utils/setCatalog.js via
+    // the `is-active` class) lights up its rail and text.
     .css-toc {
         position: fixed;
         top: 90px;
-        right: 5px;
-        width: 200px;
-        max-height: 500px;
+        right: 16px;
+        width: 216px;
+        max-height: 60vh;
         overflow-y: auto;
-        font-size: 14px;
+        padding: 10px 12px;
+        border: 1px solid var(--hr);
+        border-radius: 10px;
+        background: var(--bg-article);
+        font-size: 13px;
+
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        // Deeper heading levels indent and shrink a step each time.
+        ul ul a {
+            padding-left: 24px;
+            font-size: 12.5px;
+        }
+
+        ul ul ul a {
+            padding-left: 38px;
+            font-size: 12px;
+            opacity: 0.75;
+        }
 
         a {
-            color: var(--tag-bg);
             display: block;
             box-sizing: border-box;
             width: 100%;
-            border-radius: 7px;
-            padding-left: 5px;
-            border-left: 8px solid transparent;
+            margin-bottom: 1px;
+            padding: 4px 8px 4px 10px;
+            border-left: 3px solid transparent;
+            border-radius: 0 6px 6px 0;
+            color: var(--textNormal);
+            opacity: 0.78;
+            line-height: 1.5;
+            transition: color 0.2s, background 0.2s, border-color 0.2s, opacity 0.2s;
 
             &:hover {
-                text-decoration: underline 1.5px !important;
+                opacity: 1;
+                color: var(--textLink);
+                background: var(--inlineCode-bg);
             }
-        }
 
-        p {
-            background: var(--inlineCode-bg);
-            border-radius: 7px;
-            font-weight: 600;
-        }
-
-        >ul>li>a {
-            background: var(--inlineCode-bg);
-            border-radius: 7px;
-            font-weight: 600;
+            &.is-active {
+                opacity: 1;
+                color: var(--textLink);
+                font-weight: 600;
+                background: var(--inlineCode-bg);
+                border-left-color: var(--pink);
+            }
         }
     }
 }

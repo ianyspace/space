@@ -1,41 +1,23 @@
 import antiShake from './antiShake';
 
+/**
+ * Scroll-spy for the article TOC: on scroll, the first heading currently
+ * visible in the viewport gets the `is-active` class on its matching TOC link
+ * (styled in `styles/catalog.scss`); all other links are cleared.
+ */
 const setCatalog = (anchors, catalogs, anchorsContain) => {
-    let anchorsInfo = [];
     const anchorsContainScroll = () => {
-        const newAnchorsInfo = [];
-
+        let highlightIndex = -1;
         for (let index = 0; index < anchors.length; index += 1) {
             const { bottom } = anchors[index].getBoundingClientRect();
-            const isShow = bottom <= window.innerHeight && bottom >= 0;
-            if (isShow) {
-                newAnchorsInfo.push(true);
-            } else {
-                newAnchorsInfo.push(false);
+            if (bottom <= window.innerHeight && bottom >= 0) {
+                highlightIndex = index;
+                break;
             }
         }
-
-        const highlightAnchorIndex = newAnchorsInfo.findIndex((item) => item === true);
-        const oldHighlightAnchorIndex = newAnchorsInfo.findIndex((item) => item === true);
-
-        const highlightIndex =
-            highlightAnchorIndex > -1
-                ? highlightAnchorIndex
-                : oldHighlightAnchorIndex > -1
-                    ? highlightAnchorIndex
-                    : -1;
-        if (highlightIndex > -1) {
-            [...catalogs].forEach((item, index) => {
-                if (index === highlightAnchorIndex) {
-                    item.style.borderLeft = '8px solid #6d4534';
-                    item.style.textDecoration = 'underline 1.5px';
-                } else {
-                    item.style.borderLeft = '8px solid transparent';
-                    item.style.textDecoration = 'unset';
-                }
-            });
-        }
-        anchorsInfo = newAnchorsInfo;
+        [...catalogs].forEach((item, index) => {
+            item.classList.toggle('is-active', index === highlightIndex);
+        });
     };
 
     const antiShakeAnchorsContainScroll = antiShake(anchorsContainScroll, 10);
