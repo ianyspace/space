@@ -26,17 +26,6 @@
     margin-bottom: 14px;
 }
 
-.toolbar-link {
-    color: #222;
-    font-size: 14px;
-    font-weight: 600;
-    text-decoration: none;
-
-    &:hover {
-        color: #d23669;
-    }
-}
-
 .toolbar-actions {
     display: flex;
     align-items: center;
@@ -161,10 +150,15 @@
 /* --- print: clean A4 output --- */
 
 @media print {
-    .page {
-        background: none;
-        padding: 0;
-        display: block;
+    // 只打印简历纸本身：把页面上的一切（包括全局注入的看板娘、其他固定元素）
+    // 全部隐藏，再让简历纸以可见状态钉在纸张左上角。
+    body * {
+        visibility: hidden;
+    }
+
+    .sheet,
+    .sheet * {
+        visibility: visible;
     }
 
     .toolbar {
@@ -172,6 +166,9 @@
     }
 
     .sheet {
+        position: absolute;
+        left: 0;
+        top: 0;
         width: 100%;
         max-width: none;
         min-height: auto;

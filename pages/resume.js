@@ -1,8 +1,8 @@
 import React from 'react';
-import Link from 'next/link';
 
 import SEO from 'components/SEO';
-import withBasePath from 'utils/basePath';
+import Header from 'components/Layout/Header';
+import { useLang } from 'context/LanguageContext';
 import { formatMessage } from 'utils/i18n';
 
 import styles from './resume.module.scss';
@@ -16,6 +16,7 @@ import styles from './resume.module.scss';
  */
 const ResumePage = function () {
     const title = formatMessage('tResume');
+    const { homeLink } = useLang();
 
     const download = () => {
         window.print();
@@ -26,9 +27,7 @@ const ResumePage = function () {
             <SEO title={title} />
 
             <div className={styles.toolbar}>
-                <Link href={withBasePath('/')} className={styles['toolbar-link']}>
-                    ← {formatMessage('tHome')}
-                </Link>
+                <Header base={homeLink} />
                 <div className={styles['toolbar-actions']}>
                     <span className={styles['toolbar-hint']}>在打印窗口选择「另存为 PDF」即可下载</span>
                     <button type="button" className={styles['toolbar-btn']} onClick={download}>
