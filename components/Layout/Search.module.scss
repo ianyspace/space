@@ -1,0 +1,220 @@
+.search {
+    position: relative;
+    display: flex;
+    flex: 0 0 30px;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    color: var(--textNormal);
+}
+
+.trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 104px;
+    height: 34px;
+    gap: 7px;
+    padding: 0 13px;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--textNormal);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+
+    &:hover,
+    &:focus-visible {
+        outline: none;
+        border-color: var(--hr);
+        background: var(--bg-article);
+        color: var(--textLink);
+    }
+}
+
+.trigger-label {
+    color: currentColor;
+    font-family: var(--systemFont);
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.expanded {
+    flex-basis: 300px;
+    height: 34px;
+    justify-content: flex-start;
+    gap: 7px;
+    padding: 0 4px 0 1px;
+    border-bottom: 1px solid var(--tag-bg);
+}
+
+.icon {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 15px;
+    height: 15px;
+    color: var(--breadcrumbsTextColorActive);
+
+    svg {
+        width: 100%;
+        height: 100%;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-width: 1.6;
+    }
+}
+
+.expanded:focus-within .icon {
+    color: var(--tag-bg);
+}
+
+.input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--textNormal);
+    font-family: var(--systemFont);
+    font-size: 13px;
+
+    &::placeholder {
+        color: var(--breadcrumbsTextColorActive);
+    }
+
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-decoration {
+        display: none;
+        appearance: none;
+    }
+}
+
+.clear {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 17px;
+    height: 17px;
+    padding: 0 0 1px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--breadcrumbsTextColorActive);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+
+    &:hover,
+    &:focus-visible {
+        outline: none;
+        background: var(--tag-bg);
+        color: var(--tag-color);
+    }
+}
+
+.results {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: -8px;
+    z-index: 30;
+    overflow: hidden;
+    width: 330px;
+    max-width: calc(100vw - 32px);
+    border: 1px solid var(--hr);
+    border-radius: 10px;
+    background: var(--bg);
+    box-shadow: var(--bg-article-shadow);
+    -webkit-backdrop-filter: var(--article-backdrop);
+    backdrop-filter: var(--article-backdrop);
+}
+
+.result {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px 13px;
+    color: var(--textNormal);
+    text-decoration: none;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+
+    &+& {
+        border-top: 1px solid var(--hr);
+    }
+
+    &:hover,
+    &:focus-visible,
+    &.result-active {
+        outline: none;
+        background: var(--bg-article);
+        box-shadow: inset 2px 0 0 var(--tag-bg);
+    }
+}
+
+.result-title {
+    overflow: hidden;
+    color: var(--textTitle);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.5;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.result-desc {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--breadcrumbsTextColorActive);
+    font-size: 12px;
+    line-height: 1.45;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.result-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 2px;
+}
+
+.tag {
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--bg-article);
+    color: var(--breadcrumbsTextColorActive);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.mark {
+    padding: 0 1px;
+    border-radius: 3px;
+    background: var(--tag-bg);
+    color: var(--tag-color);
+}
+
+.status {
+    margin: 0;
+    padding: 14px 13px;
+    color: var(--breadcrumbsTextColorActive);
+    font-size: 12px;
+    text-align: center;
+}
+
+@media screen and (max-width: 650px) {
+    .expanded {
+        flex-basis: 220px;
+    }
+
+    .results {
+        right: -48px;
+    }
+}

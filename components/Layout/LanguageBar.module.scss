@@ -11,6 +11,12 @@
     align-items: center;
 }
 
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .toggle-content {
     max-height: 0px;
     overflow: hidden;

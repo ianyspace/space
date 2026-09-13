@@ -9,6 +9,7 @@ import { formatMessage } from 'utils/i18n';
 import LangButton from '../LangButton';
 import BalloonField from '../BalloonField';
 import LangList from '../LangList';
+import Search from './Search';
 
 import styles from './LanguageBar.module.scss';
 
@@ -73,7 +74,8 @@ const LanguageBar = function ({ lang: langKey = 'en', base = '/' }) {
                         {tTitle}
                     </span>
                 </Link>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div className={styles.actions}>
+                    <Search />
                     <LangButton lang={language} focused={displayLang} onClick={handleToggleLanguage} />
                 </div>
             </div>

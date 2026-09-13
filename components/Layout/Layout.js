@@ -85,14 +85,7 @@ const Layout = function ({ children = null, title = null, breadcrumbs = null }) 
                         background: 'var(--bg)',
                     }}
                 >
-                    <header
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '2.625rem',
-                        }}
-                    >
+                    <header className={styles['site-header']}>
                         <Header base={homeLink} title={title} />
                         <ReadModeToggle />
                     </header>

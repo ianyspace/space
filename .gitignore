@@ -46,3 +46,4 @@ yarn-error.log*
 # publishes what lives under `public/`, but those copies are build output.
 /public/blog/*/
 /lib/generated/
+/public/search-index.json

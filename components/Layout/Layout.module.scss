@@ -11,3 +11,17 @@
         width: calc(100% - 5px);
     }
 }
+
+// Header row: site title on the left, search pill + theme switch on the right.
+// On narrow screens the pill drops to its own full-width row (see
+// `components/Layout/Search.module.scss`).
+.site-header {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    margin-bottom: 2.625rem;
+}

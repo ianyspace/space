@@ -1,20 +1,32 @@
 // Ported from `src/components/LangButton/LangButton.css`.
 
 .language {
-    display: flex;
-    transition: transform 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 9px;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    transition: transform 0.25s ease, border-color 0.2s ease, background 0.2s ease;
 
     &:hover {
         cursor: pointer;
+        border-color: var(--hr);
+        background: var(--bg-article);
     }
 
     .icon {
+        flex: 0 0 auto;
         fill: var(--textNormal);
+        width: 16px;
+        height: 16px;
         margin-right: 5px;
     }
 
     span {
         color: var(--textNormal);
+        font-size: 12px;
+        line-height: 1;
     }
 }
 
