@@ -38,24 +38,47 @@
 .setting-page {
     display: flex;
     flex-direction: column;
+    gap: 16px;
     margin-bottom: 2.625rem;
 }
 
 .setting-card {
-    padding: 20px;
-    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    padding: 24px 26px 22px;
+    border: 1px solid var(--hr);
+    border-radius: 14px;
     background: var(--bg-article);
     box-shadow: var(--bg-article-shadow);
     -webkit-backdrop-filter: var(--article-backdrop);
     backdrop-filter: var(--article-backdrop);
 
-    &+.setting-card {
-        margin-top: 20px;
+    &::before {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 5px;
+        height: 100%;
+        background: var(--setting-accent, var(--tag-bg));
+        content: '';
+    }
+
+    &:nth-child(2) {
+        --setting-accent: #6e9ed6;
+    }
+
+    &:nth-child(3) {
+        --setting-accent: #68a995;
+    }
+
+    &:nth-child(4) {
+        --setting-accent: #d488a2;
     }
 
     h2 {
-        margin: 0 0 8px;
-        font-size: 1.1rem;
+        margin: 0 0 6px;
+        font-size: 1.15rem;
+        letter-spacing: 0.02em;
     }
 }
 
@@ -69,24 +92,28 @@
     flex: 1 1 200px;
     display: flex;
     flex-direction: column;
-    padding: 14px 16px;
+    min-height: 92px;
+    padding: 15px 16px;
     border: 1px solid var(--hr);
-    border-radius: 8px;
-    background: transparent;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--bg) 44%, transparent);
     color: var(--textNormal);
     text-align: left;
     cursor: pointer;
     font-family: var(--systemFont);
-    transition: border-color 0.3s ease, background 0.3s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease,
+        box-shadow 0.2s ease;
 
     &:hover {
         border-color: var(--tag-bg);
+        transform: translateY(-2px);
     }
 }
 
 .setting-option-active {
     border-color: var(--tag-bg);
     background: var(--bg);
+    box-shadow: 0 5px 14px -10px var(--tag-bg);
 }
 
 .setting-option-title {
@@ -98,7 +125,14 @@
 }
 
 .setting-option-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--hr);
+    border-radius: 50%;
     color: var(--tag-bg);
+    font-size: 13px;
 }
 
 .setting-option-desc {
@@ -125,6 +159,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    align-items: stretch;
 }
 
 .setting-input {
@@ -150,6 +185,7 @@
 
 .setting-primary,
 .setting-ghost {
+    min-height: 38px;
     padding: 8px 18px;
     border: none;
     border-radius: 8px;
@@ -187,5 +223,20 @@
 
     to {
         transform: rotate(360deg);
+    }
+}
+
+@media screen and (max-width: 650px) {
+    .setting-card {
+        padding: 20px 18px 18px;
+    }
+
+    .setting-option {
+        flex-basis: 100%;
+    }
+
+    .setting-primary,
+    .setting-ghost {
+        flex: 1 1 120px;
     }
 }

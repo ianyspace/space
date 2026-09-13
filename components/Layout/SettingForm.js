@@ -26,7 +26,7 @@ const SettingForm = function () {
     const [simple, setSimple] = useState(true);
     const [background, setBackground] = useState('');
     const [font, setFont] = useState(FONT_WENKAI);
-    const [listMode, setListModeState] = useState(LIST_MODE_PAGINATION);
+    const [listMode, setListModeState] = useState(LIST_MODE_SCROLL);
     const [saved, setSaved] = useState(false);
 
     useEffect(() => {

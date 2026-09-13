@@ -2,24 +2,24 @@
  * Article list loading mode, persisted in localStorage and read by
  * `templates/BlogIndex.js`.
  *
- * The site default stays `pagination` (the classic page links); the settings
- * page offers `scroll` (infinite scroll) for readers who prefer to keep
- * scrolling. Kept in one place because both the homepage and the settings page
+ * The site default is `scroll` (infinite scroll); the settings page still
+ * offers `pagination` for readers who prefer classic page links. Kept in one
+ * place because both the homepage and the settings page
  * have to agree on the key and the values.
  */
 export const LIST_MODE_KEY = 'listMode';
 export const LIST_MODE_PAGINATION = 'pagination';
 export const LIST_MODE_SCROLL = 'scroll';
 
-/** @returns {'pagination' | 'scroll'} the saved choice, defaulting to pagination. */
+/** @returns {'pagination' | 'scroll'} the saved choice, defaulting to scroll. */
 export function getListMode() {
-    if (typeof window === 'undefined') return LIST_MODE_PAGINATION;
+    if (typeof window === 'undefined') return LIST_MODE_SCROLL;
     try {
-        return window.localStorage.getItem(LIST_MODE_KEY) === LIST_MODE_SCROLL
-            ? LIST_MODE_SCROLL
-            : LIST_MODE_PAGINATION;
+        return window.localStorage.getItem(LIST_MODE_KEY) === LIST_MODE_PAGINATION
+            ? LIST_MODE_PAGINATION
+            : LIST_MODE_SCROLL;
     } catch (err) {
-        return LIST_MODE_PAGINATION;
+        return LIST_MODE_SCROLL;
     }
 }
 

@@ -12,7 +12,6 @@ import { formatMessage } from 'utils/i18n';
 import { getSimpleTheme } from 'utils/simpleTheme';
 import {
     getListMode,
-    LIST_MODE_PAGINATION,
     LIST_MODE_SCROLL,
 } from 'utils/listMode';
 
@@ -25,10 +24,10 @@ const BlogIndex = function ({ pageData }) {
     // 极简风 is the default, so the first paint already matches it; only users who
     // explicitly picked the card layout see the list switch after hydration.
     const [simpleTheme, setSimpleTheme] = useState(true);
-    // List loading mode: pagination (default, build-time pages) or infinite
-    // scroll (settings page). Scroll mode renders the full language list
+    // List loading mode: pagination (build-time pages) or infinite scroll.
+    // Scroll mode renders the full language list
     // progressively from `allPosts`, growing by `limit` items per load.
-    const [listMode, setListModeState] = useState(LIST_MODE_PAGINATION);
+    const [listMode, setListModeState] = useState(LIST_MODE_SCROLL);
     const [visibleCount, setVisibleCount] = useState(posts.length);
     const sentinelRef = useRef(null);
 
@@ -109,7 +108,7 @@ const BlogIndex = function ({ pageData }) {
                                 margin: '16px 0',
                             }}
                         >
-                            {formatMessage('tfLoadedAll', { count: allPosts.length })}
+                            {formatMessage('tfLoadedAll', allPosts.length)}
                         </div>
                     ) : null}
                 </>

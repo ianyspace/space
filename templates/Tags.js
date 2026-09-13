@@ -8,13 +8,7 @@ import SEO from 'components/SEO';
 import { useLang } from 'context/LanguageContext';
 import { formatMessage } from 'utils/i18n';
 import { kebabCase } from 'utils/helpers';
-
-const styles = {
-    tagListDiv: {
-        marginLeft: '1.5rem',
-        lineHeight: 3,
-    },
-};
+import styles from './Tags.module.scss';
 
 const TagsPage = function ({ tagGroups }) {
     const { homeLink } = useLang();
@@ -26,18 +20,20 @@ const TagsPage = function ({ tagGroups }) {
             <aside>
                 <Bio />
             </aside>
-            <div>
+            <div className={styles['tag-page']}>
                 <h1>{tTags}</h1>
-                <div style={styles.tagListDiv}>
+                <p className={styles['tag-intro']}>{formatMessage('tTagsDesc')}</p>
+                <ul className={styles['tag-grid']}>
                     {tagGroups.map((tag) => (
-                        <Tag
-                            key={tag.fieldValue}
-                            text={tag.fieldValue}
-                            count={tag.totalCount}
-                            url={`${homeLink}tags/${kebabCase(tag.fieldValue)}/`}
-                        />
+                        <li className={styles['tag-item']} key={tag.fieldValue}>
+                            <Tag
+                                text={tag.fieldValue}
+                                count={tag.totalCount}
+                                url={`${homeLink}tags/${kebabCase(tag.fieldValue)}/`}
+                            />
+                        </li>
                     ))}
-                </div>
+                </ul>
             </div>
         </Layout>
     );
