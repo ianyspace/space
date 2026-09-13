@@ -11,7 +11,7 @@ const SettingPage = function () {
     return (
         <Layout title={formatMessage('title')} breadcrumbs={[{ text: title }]}>
             <SEO title={title} />
-            <h1>{title}</h1>
+            {/* The page heading lives inside SettingForm, next to its intro copy. */}
             <SettingForm />
         </Layout>
     );

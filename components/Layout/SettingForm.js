@@ -22,19 +22,25 @@ import styles from './Setting.module.scss';
 /**
  * Theme settings, rendered on its own page (`/setting/`).
  *
- * Sections are ordered from "what you see everywhere" to "fine tuning":
- * list layout → body font → list loading → background (presets, then a custom
- * image URL). Every choice applies immediately and persists in localStorage.
+ * Sections run from "the list you read every day" to "the ambience around it":
+ * list style → list loading → body font → page background. Each setting is one
+ * card holding an iOS-style segmented control; the line under the control
+ * describes the *selected* option, because there is no room for two option
+ * descriptions inside a segmented control.
  *
- * Multi-choice settings are two-option segmented controls instead of bare
- * toggles: a switch alone never says which side is "on".
+ * Every choice applies immediately and persists in localStorage.
  */
 const SettingForm = function () {
     const [simple, setSimple] = useState(true);
     const [background, setBackground] = useState('');
     const [font, setFont] = useState(FONT_SYSTEM);
-    const [listMode, setListModeState] = useState(LIST_MODE_PAGINATION);
+    // The site default is scroll loading (`utils/listMode.js`); starting there
+    // avoids a visible jump from "pagination" during the first client render.
+    const [listMode, setListModeState] = useState(LIST_MODE_SCROLL);
     const [saved, setSaved] = useState(false);
+    // Bumped on every change so the "saved" toast restarts its timer even when
+    // the user keeps flipping options while it is already on screen.
+    const [savedTick, setSavedTick] = useState(0);
 
     useEffect(() => {
         setSimple(getSimpleTheme());
@@ -44,41 +50,44 @@ const SettingForm = function () {
     }, []);
 
     useEffect(() => {
-        if (!saved) return undefined;
+        if (savedTick === 0) return undefined;
+        setSaved(true);
         const timer = setTimeout(() => setSaved(false), 2000);
         return () => clearTimeout(timer);
-    }, [saved]);
+    }, [savedTick]);
+
+    const markSaved = () => setSavedTick((tick) => tick + 1);
 
     const onSelectStyle = (enabled) => {
         if (enabled === simple) return;
         setSimple(enabled);
         setSimpleTheme(enabled);
-        setSaved(true);
+        markSaved();
     };
 
     const onSelectFont = (choice) => {
         if (choice === font) return;
         setFont(choice);
         setFontChoice(choice);
-        setSaved(true);
+        markSaved();
     };
 
     const onSelectListMode = (mode) => {
         if (mode === listMode) return;
         setListModeState(mode);
         setListMode(mode);
-        setSaved(true);
+        markSaved();
     };
 
     const onApplyBackground = () => {
         setThemeBackground(background.trim());
-        setSaved(true);
+        markSaved();
     };
 
     const onClearBackground = () => {
         setBackground('');
         setThemeBackground('');
-        setSaved(true);
+        markSaved();
     };
 
     /** Preset swatch: paints the shared preset CSS into the small tile. */
@@ -101,19 +110,16 @@ const SettingForm = function () {
     // change the hook order between renders.
     const tSettingsDesc = formatMessage('tSettingsDesc');
     const tListStyle = formatMessage('tListStyle');
-    const tListStyleDesc = formatMessage('tListStyleDesc');
     const tSimpleOption = formatMessage('tSimpleOption');
     const tSimpleOptionDesc = formatMessage('tSimpleOptionDesc');
     const tCardOption = formatMessage('tCardOption');
     const tCardOptionDesc = formatMessage('tCardOptionDesc');
     const tFontTitle = formatMessage('tFontTitle');
-    const tFontDesc = formatMessage('tFontDesc');
     const tWenkaiOption = formatMessage('tWenkaiOption');
     const tWenkaiOptionDesc = formatMessage('tWenkaiOptionDesc');
     const tSystemOption = formatMessage('tSystemOption');
     const tSystemOptionDesc = formatMessage('tSystemOptionDesc');
     const tLoadTitle = formatMessage('tLoadTitle');
-    const tLoadDesc = formatMessage('tLoadDesc');
     const tLoadPagination = formatMessage('tLoadPagination');
     const tLoadPaginationDesc = formatMessage('tLoadPaginationDesc');
     const tLoadScroll = formatMessage('tLoadScroll');
@@ -121,55 +127,76 @@ const SettingForm = function () {
     const tBackgroundTitle = formatMessage('tBackgroundTitle');
     const tBackgroundDesc = formatMessage('tBackgroundDesc');
     const tBackgroundNone = formatMessage('tBackgroundNone');
-    const tBackgroundCustom = formatMessage('tBackgroundCustom');
-    const tBackgroundCustomDesc = formatMessage('tBackgroundCustomDesc');
+    // The locale files name these `tCustomBackground*` (they predate the preset
+    // picker); using the wrong id renders the raw key on the page.
+    const tCustomBackground = formatMessage('tCustomBackground');
+    const tCustomBackgroundDesc = formatMessage('tCustomBackgroundDesc');
     const tBackgroundPlaceholder = formatMessage('tBackgroundPlaceholder');
     const tConfirm = formatMessage('tConfirm');
     const tClear = formatMessage('tClear');
     const tSaved = formatMessage('tSaved');
 
-    /** `setting-option` plus the active modifier while this option is selected. */
-    const optionClass = (active) =>
-        active
-            ? `${styles['setting-option']} ${styles['setting-option-active']}`
-            : styles['setting-option'];
+    const listStyleOptions = [
+        { value: true, label: tSimpleOption, desc: tSimpleOptionDesc },
+        { value: false, label: tCardOption, desc: tCardOptionDesc },
+    ];
+    const loadOptions = [
+        { value: LIST_MODE_SCROLL, label: tLoadScroll, desc: tLoadScrollDesc },
+        { value: LIST_MODE_PAGINATION, label: tLoadPagination, desc: tLoadPaginationDesc },
+    ];
+    const fontOptions = [
+        { value: FONT_SYSTEM, label: tSystemOption, desc: tSystemOptionDesc },
+        { value: FONT_WENKAI, label: tWenkaiOption, desc: tWenkaiOptionDesc },
+    ];
 
-    const renderRadioPair = (label, valueA, titleA, descA, valueB, titleB, descB, onSelect) => (
-        <div className={styles['setting-options']} role="radiogroup" aria-label={label}>
-            <button
-                type="button"
-                role="radio"
-                aria-checked={valueA}
-                className={optionClass(valueA)}
-                onClick={() => onSelect(valueA)}
-            >
-                <span className={styles['setting-option-title']}>
-                    {titleA}
-                    <span className={styles['setting-option-mark']} aria-hidden="true">
-                        {valueA ? '✓' : ''}
-                    </span>
-                </span>
-                <span className={styles['setting-option-desc']}>{descA}</span>
-            </button>
-            <button
-                type="button"
-                role="radio"
-                aria-checked={valueB}
-                className={optionClass(valueB)}
-                onClick={() => onSelect(valueB)}
-            >
-                <span className={styles['setting-option-title']}>
-                    {titleB}
-                    <span className={styles['setting-option-mark']} aria-hidden="true">
-                        {valueB ? '✓' : ''}
-                    </span>
-                </span>
-                <span className={styles['setting-option-desc']}>{descB}</span>
-            </button>
-        </div>
-    );
+    /** Description of the currently selected option (falls back to the first). */
+    const activeDesc = (options, current) =>
+        (options.find((option) => option.value === current) || options[0]).desc;
 
-    const isPresetBackground = (key) => background === `${THEME_BACKGROUND_PRESET_PREFIX}${key}`;
+    /**
+     * iOS-style segmented control: one track, one sliding thumb.
+     *
+     * `options` is a list of `{ value, label, desc }` and `onSelect` receives the
+     * raw *value*. It must never receive "is this the first option" booleans:
+     * that flag is what used to be handed to `onSelectFont`/`onSelectListMode`,
+     * whose `choice === font` guards compare it against the stored string and
+     * bail out, so those two switches snapped straight back.
+     */
+    const renderSegmented = (label, options, current, onSelect) => {
+        const activeIndex = Math.max(
+            0,
+            options.findIndex((option) => option.value === current),
+        );
+
+        return (
+            <div className={styles.segmented} role="radiogroup" aria-label={label}>
+                <span
+                    className={styles['segmented-thumb']}
+                    style={{ transform: `translateX(${activeIndex * 100}%)` }}
+                    aria-hidden="true"
+                />
+                {options.map((option) => {
+                    const active = option.value === current;
+                    return (
+                        <button
+                            key={String(option.value)}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            className={`${styles['segmented-item']} ${
+                                active ? styles['segmented-item-active'] : ''
+                            }`}
+                            onClick={() => onSelect(option.value)}
+                        >
+                            {option.label}
+                        </button>
+                    );
+                })}
+            </div>
+        );
+    };
+
+    const isPresetActive = (key) => background === `${THEME_BACKGROUND_PRESET_PREFIX}${key}`;
 
     return (
         <div className={styles['setting-page']}>
@@ -178,64 +205,104 @@ const SettingForm = function () {
                 <p className={styles['setting-header-desc']}>{tSettingsDesc}</p>
             </header>
 
-            <section className={styles['setting-card']}>
-                <h2>{tListStyle}</h2>
-                <p className={styles['setting-hint']}>{tListStyleDesc}</p>
-                {renderRadioPair(tListStyle, simple, tSimpleOption, tSimpleOptionDesc, !simple, tCardOption, tCardOptionDesc, onSelectStyle)}
-            </section>
-
-            <section className={styles['setting-card']}>
-                <h2>{tFontTitle}</h2>
-                <p className={styles['setting-hint']}>{tFontDesc}</p>
-                {renderRadioPair(tFontTitle, font === FONT_SYSTEM, tSystemOption, tSystemOptionDesc, font === FONT_WENKAI, tWenkaiOption, tWenkaiOptionDesc, onSelectFont)}
-            </section>
-
-            <section className={styles['setting-card']}>
-                <h2>{tLoadTitle}</h2>
-                <p className={styles['setting-hint']}>{tLoadDesc}</p>
-                {renderRadioPair(tLoadTitle, listMode === LIST_MODE_PAGINATION, tLoadPagination, tLoadPaginationDesc, listMode === LIST_MODE_SCROLL, tLoadScroll, tLoadScrollDesc, onSelectListMode)}
-            </section>
-
-            <section className={styles['setting-card']}>
-                <h2>{tBackgroundTitle}</h2>
-                <p className={styles['setting-hint']}>{tBackgroundDesc}</p>
-                <div className={styles['bg-tiles']}>
-                    {renderPresetTile('none', tBackgroundNone, background === '', onClearBackground, tBackgroundNone)}
-                    {THEME_BACKGROUND_PRESETS.map((preset) =>
-                        renderPresetTile(
-                            preset.key,
-                            preset.label,
-                            isPresetBackground(preset.key),
-                            () => {
-                                const value = `${THEME_BACKGROUND_PRESET_PREFIX}${preset.key}`;
-                                setBackground(value);
-                                setThemeBackground(value);
-                                setSaved(true);
-                            },
-                            preset.label,
-                        ),
-                    )}
+            <section className={styles['setting-section']}>
+                <h2 className={styles['setting-section-title']}>{tListStyle}</h2>
+                <div className={styles['setting-card']}>
+                    {renderSegmented(tListStyle, listStyleOptions, simple, onSelectStyle)}
+                    {/* Caption for the *selected* option: a segmented control has
+                        no room for a description under each label. */}
+                    <p className={styles['setting-hint']}>
+                        {activeDesc(listStyleOptions, simple)}
+                    </p>
                 </div>
-
-                <h3 className={styles['setting-sub']}>{tBackgroundCustom}</h3>
-                <p className={styles['setting-hint']}>{tBackgroundCustomDesc}</p>
-                <div className={styles['setting-row']}>
-                    <input
-                        type="text"
-                        className={styles['setting-input']}
-                        value={background.startsWith(THEME_BACKGROUND_PRESET_PREFIX) ? '' : background}
-                        placeholder={tBackgroundPlaceholder}
-                        onChange={(event) => setBackground(event.target.value)}
-                    />
-                    <button type="button" className={styles['setting-primary']} onClick={onApplyBackground}>
-                        {tConfirm}
-                    </button>
-                    <button type="button" className={styles['setting-ghost']} onClick={onClearBackground}>
-                        {tClear}
-                    </button>
-                </div>
-                {saved && <p className={styles['setting-saved']}>{tSaved}</p>}
             </section>
+
+            <section className={styles['setting-section']}>
+                <h2 className={styles['setting-section-title']}>{tLoadTitle}</h2>
+                <div className={styles['setting-card']}>
+                    {renderSegmented(tLoadTitle, loadOptions, listMode, onSelectListMode)}
+                    <p className={styles['setting-hint']}>{activeDesc(loadOptions, listMode)}</p>
+                </div>
+            </section>
+
+            <section className={styles['setting-section']}>
+                <h2 className={styles['setting-section-title']}>{tFontTitle}</h2>
+                <div className={styles['setting-card']}>
+                    {renderSegmented(tFontTitle, fontOptions, font, onSelectFont)}
+                    <p className={styles['setting-hint']}>{activeDesc(fontOptions, font)}</p>
+                </div>
+            </section>
+
+            <section className={styles['setting-section']}>
+                <h2 className={styles['setting-section-title']}>{tBackgroundTitle}</h2>
+                <div className={styles['setting-card']}>
+                    <div className={styles['bg-tiles']}>
+                        {renderPresetTile(
+                            'none',
+                            tBackgroundNone,
+                            background === '',
+                            onClearBackground,
+                            tBackgroundNone,
+                        )}
+                        {THEME_BACKGROUND_PRESETS.map((preset) =>
+                            renderPresetTile(
+                                preset.key,
+                                preset.label,
+                                isPresetActive(preset.key),
+                                () => {
+                                    const value = `${THEME_BACKGROUND_PRESET_PREFIX}${preset.key}`;
+                                    setBackground(value);
+                                    setThemeBackground(value);
+                                    markSaved();
+                                },
+                                preset.label,
+                            ),
+                        )}
+                    </div>
+                    <p className={styles['setting-hint']}>{tBackgroundDesc}</p>
+
+                    <div className={styles['setting-divider']} />
+
+                    <h3 className={styles['setting-sub']}>{tCustomBackground}</h3>
+                    <p className={styles['setting-hint']}>{tCustomBackgroundDesc}</p>
+                    <div className={styles['setting-row']}>
+                        <input
+                            type="text"
+                            className={styles['setting-input']}
+                            value={
+                                background.startsWith(THEME_BACKGROUND_PRESET_PREFIX)
+                                    ? ''
+                                    : background
+                            }
+                            placeholder={tBackgroundPlaceholder}
+                            onChange={(event) => setBackground(event.target.value)}
+                        />
+                        <button
+                            type="button"
+                            className={styles['setting-primary']}
+                            onClick={onApplyBackground}
+                        >
+                            {tConfirm}
+                        </button>
+                        <button
+                            type="button"
+                            className={styles['setting-ghost']}
+                            onClick={onClearBackground}
+                        >
+                            {tClear}
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {saved && (
+                <p className={styles['setting-toast']} role="status">
+                    <span className={styles['setting-toast-check']} aria-hidden="true">
+                        ✓
+                    </span>
+                    {tSaved}
+                </p>
+            )}
         </div>
     );
 };

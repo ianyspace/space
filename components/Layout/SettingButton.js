@@ -20,7 +20,7 @@ const SettingButton = function () {
     return (
         <Link className={styles['setting-btn']} href="/setting/" aria-label={label}>
             <img className={styles['setting-icon']} src={withBasePath('/setting.svg')} alt="" />
-            <span className="setting-label">{label}</span>
+            <span className={styles['setting-label']}>{label}</span>
         </Link>
     );
 };

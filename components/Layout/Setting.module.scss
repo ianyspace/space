@@ -1,19 +1,22 @@
 // Theme settings: the floating entry button plus the settings page itself.
 //
-// Colours come from the shared theme variables (see `styles/global.less`) and the
-// card/radius/shadow values mirror `components/PostAbbrev/index.less`, so both
-// the button and the page look the same as the article list in light and dark
-// mode.
+// The page follows the site's Apple-ish direction (compare
+// `templates/TagGraph.module.scss`): hairline separators, generous whitespace,
+// squircled cards, one accent colour, spring-like easing. Colours come from the
+// shared theme variables (styles/global.scss), so light and dark mode are both
+// handled by the same rules.
 
 .setting-btn {
     position: fixed;
-    right: 30px;
-    bottom: 30px;
+    right: 26px;
+    bottom: 26px;
     z-index: 10;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    padding: 8px 14px;
-    border-radius: 10px;
+    gap: 8px;
+    padding: 10px 16px 10px 15px;
+    border: 1px solid var(--hr);
+    border-radius: 999px;
     background: var(--bg-article);
     color: var(--textNormal);
     box-shadow: var(--bg-article-shadow);
@@ -21,24 +24,35 @@
     backdrop-filter: var(--article-backdrop);
     text-decoration: none;
     font-size: 14px;
-    transition: color 0.3s ease;
+    line-height: 1;
+    transition: color 0.3s ease, border-color 0.3s ease,
+        transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 
     &:hover {
         color: var(--textLink);
+        border-color: var(--tag-bg);
+        transform: translateY(-2px);
+    }
+
+    &:active {
+        transform: scale(0.97);
     }
 }
 
+.setting-label {
+    white-space: nowrap;
+}
+
 .setting-icon {
-    animation: spin 4s linear infinite;
-    width: 18px;
-    height: 18px;
-    margin-right: 6px;
+    width: 17px;
+    height: 17px;
+    animation: spin 6s linear infinite;
 }
 
 .setting-page {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 30px;
     margin-bottom: 2.625rem;
 }
 
@@ -49,9 +63,9 @@
 }
 
 .setting-header-title {
-    margin: 0 0 6px;
-    font-size: 1.6rem;
-    letter-spacing: 0.02em;
+    margin: 0 0 8px;
+    font-size: 1.7rem;
+    letter-spacing: -0.02em;
 }
 
 .setting-header-desc {
@@ -61,11 +75,29 @@
     line-height: 1.7;
 }
 
-.setting-sub {
-    margin: 18px 0 8px;
-    color: var(--textTitle);
-    font-size: 0.95rem;
-    letter-spacing: 0.02em;
+// One setting = a small muted label, then a single card (iOS grouped-list feel).
+.setting-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.setting-section-title {
+    margin: 0 0 10px;
+    padding-left: 4px;
+    color: var(--breadcrumbsTextColorActive);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+.setting-card {
+    padding: 18px 20px;
+    border: 1px solid var(--hr);
+    border-radius: 18px;
+    background: var(--bg-article);
+    box-shadow: var(--bg-article-shadow);
+    -webkit-backdrop-filter: var(--article-backdrop);
+    backdrop-filter: var(--article-backdrop);
 }
 
 /* --- background preset swatches --- */
@@ -79,31 +111,38 @@
 .bg-tile {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 8px;
     width: 104px;
     padding: 8px;
     border: 1px solid var(--hr);
-    border-radius: 10px;
+    border-radius: 14px;
     background: color-mix(in srgb, var(--bg) 44%, transparent);
     cursor: pointer;
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s ease,
+        box-shadow 0.3s ease;
 
     &:hover {
         border-color: var(--tag-bg);
         transform: translateY(-2px);
     }
+
+    &:active {
+        transform: scale(0.98);
+    }
 }
 
+// Selection reads as a ring instead of a heavier border, so the tile keeps its
+// size when picked.
 .bg-tile-active {
     border-color: var(--tag-bg);
-    box-shadow: 0 5px 14px -10px var(--tag-bg);
+    box-shadow: 0 0 0 2px var(--tag-bg);
 }
 
 // The little preview square paints the real preset CSS (shared table in
 // utils/themeBackground.js) on a card-like backdrop.
 .bg-tile-look {
     height: 52px;
-    border-radius: 6px;
+    border-radius: 9px;
     border: 1px solid var(--hr);
     background-color: var(--bg);
     background-repeat: repeat;
@@ -115,121 +154,90 @@
     text-align: center;
 }
 
-.setting-card {
-    position: relative;
-    overflow: hidden;
-    padding: 24px 26px 22px;
-    border: 1px solid var(--hr);
-    border-radius: 14px;
-    background: var(--bg-article);
-    box-shadow: var(--bg-article-shadow);
-    -webkit-backdrop-filter: var(--article-backdrop);
-    backdrop-filter: var(--article-backdrop);
-
-    &::before {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 5px;
-        height: 100%;
-        background: var(--setting-accent, var(--tag-bg));
-        content: '';
-    }
-
-    &:nth-child(2) {
-        --setting-accent: #6e9ed6;
-    }
-
-    &:nth-child(3) {
-        --setting-accent: #68a995;
-    }
-
-    &:nth-child(4) {
-        --setting-accent: #d488a2;
-    }
-
-    &:nth-child(5) {
-        --setting-accent: #b08854;
-    }
-
-    h2 {
-        margin: 0 0 6px;
-        font-size: 1.15rem;
-        letter-spacing: 0.02em;
-    }
+// Hairline between the preset picker and the custom-image field inside one card.
+.setting-divider {
+    height: 1px;
+    margin: 20px 0 18px;
+    background: color-mix(in srgb, var(--hr) 55%, transparent);
 }
 
-.setting-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.setting-option {
-    flex: 1 1 200px;
-    display: flex;
-    flex-direction: column;
-    min-height: 92px;
-    padding: 15px 16px;
-    border: 1px solid var(--hr);
-    border-radius: 10px;
-    background: color-mix(in srgb, var(--bg) 44%, transparent);
-    color: var(--textNormal);
-    text-align: left;
-    cursor: pointer;
-    font-family: var(--systemFont);
-    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease,
-        box-shadow 0.2s ease;
-
-    &:hover {
-        border-color: var(--tag-bg);
-        transform: translateY(-2px);
-    }
-}
-
-.setting-option-active {
-    border-color: var(--tag-bg);
-    background: var(--bg);
-    box-shadow: 0 5px 14px -10px var(--tag-bg);
-}
-
-.setting-option-title {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.setting-option-mark {
-    display: inline-grid;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    border: 1px solid var(--hr);
-    border-radius: 50%;
-    color: var(--tag-bg);
-    font-size: 13px;
-}
-
-.setting-option-desc {
-    margin-top: 6px;
-    color: var(--breadcrumbsTextColorActive);
-    font-size: 13px;
-    line-height: 1.6;
-}
-
-.setting-current {
-    margin: 14px 0 0;
-    color: var(--tag-bg);
-    font-size: 13px;
+.setting-sub {
+    margin: 0 0 6px;
+    color: var(--textTitle);
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
 }
 
 .setting-hint {
-    margin: 0 0 14px;
+    margin: 14px 0 0;
     color: var(--breadcrumbsTextColorActive);
-    font-size: 14px;
+    font-size: 13.5px;
     line-height: 1.7;
+}
+
+// Segmented control (iOS style): one track, one sliding thumb.
+//
+// Every control on this page has exactly two options, so the thumb is half the
+// track wide and slides by 100% of its own width. `.segmented-item` sits above
+// the thumb so the active label keeps its contrast instead of being tinted by
+// the accent fill.
+.segmented {
+    position: relative;
+    display: flex;
+    padding: 3px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--hr) 40%, transparent);
+}
+
+.segmented-thumb {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    width: calc((100% - 6px) / 2);
+    border-radius: 999px;
+    background: var(--tag-bg);
+    box-shadow: 0 6px 14px -8px var(--tag-bg);
+    transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.segmented-item {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--textNormal);
+    cursor: pointer;
+    font-family: var(--systemFont);
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    text-align: center;
+    transition: color 0.3s ease, transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+
+    &:hover {
+        color: var(--textTitle);
+    }
+
+    &:active {
+        transform: scale(0.98);
+    }
+}
+
+.segmented-item-active {
+    color: var(--tag-color);
+
+    &:hover {
+        color: var(--tag-color);
+    }
 }
 
 .setting-row {
@@ -242,13 +250,15 @@
 .setting-input {
     flex: 1 1 240px;
     min-width: 0;
-    padding: 8px 12px;
+    min-height: 40px;
+    padding: 9px 14px;
     border: 1px solid var(--hr);
-    border-radius: 8px;
-    background: var(--bg);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--bg) 60%, transparent);
     color: var(--textNormal);
     font-family: var(--systemFont);
     font-size: 14px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 
     &::placeholder {
         color: var(--breadcrumbsTextColorActive);
@@ -257,40 +267,75 @@
     &:focus {
         outline: none;
         border-color: var(--tag-bg);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--tag-bg) 22%, transparent);
     }
 }
 
 .setting-primary,
 .setting-ghost {
-    min-height: 38px;
-    padding: 8px 18px;
-    border: none;
-    border-radius: 8px;
+    min-height: 40px;
+    padding: 9px 20px;
+    border-radius: 999px;
     cursor: pointer;
     font-family: var(--systemFont);
     font-size: 14px;
-    transition: opacity 0.3s ease;
+    font-weight: 600;
+    transition: opacity 0.3s ease, border-color 0.3s ease,
+        transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
 
     &:hover {
-        opacity: 0.85;
+        opacity: 0.88;
+    }
+
+    &:active {
+        transform: scale(0.97);
     }
 }
 
 .setting-primary {
+    border: none;
     background: var(--tag-bg);
     color: var(--tag-color);
+    box-shadow: 0 6px 16px -10px var(--tag-bg);
 }
 
 .setting-ghost {
     border: 1px solid var(--hr);
     background: transparent;
     color: var(--textNormal);
+
+    &:hover {
+        border-color: var(--tag-bg);
+    }
 }
 
-.setting-saved {
-    margin: 12px 0 0;
-    color: var(--tag-bg);
+// "Saved" confirmation: a floating pill, so it is visible no matter which
+// section the user just touched. `.setting-toast` sits above the entry button
+// and is announced through `role="status"`.
+.setting-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 26px;
+    z-index: 11;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    padding: 9px 18px;
+    border: 1px solid var(--hr);
+    border-radius: 999px;
+    background: var(--bg-article);
+    color: var(--textNormal);
+    box-shadow: var(--bg-article-shadow);
+    -webkit-backdrop-filter: var(--article-backdrop);
+    backdrop-filter: var(--article-backdrop);
     font-size: 13px;
+    font-weight: 600;
+    animation: toast-in 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.setting-toast-check {
+    color: var(--textLink);
 }
 
 @keyframes spin {
@@ -303,17 +348,49 @@
     }
 }
 
-@media screen and (max-width: 650px) {
-    .setting-card {
-        padding: 20px 18px 18px;
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 8px) scale(0.96);
     }
 
-    .setting-option {
-        flex-basis: 100%;
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+}
+
+@media screen and (max-width: 650px) {
+    .setting-page {
+        gap: 24px;
+    }
+
+    .setting-card {
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .bg-tile {
+        width: calc(50% - 6px);
+    }
+
+    .setting-btn {
+        right: 16px;
+        bottom: 16px;
+        padding: 12px;
+    }
+
+    // Icon-only FAB on phones; `aria-label` keeps it announced.
+    .setting-label {
+        display: none;
     }
 
     .setting-primary,
     .setting-ghost {
         flex: 1 1 120px;
+    }
+
+    .setting-toast {
+        bottom: 74px;
     }
 }
