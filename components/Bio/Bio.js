@@ -22,13 +22,13 @@ const Bio = function () {
         >
             <div className={styles.bio}>
                 <div style={{ width: '70px', height: '70px', marginRight: '10px' }}>
+                    {/* 圆形与悬停动效都在 `Bio.module.scss` 的 `.pic` 上。 */}
                     <Image
                         src={withBasePath('/profile-pic.jpg')}
                         alt={author}
                         className={styles.pic}
                         width={70}
                         height={70}
-                        style={{ borderRadius: '50%' }}
                     />
                 </div>
 

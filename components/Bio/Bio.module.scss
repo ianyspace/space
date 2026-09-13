@@ -4,13 +4,16 @@
     display: flex;
     align-items: center;
 
-    .pic:hover {
-        margin-bottom: 0;
-        min-width: 70px;
-        border-radius: 100%;
-        animation-name: scale;
-        animation-duration: 2s;
-        animation-iteration-count: 1;
+    .pic {
+        // 头像是这一行的第一个 flex 子项，所以悬停动效只能用 `transform`。
+        // 这里原先还有一条 `min-width: 70px`：图片本身只有 63px 宽，
+        // 悬停时它把第一格从 63px 撑回 70px，于是右边的简介被挤得往右跳 7px
+        // —— 每次滑过头像整段文字都会动一下。别再加任何影响尺寸的声明。
+        border-radius: 50%;
+
+        &:hover {
+            animation: scale 2s 1;
+        }
     }
 
     .description {
