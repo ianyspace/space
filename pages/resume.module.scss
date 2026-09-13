@@ -150,14 +150,15 @@
 /* --- print: clean A4 output --- */
 
 @media print {
+
     // 只打印简历纸本身：把页面上的一切（包括全局注入的看板娘、其他固定元素）
     // 全部隐藏，再让简历纸以可见状态钉在纸张左上角。
-    body * {
+    .page * {
         visibility: hidden;
     }
 
-    .sheet,
-    .sheet * {
+    .page .sheet,
+    .page .sheet * {
         visibility: visible;
     }
 
