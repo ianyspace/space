@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import Layout from 'components/Layout';
-import Tag from 'components/Tag';
 import Bio from 'components/Bio';
 import SEO from 'components/SEO';
 import { useLang } from 'context/LanguageContext';
@@ -12,9 +11,8 @@ import TagGraph from './TagGraph';
 import styles from './Tags.module.scss';
 
 /**
- * Tags index, redesigned as a relation graph: node size encodes the article
- * count and an edge means the two tags appear together in some article. The
- * flat tag list stays below as a quick, always-visible way into every tag.
+ * Tags index: a single relation graph. Node size encodes the article count and
+ * an edge means the two tags appear together in some article.
  */
 const TagsPage = function ({ tagGroups }) {
     const { homeLink } = useLang();
@@ -29,23 +27,8 @@ const TagsPage = function ({ tagGroups }) {
                 <Bio />
             </aside>
             <div className={styles['tag-page']}>
-                <h1>{tTags}</h1>
-                <p className={styles['tag-intro']}>{formatMessage('tTagsDesc')}</p>
-
+                <h1 className={styles['tag-title']}>{tTags}</h1>
                 <TagGraph tagGroups={tagGroups} getTagUrl={getTagUrl} />
-
-                <h2 className={styles['tag-list-title']}>{formatMessage('tTagsAll')}</h2>
-                <ul className={styles['tag-grid']}>
-                    {tagGroups.map((tag) => (
-                        <li className={styles['tag-item']} key={tag.fieldValue}>
-                            <Tag
-                                text={tag.fieldValue}
-                                count={tag.totalCount}
-                                url={getTagUrl(tag.fieldValue)}
-                            />
-                        </li>
-                    ))}
-                </ul>
             </div>
         </Layout>
     );

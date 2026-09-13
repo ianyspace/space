@@ -1,27 +1,24 @@
 import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 
 import styles from './TagGraph.module.scss';
 
 /**
  * Tag relation graph: every tag is a node (size tracks the article count), and
- * tags that share at least one article are linked — a two-dimensional map of
- * what this blog actually writes about.
+ * tags that share at least one article are linked. Hovering a node focuses it
+ * and its neighbours; clicking opens the tag page. No chrome, no legend — the
+ * map reads itself.
  *
  * Layout is a deterministic force simulation (seeded circular start, repulsion
  * + link attraction + centering, cooling to rest) computed in `useMemo`, so the
  * server render and the client hydration agree — no randomness anywhere.
- *
- * Interactions: hover highlights a node and its neighbours (the rest fade);
- * click navigates to the tag page.
  */
 const VIEW_W = 760;
-const VIEW_H = 540;
+const VIEW_H = 560;
 
-const MIN_R = 13;
-const MAX_R = 30;
+const MIN_R = 14;
+const MAX_R = 34;
 
 /** Deterministic force layout, run to convergence once per dataset. */
 function computeLayout(tagGroups) {
@@ -73,7 +70,7 @@ function computeLayout(tagGroups) {
                 const dx = nodes[b].x - nodes[a].x;
                 const dy = nodes[b].y - nodes[a].y;
                 const dist = Math.hypot(dx, dy) || 1;
-                const minGap = radiusOf(a) + radiusOf(b) + 38;
+                const minGap = radiusOf(a) + radiusOf(b) + 30;
                 // Repulsion grows sharply when circles would overlap.
                 const push =
                     (minGap - dist > 0 ? (minGap - dist) * 0.14 : 0) + (60 * 18) / (dist * dist);
@@ -182,7 +179,6 @@ const TagGraph = function ({ tagGroups, getTagUrl }) {
                             onMouseLeave={() => setHovered(null)}
                             onClick={() => router.push(getTagUrl(node.fieldValue))}
                         >
-                            <title>{`${node.fieldValue} · ${node.totalCount} 篇文章，点击进入标签页`}</title>
                             <circle className={styles.hit} cx={node.x} cy={node.y} r={r + 8} fill="transparent" />
                             <circle className={styles.bubble} cx={node.x} cy={node.y} r={r} />
                             <text
@@ -194,37 +190,13 @@ const TagGraph = function ({ tagGroups, getTagUrl }) {
                             >
                                 {node.fieldValue}
                             </text>
-                            <text
-                                className={styles.count}
-                                x={node.x}
-                                y={node.y - r - 7}
-                                textAnchor="middle"
-                            >
+                            <text className={styles.count} x={node.x} y={node.y + r + 15} textAnchor="middle">
                                 {node.totalCount}
                             </text>
                         </g>
                     );
                 })}
             </svg>
-
-            <div className={styles.panel}>
-                {hovered != null ? (
-                    <>
-                        <span className={styles['panel-tag']}>{nodes[hovered].fieldValue}</span>
-                        <span className={styles['panel-count']}>
-                            {nodes[hovered].totalCount} 篇 · 关联{' '}
-                            {(neighbourOf.get(hovered) || new Set()).size} 个标签
-                        </span>
-                        <Link className={styles['panel-link']} href={getTagUrl(nodes[hovered].fieldValue)}>
-                            查看文章 →
-                        </Link>
-                    </>
-                ) : (
-                    <span className={styles['panel-hint']}>
-                        节点越大文章越多，连线代表两个标签出现在同一篇文章里。悬停查看详情，点击进入标签页。
-                    </span>
-                )}
-            </div>
         </div>
     );
 };

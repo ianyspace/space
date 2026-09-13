@@ -1,15 +1,11 @@
-// Tag relation graph (`templates/TagGraph.js`): a relation map where node size
-// encodes article count and lines encode tags co-occurring in one article.
+// Tag relation graph, Apple-style: no card chrome, no legend — just the map
+// breathing on the page. Pink bubbles on a clean backdrop, light hairline
+// edges, generous whitespace, smooth focus transitions.
 
 .wrap {
-    margin: 6px 0 0;
-    padding: 10px 6px 6px;
-    border: 1px solid var(--hr);
-    border-radius: 14px;
-    background: var(--bg-article);
-    box-shadow: var(--bg-article-shadow);
-    -webkit-backdrop-filter: var(--article-backdrop);
-    backdrop-filter: var(--article-backdrop);
+    margin: 0.5rem 0 1rem;
+    padding: 0 4px;
+    user-select: none;
 }
 
 .svg {
@@ -17,23 +13,24 @@
     width: 100%;
     min-width: 300px;
     height: auto;
+    overflow: visible;
 }
 
 .edge {
-    stroke: var(--breadcrumbsTextColor);
-    stroke-width: 1.2;
-    opacity: 0.35;
-    transition: opacity 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease;
+    stroke: var(--hr);
+    stroke-width: 1;
+    opacity: 0.6;
+    transition: opacity 0.25s ease, stroke 0.25s ease, stroke-width 0.25s ease;
 }
 
 .edge-hot {
-    stroke: var(--tag-bg);
-    stroke-width: 2.2;
-    opacity: 0.9;
+    stroke: var(--pink);
+    stroke-width: 1.6;
+    opacity: 0.8;
 }
 
 .edge-dim {
-    opacity: 0.08;
+    opacity: 0.12;
 }
 
 .node {
@@ -41,23 +38,48 @@
     outline: none;
 }
 
-.hit {
-    pointer-events: all;
+.bubble {
+    fill: var(--pink);
+    stroke: transparent;
+    stroke-width: 2;
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), fill 0.25s ease,
+        opacity 0.25s ease;
 }
 
-.bubble {
-    fill: var(--bg);
-    stroke: var(--breadcrumbsTextColor);
-    stroke-width: 1.6;
-    transition: fill 0.2s ease, stroke 0.2s ease;
+@supports (fill: color-mix(in srgb, red 50%, blue)) {
+    :global(body.light) .bubble {
+        fill: color-mix(in srgb, var(--pink) 12%, #ffffff);
+    }
+
+    :global(body.dark) .bubble {
+        fill: color-mix(in srgb, var(--pink) 16%, #2b303b);
+    }
+}
+
+.node:hover .bubble,
+.node-hot .bubble {
+    fill: var(--pink);
+    transform: scale(1.06);
+}
+
+.node-hot .bubble {
+    stroke: var(--pink);
 }
 
 .label {
-    fill: var(--textNormal);
-    font-size: 12px;
-    font-weight: 700;
+    fill: var(--textTitle);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     pointer-events: none;
-    transition: fill 0.2s ease;
+    transition: fill 0.25s ease;
+}
+
+.node:hover .label,
+.node-hot .label {
+    fill: var(--textNormal);
 }
 
 .count {
@@ -65,72 +87,15 @@
     font-size: 10.5px;
     font-variant-numeric: tabular-nums;
     pointer-events: none;
-}
-
-.node-hot .bubble {
-    fill: var(--inlineCode-bg);
-    stroke: var(--tag-bg);
-    stroke-width: 2.4;
-}
-
-.node-hot .label {
-    fill: var(--textLink);
+    transition: opacity 0.25s ease;
 }
 
 .node-dim {
-    opacity: 0.25;
-    transition: opacity 0.2s ease;
+    opacity: 0.22;
 }
 
-/* --- detail panel under the graph --- */
-
-.panel {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    min-height: 34px;
-    margin: 6px 8px 6px;
-    padding: 7px 12px;
-    border: 1px solid var(--hr);
-    border-radius: 9px;
-    background: var(--bg);
-}
-
-.panel-tag {
-    padding: 1px 10px;
-    border-radius: 999px;
-    background: var(--tag-bg);
-    color: var(--tag-color);
-    font-size: 12.5px;
-    font-weight: 700;
-}
-
-.panel-count {
-    color: var(--textNormal);
-    font-size: 13px;
-}
-
-.panel-link {
-    margin-left: auto;
-    color: var(--textLink);
-    font-size: 13px;
-    font-weight: 600;
-    text-decoration: none;
-
-    &:hover {
-        text-decoration: underline;
-    }
-}
-
-.panel-hint {
-    color: var(--breadcrumbsTextColorActive);
-    font-size: 12.5px;
-    line-height: 1.6;
-}
-
-@media screen and (max-width: 650px) {
-    .panel-link {
-        margin-left: 0;
-    }
+.node-dim .bubble,
+.node-dim .label,
+.node-dim .count {
+    opacity: 0.7;
 }

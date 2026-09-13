@@ -2,8 +2,6 @@ module.exports = {
     tHome: '主页',
     tRelativePosts: '相关文章',
     tTags: '所有标签',
-    tTagsDesc: '按主题浏览文章，节点越大文章越多，相连的标签曾出现在同一篇文章里。',
-    tTagsAll: '全部标签',
     tSearch: '搜索文章',
     tSearchPlaceholder: '搜索标题、描述或标签',
     tSearchEmpty: '没有找到匹配的文章',

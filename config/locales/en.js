@@ -3,8 +3,6 @@ module.exports = {
     tRelativePosts: 'Relative Posts',
     tFollowTwitterDescription: 'You should follow him on Twitter',
     tTags: 'Tags',
-    tTagsDesc: 'Browse by topic: bigger nodes hold more posts, linked tags once shared an article.',
-    tTagsAll: 'All tags',
     tSearch: 'Search articles',
     tSearchPlaceholder: 'Search title, description or tags',
     tSearchEmpty: 'No matching articles found',
