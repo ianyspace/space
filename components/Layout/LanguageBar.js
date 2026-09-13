@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 import { site, supportedLanguages } from 'config';
 import { rhythm } from 'utils/typography';
 import { formatMessage } from 'utils/i18n';
 
 import LangButton from '../LangButton';
-import BalloonField from '../BalloonField';
 import LangList from '../LangList';
 import Search from './Search';
 
@@ -17,21 +17,38 @@ import styles from './LanguageBar.module.scss';
  * base MUST include a trailing slash (eg: `en/`).
  */
 const LanguageBar = function ({ lang: langKey = 'en', base = '/' }) {
-    const [displayLang, toggleDisplayLang] = useState(false);
+    const [open, setOpen] = useState(false);
+    const rootRef = useRef(null);
+    const router = useRouter();
 
     const handleToggleLanguage = React.useCallback(() => {
-        toggleDisplayLang((prev) => !prev);
+        setOpen((prev) => !prev);
     }, []);
 
-    let toggleStyle = {
-        maxHeight: null,
-    };
-    if (displayLang) {
-        toggleStyle = {
-            maxHeight: 200,
-            overflow: 'initial',
+    // Close when clicking anywhere outside the bar.
+    useEffect(() => {
+        const onPointerDown = (event) => {
+            if (!rootRef.current?.contains(event.target)) {
+                setOpen(false);
+            }
         };
-    }
+        document.addEventListener('pointerdown', onPointerDown);
+        return () => document.removeEventListener('pointerdown', onPointerDown);
+    }, []);
+
+    // Close on Escape and on navigation.
+    useEffect(() => {
+        const onKeyDown = (event) => {
+            if (event.key === 'Escape') setOpen(false);
+        };
+        document.addEventListener('keydown', onKeyDown);
+        return () => document.removeEventListener('keydown', onKeyDown);
+    }, []);
+
+    useEffect(() => {
+        setOpen(false);
+    }, [router.asPath]);
+
     const tTitle = formatMessage('title');
 
     const langsEntries = Object.entries(supportedLanguages);
@@ -50,6 +67,7 @@ const LanguageBar = function ({ lang: langKey = 'en', base = '/' }) {
     return (
         <div
             id="top-bar"
+            ref={rootRef}
             style={{
                 maxWidth: rhythm(28),
                 margin: 'auto',
@@ -76,13 +94,11 @@ const LanguageBar = function ({ lang: langKey = 'en', base = '/' }) {
                 </Link>
                 <div className={styles.actions}>
                     <Search />
-                    <LangButton lang={language} focused={displayLang} onClick={handleToggleLanguage} />
+                    <LangButton lang={language} focused={open} onClick={handleToggleLanguage} />
                 </div>
             </div>
-            <div className={styles['toggle-content']} style={toggleStyle}>
-                <BalloonField style={{ padding: 20 }}>
-                    <LangList languages={supportedLanguages} langKey={defaultLang} />
-                </BalloonField>
+            <div className={`${styles.dropdown} ${open ? styles['dropdown-open'] : ''}`}>
+                <LangList languages={supportedLanguages} langKey={defaultLang} current={langKey} />
             </div>
         </div>
     );

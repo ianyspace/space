@@ -87,6 +87,8 @@ body.light {
     --pagination-bg: #f7a046;
     --scrollbar-bg: #f5f5f5;
     --scrollbar-cl: #c5c3c3;
+    --preset-line: rgba(0, 0, 0, 0.09);
+    --preset-dot: rgba(0, 0, 0, 0.18);
 }
 
 body.dark {
@@ -111,6 +113,8 @@ body.dark {
     --pagination-bg: rgb(143, 91, 35);
     --scrollbar-bg: #373c49;
     --scrollbar-cl: #20232b;
+    --preset-line: rgba(255, 255, 255, 0.075);
+    --preset-dot: rgba(255, 255, 255, 0.16);
 }
 
 a {

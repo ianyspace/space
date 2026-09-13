@@ -1,14 +1,38 @@
-// Ported from `src/components/LangList/LangList.css`.
+// Language dropdown rows: compact menu items instead of oversized bare links.
 
 .lang-root {
     display: flex;
-    justify-content: space-around;
+    flex-direction: column;
+    padding: 6px;
 }
 
 .lang-link {
-    background-color: var(--linkBackground);
-    border-bottom: 1px solid var(--linkBorder);
-    font-size: 22px;
-    font-weight: bold;
-    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: var(--textNormal);
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+        outline: none;
+        background: var(--bg-article);
+        color: var(--textLink);
+    }
+}
+
+.is-current {
+    background: var(--inlineCode-bg);
+    color: var(--textLink);
+}
+
+.lang-check {
+    font-size: 12px;
+    line-height: 1;
 }

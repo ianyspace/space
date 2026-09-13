@@ -12,11 +12,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: auto;
-    min-width: 104px;
+    width: 34px;
     height: 34px;
-    gap: 7px;
-    padding: 0 13px;
+    padding: 0;
     border: 1px solid transparent;
     border-radius: 50%;
     background: transparent;
@@ -33,17 +31,13 @@
     }
 }
 
-.trigger-label {
-    color: currentColor;
-    font-family: var(--systemFont);
-    font-size: 12px;
-    line-height: 1;
-    white-space: nowrap;
-}
-
+// 展开态：输入框高度撑满顶栏（含上下 padding），底边线与顶栏自身的
+// border-bottom 精确重合 —— 负 margin 与 `.bar` 的 5px 垂直 padding 对应。
 .expanded {
-    flex-basis: 300px;
-    height: 34px;
+    flex-basis: 320px;
+    align-self: center;
+    height: 44px;
+    margin: -5px 0;
     justify-content: flex-start;
     gap: 7px;
     padding: 0 4px 0 1px;
@@ -121,25 +115,39 @@
 
 .results {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 10px);
     right: -8px;
     z-index: 30;
     overflow: hidden;
-    width: 330px;
+    width: 340px;
     max-width: calc(100vw - 32px);
     border: 1px solid var(--hr);
-    border-radius: 10px;
+    border-radius: 12px;
     background: var(--bg);
-    box-shadow: var(--bg-article-shadow);
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.18);
     -webkit-backdrop-filter: var(--article-backdrop);
     backdrop-filter: var(--article-backdrop);
+    transform-origin: top right;
+    animation: search-in 0.16s ease;
+}
+
+@keyframes search-in {
+    from {
+        opacity: 0;
+        transform: translateY(-5px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .result {
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    padding: 10px 13px;
+    gap: 4px;
+    padding: 11px 14px;
     color: var(--textNormal);
     text-decoration: none;
     transition: background 0.15s ease, box-shadow 0.15s ease;
@@ -153,7 +161,7 @@
     &.result-active {
         outline: none;
         background: var(--bg-article);
-        box-shadow: inset 2px 0 0 var(--tag-bg);
+        box-shadow: inset 3px 0 0 var(--tag-bg);
     }
 }
 
@@ -194,11 +202,16 @@
     line-height: 1.6;
 }
 
+// 命中的关键词用主题色下划线标出，不再铺背景色。
 .mark {
-    padding: 0 1px;
-    border-radius: 3px;
-    background: var(--tag-bg);
-    color: var(--tag-color);
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-color: var(--tag-bg);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
 }
 
 .status {

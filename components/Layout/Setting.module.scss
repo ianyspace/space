@@ -42,6 +42,79 @@
     margin-bottom: 2.625rem;
 }
 
+// Page header: a short intro so the page reads like a designed panel instead
+// of a bare stack of cards.
+.setting-header {
+    padding: 4px 2px 0;
+}
+
+.setting-header-title {
+    margin: 0 0 6px;
+    font-size: 1.6rem;
+    letter-spacing: 0.02em;
+}
+
+.setting-header-desc {
+    margin: 0;
+    color: var(--breadcrumbsTextColorActive);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.setting-sub {
+    margin: 18px 0 8px;
+    color: var(--textTitle);
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+}
+
+/* --- background preset swatches --- */
+
+.bg-tiles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.bg-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    width: 104px;
+    padding: 8px;
+    border: 1px solid var(--hr);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--bg) 44%, transparent);
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        border-color: var(--tag-bg);
+        transform: translateY(-2px);
+    }
+}
+
+.bg-tile-active {
+    border-color: var(--tag-bg);
+    box-shadow: 0 5px 14px -10px var(--tag-bg);
+}
+
+// The little preview square paints the real preset CSS (shared table in
+// utils/themeBackground.js) on a card-like backdrop.
+.bg-tile-look {
+    height: 52px;
+    border-radius: 6px;
+    border: 1px solid var(--hr);
+    background-color: var(--bg);
+    background-repeat: repeat;
+}
+
+.bg-tile-label {
+    color: var(--textNormal);
+    font-size: 12.5px;
+    text-align: center;
+}
+
 .setting-card {
     position: relative;
     overflow: hidden;
@@ -73,6 +146,10 @@
 
     &:nth-child(4) {
         --setting-accent: #d488a2;
+    }
+
+    &:nth-child(5) {
+        --setting-accent: #b08854;
     }
 
     h2 {

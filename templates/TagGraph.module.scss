@@ -1,0 +1,136 @@
+// Tag relation graph (`templates/TagGraph.js`): a relation map where node size
+// encodes article count and lines encode tags co-occurring in one article.
+
+.wrap {
+    margin: 6px 0 0;
+    padding: 10px 6px 6px;
+    border: 1px solid var(--hr);
+    border-radius: 14px;
+    background: var(--bg-article);
+    box-shadow: var(--bg-article-shadow);
+    -webkit-backdrop-filter: var(--article-backdrop);
+    backdrop-filter: var(--article-backdrop);
+}
+
+.svg {
+    display: block;
+    width: 100%;
+    min-width: 300px;
+    height: auto;
+}
+
+.edge {
+    stroke: var(--breadcrumbsTextColor);
+    stroke-width: 1.2;
+    opacity: 0.35;
+    transition: opacity 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+.edge-hot {
+    stroke: var(--tag-bg);
+    stroke-width: 2.2;
+    opacity: 0.9;
+}
+
+.edge-dim {
+    opacity: 0.08;
+}
+
+.node {
+    cursor: pointer;
+    outline: none;
+}
+
+.hit {
+    pointer-events: all;
+}
+
+.bubble {
+    fill: var(--bg);
+    stroke: var(--breadcrumbsTextColor);
+    stroke-width: 1.6;
+    transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
+.label {
+    fill: var(--textNormal);
+    font-size: 12px;
+    font-weight: 700;
+    pointer-events: none;
+    transition: fill 0.2s ease;
+}
+
+.count {
+    fill: var(--breadcrumbsTextColorActive);
+    font-size: 10.5px;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+.node-hot .bubble {
+    fill: var(--inlineCode-bg);
+    stroke: var(--tag-bg);
+    stroke-width: 2.4;
+}
+
+.node-hot .label {
+    fill: var(--textLink);
+}
+
+.node-dim {
+    opacity: 0.25;
+    transition: opacity 0.2s ease;
+}
+
+/* --- detail panel under the graph --- */
+
+.panel {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 34px;
+    margin: 6px 8px 6px;
+    padding: 7px 12px;
+    border: 1px solid var(--hr);
+    border-radius: 9px;
+    background: var(--bg);
+}
+
+.panel-tag {
+    padding: 1px 10px;
+    border-radius: 999px;
+    background: var(--tag-bg);
+    color: var(--tag-color);
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.panel-count {
+    color: var(--textNormal);
+    font-size: 13px;
+}
+
+.panel-link {
+    margin-left: auto;
+    color: var(--textLink);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.panel-hint {
+    color: var(--breadcrumbsTextColorActive);
+    font-size: 12.5px;
+    line-height: 1.6;
+}
+
+@media screen and (max-width: 650px) {
+    .panel-link {
+        margin-left: 0;
+    }
+}

@@ -179,7 +179,6 @@ const Search = function () {
                             <line x1="10.2" y1="10.2" x2="14" y2="14" />
                         </svg>
                     </span>
-                    <span className={styles['trigger-label']}>{tSearch}</span>
                 </button>
             ) : (
                 <>
