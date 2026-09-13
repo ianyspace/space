@@ -106,10 +106,10 @@ export default {
 - 文章列表 / 分页 / 文章详情（MDX、代码高亮、目录 TOC、封面）
 - 标签页与标签详情、多语言切换、翻译链接
 - 上一篇/下一篇、相关文章、阅读时长、面包屑、Bio、SEO
-- 明暗主题切换、主题背景设置、极简模式
+- 明暗主题切换、主题设置页（列表样式 / 加载方式 / 正文字体 / 页面背景 / 看板娘）
 - 私密文章密码锁、爱情标签爱心动画、Valine 评论（按需加载）
 - `map-space` 地球地图：省界高亮、按 zoom 显隐的足迹 marker、彩色气泡弹窗（`lib/map-space/`）
-- 左下角看板娘：Live2D 模型（嘉然 / Diana、Ava），由 `/live2d-jaran.js` + `/live2d-lib/pio.js` 提供
+- 左下角看板娘：Live2D 模型（嘉然 / Diana、Ava），由 `/live2d-jaran.js` + `/live2d-lib/pio.js` 提供，可在主题设置里关闭（关闭时 `pages/_app.js` 直接不加载该脚本）
 - 已从原项目迁移的样式全部转为 Sass（SCSS），组件样式收敛为同目录 CSS Modules
 
 ## 未迁移（原项目中的非文章功能）

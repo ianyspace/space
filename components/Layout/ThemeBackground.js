@@ -2,7 +2,7 @@ import React, { useLayoutEffect, useState } from 'react';
 
 import {
     getThemeBackground,
-    isPresetBackground,
+    isCustomBackground,
     presetBackgroundKey,
     THEME_BACKGROUND_EVENT,
     THEME_BACKGROUND_PRESET_STYLES,
@@ -28,20 +28,19 @@ const ThemeBackground = () => {
     }, []);
 
     const presetKey = presetBackgroundKey(themeBackground);
-    const preset = presetKey ? THEME_BACKGROUND_PRESET_STYLES[presetKey] : null;
+    // `none` and an empty value both mean "paint nothing".
+    const customUrl = isCustomBackground(themeBackground) ? themeBackground : '';
 
-    const backgroundStyle = preset
-        ? { ...preset, position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, zIndex: -1 }
-        : {
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              backgroundImage: isPresetBackground(themeBackground) ? undefined : `url(${themeBackground})`,
-              backgroundSize: 'cover',
-              zIndex: -1,
-          };
+    const backgroundStyle = {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: -1,
+        ...(presetKey ? THEME_BACKGROUND_PRESET_STYLES[presetKey] : null),
+        ...(customUrl ? { backgroundImage: `url(${customUrl})`, backgroundSize: 'cover' } : null),
+    };
 
     return (
         <>

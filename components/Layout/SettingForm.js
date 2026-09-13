@@ -4,26 +4,24 @@ import { formatMessage } from 'utils/i18n';
 import { getSimpleTheme, setSimpleTheme } from 'utils/simpleTheme';
 import {
     getThemeBackground,
+    isCustomBackground,
     setThemeBackground,
+    THEME_BACKGROUND_NONE,
     THEME_BACKGROUND_PRESETS,
     THEME_BACKGROUND_PRESET_STYLES,
     THEME_BACKGROUND_PRESET_PREFIX,
 } from 'utils/themeBackground';
 import { getFontChoice, setFontChoice, FONT_WENKAI, FONT_SYSTEM } from 'utils/fontChoice';
-import {
-    getListMode,
-    setListMode,
-    LIST_MODE_PAGINATION,
-    LIST_MODE_SCROLL,
-} from 'utils/listMode';
+import { getListMode, setListMode, LIST_MODE_PAGINATION, LIST_MODE_SCROLL } from 'utils/listMode';
+import { getLive2DEnabled, setLive2DEnabled } from 'utils/live2d';
 
 import styles from './Setting.module.scss';
 
 /**
  * Theme settings, rendered on its own page (`/setting/`).
  *
- * Sections run from "the list you read every day" to "the ambience around it":
- * list style → list loading → body font → page background. Each setting is one
+ * Sections run from "the list you read every day" outwards: list style → list
+ * loading → body font → page background → Live2D character. Each setting is one
  * card holding an iOS-style segmented control; the line under the control
  * describes the *selected* option, because there is no room for two option
  * descriptions inside a segmented control.
@@ -37,6 +35,7 @@ const SettingForm = function () {
     // The site default is scroll loading (`utils/listMode.js`); starting there
     // avoids a visible jump from "pagination" during the first client render.
     const [listMode, setListModeState] = useState(LIST_MODE_SCROLL);
+    const [live2d, setLive2dState] = useState(true);
     const [saved, setSaved] = useState(false);
     // Bumped on every change so the "saved" toast restarts its timer even when
     // the user keeps flipping options while it is already on screen.
@@ -47,6 +46,7 @@ const SettingForm = function () {
         setBackground(getThemeBackground());
         setFont(getFontChoice());
         setListModeState(getListMode());
+        setLive2dState(getLive2DEnabled());
     }, []);
 
     useEffect(() => {
@@ -79,14 +79,24 @@ const SettingForm = function () {
         markSaved();
     };
 
+    const onSelectLive2d = (enabled) => {
+        if (enabled === live2d) return;
+        setLive2dState(enabled);
+        setLive2DEnabled(enabled);
+        markSaved();
+    };
+
     const onApplyBackground = () => {
-        setThemeBackground(background.trim());
+        const value = background.trim();
+        setBackground(value);
+        // An empty field means "no background" (see utils/themeBackground.js).
+        setThemeBackground(value);
         markSaved();
     };
 
     const onClearBackground = () => {
-        setBackground('');
-        setThemeBackground('');
+        setBackground(THEME_BACKGROUND_NONE);
+        setThemeBackground(THEME_BACKGROUND_NONE);
         markSaved();
     };
 
@@ -132,6 +142,11 @@ const SettingForm = function () {
     const tCustomBackground = formatMessage('tCustomBackground');
     const tCustomBackgroundDesc = formatMessage('tCustomBackgroundDesc');
     const tBackgroundPlaceholder = formatMessage('tBackgroundPlaceholder');
+    const tLive2dTitle = formatMessage('tLive2dTitle');
+    const tLive2dOn = formatMessage('tLive2dOn');
+    const tLive2dOnDesc = formatMessage('tLive2dOnDesc');
+    const tLive2dOff = formatMessage('tLive2dOff');
+    const tLive2dOffDesc = formatMessage('tLive2dOffDesc');
     const tConfirm = formatMessage('tConfirm');
     const tClear = formatMessage('tClear');
     const tSaved = formatMessage('tSaved');
@@ -147,6 +162,10 @@ const SettingForm = function () {
     const fontOptions = [
         { value: FONT_SYSTEM, label: tSystemOption, desc: tSystemOptionDesc },
         { value: FONT_WENKAI, label: tWenkaiOption, desc: tWenkaiOptionDesc },
+    ];
+    const live2dOptions = [
+        { value: true, label: tLive2dOn, desc: tLive2dOnDesc },
+        { value: false, label: tLive2dOff, desc: tLive2dOffDesc },
     ];
 
     /** Description of the currently selected option (falls back to the first). */
@@ -177,15 +196,16 @@ const SettingForm = function () {
                 />
                 {options.map((option) => {
                     const active = option.value === current;
+                    const className = active
+                        ? `${styles['segmented-item']} ${styles['segmented-item-active']}`
+                        : styles['segmented-item'];
                     return (
                         <button
                             key={String(option.value)}
                             type="button"
                             role="radio"
                             aria-checked={active}
-                            className={`${styles['segmented-item']} ${
-                                active ? styles['segmented-item-active'] : ''
-                            }`}
+                            className={className}
                             onClick={() => onSelect(option.value)}
                         >
                             {option.label}
@@ -240,7 +260,7 @@ const SettingForm = function () {
                         {renderPresetTile(
                             'none',
                             tBackgroundNone,
-                            background === '',
+                            background === THEME_BACKGROUND_NONE,
                             onClearBackground,
                             tBackgroundNone,
                         )}
@@ -269,11 +289,7 @@ const SettingForm = function () {
                         <input
                             type="text"
                             className={styles['setting-input']}
-                            value={
-                                background.startsWith(THEME_BACKGROUND_PRESET_PREFIX)
-                                    ? ''
-                                    : background
-                            }
+                            value={isCustomBackground(background) ? background : ''}
                             placeholder={tBackgroundPlaceholder}
                             onChange={(event) => setBackground(event.target.value)}
                         />
@@ -292,6 +308,14 @@ const SettingForm = function () {
                             {tClear}
                         </button>
                     </div>
+                </div>
+            </section>
+
+            <section className={styles['setting-section']}>
+                <h2 className={styles['setting-section-title']}>{tLive2dTitle}</h2>
+                <div className={styles['setting-card']}>
+                    {renderSegmented(tLive2dTitle, live2dOptions, live2d, onSelectLive2d)}
+                    <p className={styles['setting-hint']}>{activeDesc(live2dOptions, live2d)}</p>
                 </div>
             </section>
 

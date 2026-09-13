@@ -65,6 +65,14 @@ h6 {
     }
 }
 
+// 「看板娘」开关（utils/live2d.js）：关掉时立即隐藏已经注入的容器。
+// 下次整页刷新时 `pages/_app.js` 会直接不挂载那个脚本，这里只是让
+// “浏览中途关掉”也能马上生效（vendored 脚本没法反向卸载）。
+body.live2d-off .pio-container,
+body.live2d-off #pio-container {
+    display: none !important;
+}
+
 body.light {
     --bg: rgba(255, 255, 255, 0.6);
     --bg-outer: transparent;
