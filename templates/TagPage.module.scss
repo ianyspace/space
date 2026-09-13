@@ -1,0 +1,37 @@
+// Tag detail page (`/tags/<tag>/`) — Apple-style large title with a muted count
+// line, then the post list with hairline separators between rows. Same rhythm as
+// the grouped cards on the settings page.
+
+.tag-header {
+    margin: 0 0 1.5rem;
+}
+
+.tag-title {
+    margin: 0 0 0.4rem;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.022em;
+}
+
+.tag-meta {
+    margin: 0;
+    color: var(--breadcrumbsTextColorActive);
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+
+// `article` is the element `PostAbbrevSimple` renders. Reaching it with an
+// element selector keeps this stylesheet from depending on another component's
+// module class names.
+.tag-posts article {
+    padding-bottom: 16px;
+}
+
+.tag-posts article + article {
+    padding-top: 18px;
+    border-top: 1px solid color-mix(in srgb, var(--hr) 45%, transparent);
+}
+
+.tag-bio {
+    margin-top: 50px;
+}

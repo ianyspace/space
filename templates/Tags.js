@@ -13,10 +13,19 @@ import styles from './Tags.module.scss';
 /**
  * Tags index: a single relation graph. Node size encodes the article count and
  * an edge means the two tags appear together in some article.
+ *
+ * Apple-style page: one large title, one muted line that doubles as the
+ * interaction hint (a graph with no chrome has no affordance of its own), then
+ * the map.
  */
 const TagsPage = function ({ tagGroups }) {
     const { homeLink } = useLang();
     const tTags = formatMessage('tTags');
+    const tTagGraphHint = formatMessage('tTagGraphHint');
+    // Hoisted like every other message: `formatMessage` reads the language
+    // context, so it must not be called inside a conditional branch.
+    const tTagGraphEmpty = formatMessage('tTagGraphEmpty');
+    const tagSummary = formatMessage('tfTagGraphSummary', tagGroups.length);
 
     const getTagUrl = (tag) => `${homeLink}tags/${kebabCase(tag)}/`;
 
@@ -27,8 +36,21 @@ const TagsPage = function ({ tagGroups }) {
                 <Bio />
             </aside>
             <div className={styles['tag-page']}>
-                <h1 className={styles['tag-title']}>{tTags}</h1>
-                <TagGraph tagGroups={tagGroups} getTagUrl={getTagUrl} />
+                <header className={styles['tag-header']}>
+                    <h1 className={styles['tag-title']}>{tTags}</h1>
+                    <p className={styles['tag-meta']}>
+                        {tagSummary}
+                        <span className={styles['tag-meta-dot']} aria-hidden="true">
+                            ·
+                        </span>
+                        {tTagGraphHint}
+                    </p>
+                </header>
+                {tagGroups.length > 0 ? (
+                    <TagGraph tagGroups={tagGroups} getTagUrl={getTagUrl} />
+                ) : (
+                    <p className={styles['tag-empty']}>{tTagGraphEmpty}</p>
+                )}
             </div>
         </Layout>
     );

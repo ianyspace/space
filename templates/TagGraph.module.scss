@@ -1,6 +1,9 @@
 // Tag relation graph, Apple-style: no card chrome, no legend — just the map
 // breathing on the page. Pink bubbles on a clean backdrop, light hairline
 // edges, generous whitespace, smooth focus transitions.
+//
+// The nodes are real links: mouse, keyboard and touch all get the same feedback
+// (hover/focus share one "hot" look, see below).
 
 .wrap {
     margin: 0.5rem 0 1rem;
@@ -11,9 +14,9 @@
 .svg {
     display: block;
     width: 100%;
-    min-width: 300px;
     height: auto;
     overflow: visible;
+    animation: graph-in 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .edge {
@@ -35,7 +38,24 @@
 
 .node {
     cursor: pointer;
+}
+
+// Invisible circle under the bubble: a slightly larger hit area makes the node
+// easier to grab without making it look bigger.
+.hit {
+    cursor: pointer;
+}
+
+// Pointer focus should not paint a ring; keyboard focus must. The suppressing
+// rule is dropped by engines without `:focus-visible`, which leaves their
+// default focus ring in place — the safe fallback.
+.node:focus:not(:focus-visible) {
     outline: none;
+}
+
+.node:focus-visible .bubble {
+    stroke: var(--pink);
+    stroke-width: 2.5;
 }
 
 .bubble {
@@ -58,10 +78,15 @@
     }
 }
 
+// Hover, keyboard focus and click-focus all share one "hot" look: the bubble
+// fills in, scales up and picks up a soft pink glow so the active node reads as
+// lifted off the map instead of just darker.
 .node:hover .bubble,
-.node-hot .bubble {
+.node-hot .bubble,
+.node:focus-visible .bubble {
     fill: var(--pink);
     transform: scale(1.06);
+    filter: drop-shadow(0 6px 12px rgba(255, 167, 196, 0.45));
 }
 
 .node-hot .bubble {
@@ -78,7 +103,8 @@
 }
 
 .node:hover .label,
-.node-hot .label {
+.node-hot .label,
+.node:focus-visible .label {
     fill: var(--textNormal);
 }
 
@@ -98,4 +124,30 @@
 .node-dim .label,
 .node-dim .count {
     opacity: 0.7;
+}
+
+@keyframes graph-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media screen and (max-width: 650px) {
+    // A 760×560 viewBox squeezed into a phone screen would scale the labels down
+    // to a few pixels, so the map keeps a readable width and pans instead.
+    .wrap {
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .svg {
+        min-width: 560px;
+    }
 }

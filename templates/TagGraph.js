@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useRouter } from 'next/router';
 
+import { formatMessage } from 'utils/i18n';
+
 import styles from './TagGraph.module.scss';
 
 /**
@@ -120,6 +122,9 @@ function computeLayout(tagGroups) {
 const TagGraph = function ({ tagGroups, getTagUrl }) {
     const [hovered, setHovered] = useState(null);
     const router = useRouter();
+    // Resolved once, outside the node loop: `formatMessage` is a hook, and the
+    // tag counts are plain data, so the counts are interpolated with `String`.
+    const tTagGraphAria = formatMessage('tTagGraphAria');
 
     const { nodes, links, radiusOf } = useMemo(() => computeLayout(tagGroups), [tagGroups]);
 
@@ -138,13 +143,17 @@ const TagGraph = function ({ tagGroups, getTagUrl }) {
         return !(neighbourOf.get(hovered) || new Set()).has(i);
     };
 
+    const openTag = (tag) => router.push(getTagUrl(tag));
+
     return (
         <div className={styles.wrap}>
             <svg
                 viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
                 className={styles.svg}
-                role="img"
-                aria-label="标签关系图"
+                // `role="group"` rather than `role="img"`: the nodes are links, and
+                // `img` would hide the whole map from assistive tech.
+                role="group"
+                aria-label={tTagGraphAria}
             >
                 {links.map((link) => {
                     const dimmed =
@@ -175,9 +184,21 @@ const TagGraph = function ({ tagGroups, getTagUrl }) {
                             className={`${styles.node} ${dimmed ? styles['node-dim'] : ''} ${
                                 i === hovered ? styles['node-hot'] : ''
                             }`}
+                            // Keyboard/touch users get the same affordance as the mouse:
+                            // focus follows the hover state, Enter and Space open the tag.
+                            role="button"
+                            tabIndex={0}
+                            aria-label={`${node.fieldValue} (${node.totalCount})`}
                             onMouseEnter={() => setHovered(i)}
                             onMouseLeave={() => setHovered(null)}
-                            onClick={() => router.push(getTagUrl(node.fieldValue))}
+                            onFocus={() => setHovered(i)}
+                            onBlur={() => setHovered(null)}
+                            onClick={() => openTag(node.fieldValue)}
+                            onKeyDown={(event) => {
+                                if (event.key !== 'Enter' && event.key !== ' ') return;
+                                event.preventDefault();
+                                openTag(node.fieldValue);
+                            }}
                         >
                             <circle className={styles.hit} cx={node.x} cy={node.y} r={r + 8} fill="transparent" />
                             <circle className={styles.bubble} cx={node.x} cy={node.y} r={r} />

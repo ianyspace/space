@@ -1,11 +1,41 @@
+// Tags index. Apple-style page header: one large title and a single muted line
+// that carries both the tag count and the interaction hint, then the graph
+// (see `TagGraph.module.scss`) breathing on the page below it.
+
 .tag-page {
     margin-bottom: 2.625rem;
     margin-top: 0.5rem;
 }
 
+.tag-header {
+    margin-bottom: 1.25rem;
+}
+
 .tag-title {
-    margin: 0 0 0.2rem;
+    margin: 0 0 0.4rem;
     font-size: 2rem;
     font-weight: 700;
     letter-spacing: -0.022em;
+}
+
+.tag-meta {
+    margin: 0;
+    color: var(--breadcrumbsTextColorActive);
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+
+// Middot between the count and the hint — it keeps the line readable when it
+// wraps on narrow screens.
+.tag-meta-dot {
+    margin: 0 7px;
+    opacity: 0.6;
+}
+
+.tag-empty {
+    margin: 0;
+    padding: 2rem 0;
+    color: var(--breadcrumbsTextColorActive);
+    font-size: 15px;
+    text-align: center;
 }

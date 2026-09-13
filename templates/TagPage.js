@@ -8,11 +8,14 @@ import Bio from 'components/Bio';
 import { useLang } from 'context/LanguageContext';
 import { formatMessage } from 'utils/i18n';
 
+import styles from './TagPage.module.scss';
+
 const TagPageTemplate = function ({ tag, posts }) {
     const siteTitle = formatMessage('title');
     const { lang, homeLink } = useLang();
 
     const tagHeader = formatMessage('tfTagHeader', posts.length, tag);
+    const tagCount = formatMessage('tfTagCountPosts', posts.length);
 
     return (
         <Layout
@@ -20,8 +23,13 @@ const TagPageTemplate = function ({ tag, posts }) {
             breadcrumbs={[{ text: formatMessage('tTags'), url: `${homeLink}tags/` }, { text: tag }]}
         >
             <SEO title={tagHeader} description={tagHeader} />
-            <h1>{tagHeader}</h1>
-            <main>
+            {/* Apple-style large title: the tag itself, with the count as the muted
+                secondary line. The full sentence stays in the SEO title above. */}
+            <header className={styles['tag-header']}>
+                <h1 className={styles['tag-title']}>{tag}</h1>
+                <p className={styles['tag-meta']}>{tagCount}</p>
+            </header>
+            <main className={styles['tag-posts']}>
                 {posts.map((post) => {
                     const title = post.frontmatter.title || post.slug;
                     return (
@@ -37,8 +45,7 @@ const TagPageTemplate = function ({ tag, posts }) {
                     );
                 })}
             </main>
-            <div style={{ marginTop: 50 }} />
-            <aside>
+            <aside className={styles['tag-bio']}>
                 <Bio />
             </aside>
         </Layout>
