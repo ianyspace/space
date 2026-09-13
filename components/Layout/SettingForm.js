@@ -4,6 +4,12 @@ import { formatMessage } from 'utils/i18n';
 import { getSimpleTheme, setSimpleTheme } from 'utils/simpleTheme';
 import { getThemeBackground, setThemeBackground } from 'utils/themeBackground';
 import { getFontChoice, setFontChoice, FONT_WENKAI, FONT_SYSTEM } from 'utils/fontChoice';
+import {
+    getListMode,
+    setListMode,
+    LIST_MODE_PAGINATION,
+    LIST_MODE_SCROLL,
+} from 'utils/listMode';
 
 import styles from './Setting.module.scss';
 
@@ -20,12 +26,14 @@ const SettingForm = function () {
     const [simple, setSimple] = useState(true);
     const [background, setBackground] = useState('');
     const [font, setFont] = useState(FONT_WENKAI);
+    const [listMode, setListModeState] = useState(LIST_MODE_PAGINATION);
     const [saved, setSaved] = useState(false);
 
     useEffect(() => {
         setSimple(getSimpleTheme());
         setBackground(getThemeBackground());
         setFont(getFontChoice());
+        setListModeState(getListMode());
     }, []);
 
     useEffect(() => {
@@ -45,6 +53,13 @@ const SettingForm = function () {
         if (choice === font) return;
         setFont(choice);
         setFontChoice(choice);
+        setSaved(true);
+    };
+
+    const onSelectListMode = (mode) => {
+        if (mode === listMode) return;
+        setListModeState(mode);
+        setListMode(mode);
         setSaved(true);
     };
 
@@ -82,6 +97,12 @@ const SettingForm = function () {
     const tSystemOption = formatMessage('tSystemOption');
     const tSystemOptionDesc = formatMessage('tSystemOptionDesc');
     const tCurrentFont = formatMessage('tfCurrentFont', font === FONT_SYSTEM ? tSystemOption : tWenkaiOption);
+    const tLoadTitle = formatMessage('tLoadTitle');
+    const tLoadDesc = formatMessage('tLoadDesc');
+    const tLoadPagination = formatMessage('tLoadPagination');
+    const tLoadPaginationDesc = formatMessage('tLoadPaginationDesc');
+    const tLoadScroll = formatMessage('tLoadScroll');
+    const tLoadScrollDesc = formatMessage('tLoadScrollDesc');
     const tConfirm = formatMessage('tConfirm');
     const tClear = formatMessage('tClear');
     const tSaved = formatMessage('tSaved');
@@ -168,6 +189,43 @@ const SettingForm = function () {
                     </button>
                 </div>
                 <p className={styles['setting-current']}>{tCurrentFont}</p>
+            </section>
+
+            <section className={styles['setting-card']}>
+                <h2>{tLoadTitle}</h2>
+                <p className={styles['setting-hint']}>{tLoadDesc}</p>
+                <div className={styles['setting-options']} role="radiogroup" aria-label={tLoadTitle}>
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={listMode === LIST_MODE_PAGINATION}
+                        className={optionClass(listMode === LIST_MODE_PAGINATION)}
+                        onClick={() => onSelectListMode(LIST_MODE_PAGINATION)}
+                    >
+                        <span className={styles['setting-option-title']}>
+                            {tLoadPagination}
+                            <span className={styles['setting-option-mark']} aria-hidden="true">
+                                {listMode === LIST_MODE_PAGINATION ? '✓' : ''}
+                            </span>
+                        </span>
+                        <span className={styles['setting-option-desc']}>{tLoadPaginationDesc}</span>
+                    </button>
+                    <button
+                        type="button"
+                        role="radio"
+                        aria-checked={listMode === LIST_MODE_SCROLL}
+                        className={optionClass(listMode === LIST_MODE_SCROLL)}
+                        onClick={() => onSelectListMode(LIST_MODE_SCROLL)}
+                    >
+                        <span className={styles['setting-option-title']}>
+                            {tLoadScroll}
+                            <span className={styles['setting-option-mark']} aria-hidden="true">
+                                {listMode === LIST_MODE_SCROLL ? '✓' : ''}
+                            </span>
+                        </span>
+                        <span className={styles['setting-option-desc']}>{tLoadScrollDesc}</span>
+                    </button>
+                </div>
             </section>
 
             <section className={styles['setting-card']}>
