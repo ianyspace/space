@@ -29,8 +29,20 @@ const LangButton = function ({
 }) {
     const focusedClass = focused ? styles['language-focused'] : '';
     return (
-        // eslint-disable-next-line jsx-a11y/interactive-supports-focus
-        <div className={`${styles.language} ${focusedClass}`} onClick={onClick} role="button" {...restProps}>
+        <div
+            className={`${styles.language} ${focusedClass}`}
+            onClick={onClick}
+            onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onClick?.(event);
+                }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-expanded={focused}
+            {...restProps}
+        >
             <IconLanguage className={styles.icon} />
             <span>{lang}</span>
         </div>

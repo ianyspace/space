@@ -224,10 +224,28 @@
 
 @media screen and (max-width: 650px) {
     .expanded {
-        flex-basis: 220px;
+        position: fixed;
+        top: 5px;
+        right: 12px;
+        left: 12px;
+        z-index: 120;
+        width: auto;
+        flex: none;
+        flex-basis: auto;
+        margin: 0;
+        padding: 0 7px 0 4px;
+        border: 1px solid var(--tag-bg);
+        border-radius: 12px;
+        background: var(--bg);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+        -webkit-backdrop-filter: var(--article-backdrop);
+        backdrop-filter: var(--article-backdrop);
     }
 
     .results {
-        right: -48px;
+        top: calc(100% + 8px);
+        right: 0;
+        width: 100%;
+        max-width: none;
     }
 }

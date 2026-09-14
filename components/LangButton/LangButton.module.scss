@@ -34,3 +34,8 @@
     border-color: var(--hr);
     background: var(--bg-article);
 }
+
+.language:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--pink) 70%, transparent);
+    outline-offset: 2px;
+}

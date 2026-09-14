@@ -11,12 +11,15 @@
     justify-content: space-between;
     flex-direction: row;
     align-items: center;
+    box-sizing: border-box;
 }
 
 .actions {
     display: flex;
+    flex: 0 1 auto;
     align-items: center;
     gap: 6px;
+    min-width: 0;
 }
 
 // Language picker panel: floats under the bar, fades/slides in, and only
@@ -48,4 +51,20 @@
 #top-bar {
     -webkit-backdrop-filter: var(--article-backdrop);
     backdrop-filter: var(--article-backdrop);
+}
+
+@media screen and (max-width: 650px) {
+    .bar {
+        padding: 5px 14px;
+    }
+
+    .actions {
+        gap: 4px;
+    }
+
+    .dropdown {
+        right: 12px;
+        min-width: 0;
+        width: min(170px, calc(100vw - 24px));
+    }
 }
