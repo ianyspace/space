@@ -99,6 +99,24 @@
         padding: 0 8px 10px 0;
         font-size: 13px;
         scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--textNormal) 18%, transparent) transparent;
+
+        &::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: color-mix(in srgb, var(--textNormal) 18%, transparent);
+        }
+
+        &:hover::-webkit-scrollbar-thumb {
+            background: color-mix(in srgb, var(--pink) 55%, transparent);
+        }
     }
 
     .css-toc a {

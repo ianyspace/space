@@ -1,5 +1,7 @@
 import React, { useLayoutEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 
+import { site } from 'config';
 import {
     getThemeBackground,
     isCustomBackground,
@@ -16,6 +18,7 @@ import SettingButton from './SettingButton';
  * `THEME_BACKGROUND_PRESET_STYLES` table (see utils/themeBackground.js).
  */
 const ThemeBackground = () => {
+    const router = useRouter();
     const [themeBackground, setThemeBackground] = useState('');
 
     useLayoutEffect(() => {
@@ -42,10 +45,16 @@ const ThemeBackground = () => {
         ...(customUrl ? { backgroundImage: `url(${customUrl})`, backgroundSize: 'cover' } : null),
     };
 
+    const path = (router.asPath || '/').split('?')[0].split('#')[0];
+    const relativePath = path.replace(site.pathPrefix || '', '') || '/';
+    const isHomepageList =
+        router.pathname === '/' ||
+        (router.pathname === '/[...slug]' && /^\/(?:en\/)?(?:\d+\/)?$/.test(relativePath));
+
     return (
         <>
             <div style={backgroundStyle} />
-            <SettingButton />
+            {isHomepageList && <SettingButton />}
         </>
     );
 };

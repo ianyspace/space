@@ -50,7 +50,12 @@ const ArticleToc = function ({ tableOfContents }) {
                         aria-label={tOpenOutline}
                         title={tOpenOutline}
                     >
-                        <span aria-hidden="true">↗</span>
+                        <span className={styles['toc-expand-icon']} aria-hidden="true">
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                        </span>
                     </button>
                 </div>
                 <div dangerouslySetInnerHTML={{ __html: tableOfContents }} />
