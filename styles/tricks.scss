@@ -38,3 +38,25 @@ h4 {
 img {
     margin-bottom: 0;
 }
+
+// Markdown 表格：小屏下多列会被挤得极窄。让表格自身成为横向滚动容器，
+// 每个单元格设最小宽度；列宽总和超出容器时横向滚动，否则仍平分填满。
+// 写在 tricks（晚于 typography.generated.css 加载），并用 .css-post 前缀
+// 提高特异性、限定只作用于正文表格，避免被生成样式覆盖。滚动条隐藏，仅保留滑动。
+.css-post table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; // Firefox
+    -ms-overflow-style: none; // 旧版 Edge / IE
+
+    &::-webkit-scrollbar {
+        display: none; // Chrome / Safari / 新版 Edge
+    }
+}
+
+.css-post table th,
+.css-post table td {
+    min-width: 6em;
+}
