@@ -25,14 +25,15 @@ export const LIVE2D_KEY = 'live2dEnabled';
 export const LIVE2D_OFF_CLASS = 'live2d-off';
 export const LIVE2D_SCRIPT = '/live2d-jaran.js';
 
-/** @returns {boolean} whether the character should be shown (default: yes). */
+/** @returns {boolean} whether the character should be shown (default: no). */
 export function getLive2DEnabled() {
-    if (typeof window === 'undefined') return true;
+    if (typeof window === 'undefined') return false;
     try {
-        // Everything but an explicit `'0'` keeps the site default (on).
-        return window.localStorage.getItem(LIVE2D_KEY) !== '0';
+        // Only an explicit `'1'` turns the character on; a missing key means
+        // "never chosen" and keeps the site default (off).
+        return window.localStorage.getItem(LIVE2D_KEY) === '1';
     } catch (err) {
-        return true;
+        return false;
     }
 }
 

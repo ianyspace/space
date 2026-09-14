@@ -35,7 +35,9 @@ const SettingForm = function () {
     // The site default is scroll loading (`utils/listMode.js`); starting there
     // avoids a visible jump from "pagination" during the first client render.
     const [listMode, setListModeState] = useState(LIST_MODE_SCROLL);
-    const [live2d, setLive2dState] = useState(true);
+    // The site default is the character off (`utils/live2d.js`); starting there
+    // avoids a visible jump from "on" during the first client render.
+    const [live2d, setLive2dState] = useState(false);
     const [saved, setSaved] = useState(false);
     // Bumped on every change so the "saved" toast restarts its timer even when
     // the user keeps flipping options while it is already on screen.

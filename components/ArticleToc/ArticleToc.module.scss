@@ -161,10 +161,11 @@
     position: absolute;
     inset: 0;
     border: 0;
-    background: rgba(20, 22, 28, 0.88);
+    // 毛玻璃：低透明度着色让 blur 后的页面内容透出轮廓，而不是整片压黑。
+    background: rgba(20, 22, 28, 0.42);
     opacity: 1;
-    -webkit-backdrop-filter: blur(16px) saturate(1.08);
-    backdrop-filter: blur(16px) saturate(1.08);
+    -webkit-backdrop-filter: blur(18px) saturate(1.35);
+    backdrop-filter: blur(18px) saturate(1.35);
     cursor: pointer;
 }
 

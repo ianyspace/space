@@ -24,7 +24,7 @@ export const THEME_BACKGROUND_DEFAULT = `${THEME_BACKGROUND_PRESET_PREFIX}kraft`
 
 /** Built-in background presets (rendered by `ThemeBackground.js`); default first. */
 export const THEME_BACKGROUND_PRESETS = [
-    { key: 'kraft', label: '牛皮纸' },
+    { key: 'kraft', label: '牛皮纸（默认）' },
     { key: 'rice', label: '宣纸' },
     { key: 'parchment', label: '羊皮纸' },
     { key: 'recycled', label: '再生纸' },
