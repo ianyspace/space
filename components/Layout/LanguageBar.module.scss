@@ -32,7 +32,7 @@
     min-width: 170px;
     border: 1px solid var(--hr);
     border-radius: 12px;
-    background: var(--bg);
+    background: #ffffff;
     box-shadow: 0 14px 38px rgba(0, 0, 0, 0.18);
     -webkit-backdrop-filter: var(--article-backdrop);
     backdrop-filter: var(--article-backdrop);
@@ -40,6 +40,10 @@
     transform: translateY(-6px);
     pointer-events: none;
     transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+:global(body.dark) .dropdown {
+    background: #282c35;
 }
 
 .dropdown-open {
