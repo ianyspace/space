@@ -21,6 +21,10 @@ const setCatalog = (anchors, catalogs, anchorsContain) => {
     };
 
     const antiShakeAnchorsContainScroll = antiShake(anchorsContainScroll, 10);
+    // Set both the rail and the modal copy immediately. Without this, the
+    // modal opened after the first scroll would not show the current section
+    // until the reader moved again.
+    anchorsContainScroll();
     anchorsContain.addEventListener('scroll', antiShakeAnchorsContainScroll);
     return antiShakeAnchorsContainScroll;
 };

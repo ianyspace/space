@@ -26,70 +26,118 @@
     justify-content: flex-end;
 }
 
-@media screen and (min-width: 1200px) {
-    // Article TOC, back to the classic look: colored links, pill background on
-    // the top level, 8px left rail that turns brown on the current section
-    // (toggled by utils/setCatalog.js via the `is-active` class).
-    // Two refinements: long titles ellipsize instead of wrapping, and nested
-    // lists show no bullets (a small indent keeps the hierarchy readable).
+// Article outline. The rail is intentionally quiet: the article remains the
+// main event, while the pink active marker ties the outline to anyspace's
+// existing accent system. The same link rules are shared by the large modal.
+.css-toc,
+.css-toc-modal {
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    ul ul {
+        margin: 3px 0 5px 10px;
+        padding-left: 10px;
+        border-left: 1px solid color-mix(in srgb, var(--hr) 60%, transparent);
+    }
+
+    li {
+        margin: 0;
+    }
+
+    a {
+        position: relative;
+        display: block;
+        box-sizing: border-box;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 8px;
+        color: var(--breadcrumbsTextColorActive);
+        font-size: 13px;
+        line-height: 1.45;
+        text-decoration: none;
+        text-overflow: ellipsis;
+        transition: color 0.2s ease, background 0.2s ease, padding 0.25s ease;
+
+        &:hover,
+        &:focus-visible {
+            outline: none;
+            background: color-mix(in srgb, var(--pink) 9%, transparent);
+            color: var(--textTitle);
+        }
+
+        &.is-active {
+            background: color-mix(in srgb, var(--pink) 12%, transparent);
+            color: var(--textTitle);
+            font-weight: 600;
+        }
+
+        &.is-active::before {
+            position: absolute;
+            top: 7px;
+            bottom: 7px;
+            left: 0;
+            width: 3px;
+            border-radius: 3px;
+            background: var(--pink);
+            content: '';
+        }
+    }
+}
+
+@media screen and (min-width: 1201px) {
     .css-toc {
         position: fixed;
-        top: 90px;
-        right: 5px;
-        width: 200px;
-        max-height: 500px;
+        top: 104px;
+        right: 24px;
+        z-index: 20;
+        width: min(210px, calc((100vw - 980px) / 2 - 30px));
+        max-height: calc(100vh - 190px);
         overflow-y: auto;
-        font-size: 14px;
+        padding: 0 8px 10px 0;
+        font-size: 13px;
+        scrollbar-width: thin;
+    }
 
-        ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
+    .css-toc a {
+        padding: 6px 8px 6px 11px;
+        white-space: nowrap;
+    }
 
-        ul ul {
-            padding-left: 14px;
-        }
-
-        a {
-            color: var(--tag-bg);
-            display: block;
-            box-sizing: border-box;
-            width: 100%;
-            border-radius: 7px;
-            padding-left: 5px;
-            border-left: 8px solid transparent;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-
-            &:hover {
-                text-decoration: underline 1.5px !important;
-            }
-
-            &.is-active {
-                border-left-color: #6d4534;
-                text-decoration: underline 1.5px;
-            }
-        }
-
-        p {
-            background: var(--inlineCode-bg);
-            border-radius: 7px;
-            font-weight: 600;
-        }
-
-        >ul>li>a {
-            background: var(--inlineCode-bg);
-            border-radius: 7px;
-            font-weight: 600;
-        }
+    .css-toc ul ul a {
+        padding-left: 9px;
+        font-size: 12px;
     }
 }
 
 @media screen and (max-width: 1200px) {
     .css-toc {
         display: none;
+    }
+}
+
+.css-toc-modal a {
+    padding: 10px 14px 10px 16px;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.css-toc-modal > div > ul > li > a {
+    color: var(--textTitle);
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.css-toc-modal ul ul a {
+    padding-left: 13px;
+}
+
+@media screen and (max-width: 600px) {
+    .css-toc-modal a {
+        padding: 9px 10px 9px 14px;
+        font-size: 14px;
     }
 }
 

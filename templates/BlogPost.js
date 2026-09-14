@@ -12,6 +12,7 @@ import TranslationsLink from 'components/TranslationsLink';
 import Private from 'components/Private';
 import Love from 'components/Love';
 import Comments from 'components/Comments';
+import ArticleToc from 'components/ArticleToc/ArticleToc';
 
 import articleComponents from 'lib/generated/articleComponents';
 import sharedComponents from 'content/components';
@@ -78,13 +79,14 @@ const BlogPostTemplate = function ({
 
     useEffect(() => {
         const anchors = document.querySelectorAll('.anchor');
-        const catalogsContain = document.querySelector('.css-toc');
         const anchorsContain = document.querySelector('#main-contain');
-        if (!catalogsContain || !anchorsContain) return undefined;
+        const catalogsContain = document.querySelectorAll('.css-toc, .css-toc-modal');
+        if (!catalogsContain.length || !anchorsContain) return undefined;
 
-        const catalogs = catalogsContain.getElementsByTagName('a');
-        const handler = setCatalog(anchors, catalogs, anchorsContain);
-        return () => anchorsContain.removeEventListener('scroll', handler);
+        const handlers = [...catalogsContain].map((catalog) =>
+            setCatalog(anchors, catalog.getElementsByTagName('a'), anchorsContain),
+        );
+        return () => handlers.forEach((handler) => anchorsContain.removeEventListener('scroll', handler));
     }, [update, mdxSource]);
 
     let tags;
@@ -192,10 +194,7 @@ const BlogPostTemplate = function ({
                     <MDXRemote {...mdxSource} components={mdxComponents} />
                 )}
             </div>
-            <div
-                className="css-toc"
-                dangerouslySetInnerHTML={{ __html: showUnreal ? '' : tableOfContents }}
-            />
+            {!showUnreal && <ArticleToc tableOfContents={tableOfContents} />}
 
             {frontmatter.relative && (
                 <RelativePosts postNodes={[previousInSameTag, nextInSameTag]} />
