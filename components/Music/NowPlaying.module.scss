@@ -10,12 +10,21 @@
     background: rgba(8, 9, 16, 0.55);
     -webkit-backdrop-filter: blur(18px);
     backdrop-filter: blur(18px);
-    animation: veil-in 0.24s ease-out;
+    animation: veil-in 0.28s ease-out;
+}
+
+.veil-out {
+    animation: veil-out 0.3s ease-in forwards;
 }
 
 @keyframes veil-in {
     from { opacity: 0; }
     to { opacity: 1; }
+}
+
+@keyframes veil-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
 }
 
 .page {
@@ -37,19 +46,37 @@
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC',
         'Helvetica Neue', 'Microsoft YaHei', sans-serif;
     -webkit-font-smoothing: antialiased;
-    animation: np-in 0.32s cubic-bezier(0.32, 0.72, 0.2, 1);
+    animation: np-in 0.42s cubic-bezier(0.32, 0.72, 0.2, 1) both;
+    will-change: transform, opacity;
     overflow: hidden;
+}
+
+/* Exit: slide back down toward the mini bar, then the shell unmounts. */
+.page-out {
+    animation: np-out 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 @keyframes np-in {
     from {
-        transform: translateY(10%);
-        opacity: 0.4;
+        transform: translateY(34%) scale(0.94);
+        opacity: 0.35;
     }
 
     to {
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
         opacity: 1;
+    }
+}
+
+@keyframes np-out {
+    from {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateY(34%) scale(0.94);
+        opacity: 0.3;
     }
 }
 

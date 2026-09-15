@@ -7,6 +7,27 @@
     bottom: 92px;
     z-index: 20;
     width: min(464px, calc(100vw - 24px));
+    animation: mini-in 0.36s cubic-bezier(0.32, 0.72, 0.2, 1) both;
+}
+
+/* Rises into place when it appears — after the player sheet slides away
+   or when a first track loads. */
+@keyframes mini-in {
+    from {
+        transform: translateX(-50%) translateY(18px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wrap {
+        animation: none;
+    }
 }
 
 .mini {

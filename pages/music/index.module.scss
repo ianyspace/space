@@ -111,6 +111,31 @@
     box-sizing: border-box;
 }
 
+/* --- tab page transitions --- */
+
+.view {
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Applied to whichever view is shown — remounting the class replays the
+   fade-rise on every tab switch (both views stay mounted for scroll memory). */
+.view-in {
+    animation: view-in 0.3s cubic-bezier(0.32, 0.72, 0.2, 1) both;
+}
+
+@keyframes view-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* --- toast --- */
 
 .toast {
@@ -139,7 +164,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .blob {
+    .blob,
+    .view-in {
         animation: none;
     }
 }

@@ -33,7 +33,6 @@ const TrackList = function ({
     onToggleTrack,
     onGoProfile,
     onRefresh,
-    activeItemRef,
 }) {
     const keyword = search.trim();
     const currentId = current ? current.track.id : '';
@@ -106,7 +105,7 @@ const TrackList = function ({
                         const active = track.id === currentId;
                         const meta = parseTrackName(track.name);
                         return (
-                            <li key={track.id} ref={active ? activeItemRef : undefined}>
+                            <li key={track.id}>
                                 <button
                                     type="button"
                                     className={active ? styles['track-active'] : styles.track}

@@ -49,6 +49,24 @@ export const storageSet = function (key, value) {
     } catch (err) { /* private mode etc. — keep working without persistence */ }
 };
 
+// iOS (and iOS-only browsers like Alook — they are all WKWebView) needs the
+// audio element to have played once inside a real user gesture before later
+// async `play()` calls (after a Drive blob download) are allowed.
+export const isIOSLike = function () {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent || '';
+    const iOSUA = /iP(hone|ad|od)/.test(ua);
+    // iPadOS 13+ reports a Macintosh UA but still behaves like iOS.
+    const iPadOS = ua.includes('Macintosh')
+        && typeof navigator.maxTouchPoints === 'number'
+        && navigator.maxTouchPoints > 1;
+    return iOSUA || iPadOS;
+};
+
+// ~0.01s of silence — lets the unlock `play()` resolve promptly instead of
+// hanging with an empty src (which would leave the element "playing").
+export const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+
 // `audio.play()` may reject as a promise OR throw synchronously (Safari has
 // been observed doing the latter, which crashes the whole page when it
 // happens inside an event handler) — swallow both failure modes.

@@ -14,6 +14,8 @@ import {
     storageGet,
     storageSet,
     safePlay,
+    isIOSLike,
+    SILENT_WAV,
     parseTrackName,
     makeArtwork,
     listAllFiles,
@@ -47,6 +49,9 @@ const MusicPage = function () {
     // now-playing page floats above it while `playerOpen` is true.
     const [tab, setTab] = useState('list');
     const [playerOpen, setPlayerOpen] = useState(false);
+    // While true the sheet plays its slide-down exit animation and only
+    // unmounts when that finishes (`onClosed`).
+    const [playerClosing, setPlayerClosing] = useState(false);
     const [gsiReady, setGsiReady] = useState(false);
     const [clientId, setClientId] = useState('');
     const [clientIdDraft, setClientIdDraft] = useState('');
@@ -65,13 +70,66 @@ const MusicPage = function () {
     // 'off' → 'all' → 'one' → 'off'
     const [repeat, setRepeat] = useState('off');
     const [progress, setProgress] = useState({ time: 0, duration: 0 });
+    // Id of the track whose audio blob is (or is being) prefetched.
+    const [prefetchId, setPrefetchId] = useState('');
 
     const audioRef = useRef(null);
     const objectUrlRef = useRef('');
     // Guards against two blob downloads racing when several tracks are
     // clicked in quick succession — only the latest click may win.
     const playSeqRef = useRef(0);
-    const activeItemRef = useRef(null);
+    // iOS needs one synchronous `play()` inside the tap gesture before
+    // async plays are allowed (Safari tolerates this; Alook-style WKWebView
+    // shells do not) — done once per element.
+    const unlockRef = useRef(false);
+    // { id, promise } of the in-flight/finished next-track prefetch.
+    const prefetchRef = useRef(null);
+
+    const fetchTrackUrl = useCallback(async function (track, accessToken) {
+        const resp = await fetch(`${DRIVE_FILES_URL}/${track.id}?alt=media`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (resp.status === 401) {
+            setToken('');
+            throw new Error('授权已过期，请重新连接');
+        }
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return URL.createObjectURL(await resp.blob());
+    }, []);
+
+    // Pre-download the next track while the current one still plays: iOS
+    // suspends background `fetch`, so a cold download at `ended` in the
+    // background only completes once the page is re-opened (the exact
+    // "next song starts when I come back" symptom). With the blob already
+    // cached, auto-advance is a synchronous src swap that keeps rolling in
+    // the background.
+    const startPrefetch = useCallback(async function (track) {
+        if (!track) return;
+        const old = prefetchRef.current;
+        if (old && old.promise && old.id !== track.id) {
+            // Abandoned prefetch (user skipped ahead) — free its blob.
+            old.promise.then((r) => r.url && URL.revokeObjectURL(r.url)).catch(() => {});
+        }
+        const entry = { id: track.id, promise: null };
+        entry.promise = fetchTrackUrl(track, token)
+            .then((url) => ({ url }))
+            .catch(() => ({ url: '' }));
+        prefetchRef.current = entry;
+        setPrefetchId(track.id);
+    }, [token, fetchTrackUrl]);
+
+    // Take the prefetched blob if it matches `track` (clearing the cache);
+    // returns '' when nothing usable is cached.
+    const claimPrefetch = useCallback(async function (track) {
+        const entry = prefetchRef.current;
+        if (!entry || entry.id !== track.id) return '';
+        prefetchRef.current = null;
+        setPrefetchId('');
+        try {
+            const result = await entry.promise;
+            return result.url || '';
+        } catch (err) { return ''; }
+    }, []);
 
     /* --- theme --- */
 
@@ -115,9 +173,11 @@ const MusicPage = function () {
         if (savedFolder) setFolderId(savedFolder);
     }, []);
 
-    // Revoke the blob URL of the last played file when leaving the page.
+    // Revoke the blob URLs (current + prefetched) when leaving the page.
     useEffect(() => () => {
         if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+        const entry = prefetchRef.current;
+        if (entry && entry.promise) entry.promise.then((r) => r.url && URL.revokeObjectURL(r.url)).catch(() => {});
     }, []);
 
     const driveGet = useCallback(async (params, accessToken) => {
@@ -247,24 +307,44 @@ const MusicPage = function () {
 
     /* --- playback --- */
 
+    // One-time silent-source play INSIDE the tap gesture: WKWebView shells
+    // like Alook reject `play()` calls that happen after an await, so the
+    // element must be unlocked synchronously on the first user interaction.
+    const unlockAudio = useCallback(function () {
+        if (unlockRef.current || !isIOSLike()) return;
+        const audio = audioRef.current;
+        if (!audio) return;
+        unlockRef.current = true;
+        try {
+            audio.src = SILENT_WAV;
+            const request = audio.play();
+            if (request && typeof request.then === 'function') {
+                request.then(function () {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }).catch(() => {});
+            } else {
+                audio.pause();
+            }
+        } catch (err) { /* old webviews: element already unlocked or unusable */ }
+    }, []);
+
     const play = useCallback(async function (track) {
         setError('');
         setLoadingId(track.id);
         const seq = ++playSeqRef.current;
         try {
-            const resp = await fetch(`${DRIVE_FILES_URL}/${track.id}?alt=media`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (resp.status === 401) {
-                setToken('');
-                setNotice('');
-                throw new Error('授权已过期，请重新连接');
+            // Use the prefetched blob when it matches — instant start, and
+            // the only path that survives background auto-advance on iOS.
+            let url = await claimPrefetch(track);
+            if (seq !== playSeqRef.current) {
+                if (url) URL.revokeObjectURL(url);
+                return;
             }
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const url = URL.createObjectURL(await resp.blob());
+            if (!url) url = await fetchTrackUrl(track, token);
             if (seq !== playSeqRef.current) {
                 // A newer click superseded this download — drop its blob.
-                URL.revokeObjectURL(url);
+                if (url) URL.revokeObjectURL(url);
                 return;
             }
             if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
@@ -276,11 +356,12 @@ const MusicPage = function () {
         } finally {
             if (seq === playSeqRef.current) setLoadingId('');
         }
-    }, [token]);
+    }, [token, fetchTrackUrl, claimPrefetch]);
 
     // Clicking the row of the track that is already loaded toggles
     // play/pause instead of downloading the whole file again.
     const toggleTrack = useCallback(function (track) {
+        unlockAudio();
         if (current && current.track.id === track.id) {
             const audio = audioRef.current;
             if (!audio) return;
@@ -289,7 +370,7 @@ const MusicPage = function () {
             return;
         }
         play(track);
-    }, [current, play]);
+    }, [current, play, unlockAudio]);
 
     const togglePlay = useCallback(function () {
         const audio = audioRef.current;
@@ -346,9 +427,59 @@ const MusicPage = function () {
         setRepeat((mode) => (mode === 'off' ? 'all' : mode === 'all' ? 'one' : 'off'));
     }, []);
 
-    // Auto-advance at the end of a track — this keeps playing in the
-    // background: the audio element continues in hidden tabs and `ended`
-    // still fires, so the next blob download + play go through untouched.
+    /* --- now-playing transitions (mini bar ⇄ sheet) --- */
+
+    const openPlayer = useCallback(function () {
+        setPlayerClosing(false);
+        setPlayerOpen(true);
+    }, []);
+
+    // Dismiss = slide the sheet back down; it unmounts via `onClosed`.
+    // With reduced motion the CSS animation never fires an end event, so
+    // unmount immediately instead.
+    const closePlayer = useCallback(function (nextTab) {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            setPlayerOpen(false);
+            setPlayerClosing(false);
+        } else {
+            setPlayerClosing(true);
+        }
+        if (nextTab) setTab(nextTab);
+    }, []);
+
+    const finishClosePlayer = useCallback(function () {
+        setPlayerOpen(false);
+        setPlayerClosing(false);
+    }, []);
+
+    // A new tap while the exit animation runs — bring the sheet back.
+    const cancelClosePlayer = useCallback(function () {
+        setPlayerClosing(false);
+    }, []);
+
+    // Which track auto-advance will pick up at `ended` (sequential only —
+    // shuffle chooses randomly at the last moment, so nothing to prefetch).
+    const upcomingTrack = useMemo(function () {
+        if (!current || repeat === 'one' || visibleTracks.length === 0) return null;
+        if (shuffle) return null;
+        const index = visibleTracks.findIndex((track) => track.id === current.track.id);
+        if (index === -1) return visibleTracks[0];
+        return visibleTracks[index + 1] || (repeat === 'all' ? visibleTracks[0] : null);
+    }, [current, repeat, shuffle, visibleTracks]);
+
+    // Keep the next song's blob downloaded while the current one plays, so
+    // background auto-advance works on iOS (a cold fetch there is suspended
+    // until the page returns to the foreground).
+    useEffect(() => {
+        if (!token || !isPlaying) return;
+        if (!upcomingTrack || upcomingTrack.id === prefetchId) return;
+        startPrefetch(upcomingTrack);
+    }, [token, isPlaying, upcomingTrack, prefetchId, startPrefetch]);
+
+    // Auto-advance at the end of a track. With the next blob already
+    // prefetched this is a plain src swap — it keeps rolling even while the
+    // page sits in the background on iOS; only the rare un-cached case
+    // (shuffle, dead prefetch) falls back to a foreground fetch.
     const handleEnded = useCallback(function () {
         setIsPlaying(false);
         if (!current) return;
@@ -424,14 +555,8 @@ const MusicPage = function () {
         navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
     }, [isPlaying]);
 
-    // Auto-advancing to the next track should bring its row into view — but
-    // only while the list is actually on screen.
-    const currentId = current ? current.track.id : '';
-    useEffect(() => {
-        if (currentId && !playerOpen && tab === 'list' && activeItemRef.current) {
-            activeItemRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        }
-    }, [currentId, playerOpen, tab]);
+    // No auto-scrolling to the current row — switching tabs or auto-advance
+    // must never yank the list position around.
 
     // Space = play/pause, ←/→ = seek ±10s (ignored while typing in a field).
     useEffect(() => {
@@ -481,7 +606,12 @@ const MusicPage = function () {
             </div>
 
             <div className={styles.app}>
-                {tab === 'list' ? (
+                {/* Both tab pages stay mounted (scroll position survives the
+                    switch); the shown one replays its enter transition. */}
+                <div
+                    className={`${styles.view}${tab === 'list' ? ` ${styles['view-in']}` : ''}`}
+                    style={{ display: tab === 'list' ? undefined : 'none' }}
+                >
                     <TrackList
                         connected={!!token}
                         folderName={folderName}
@@ -496,9 +626,12 @@ const MusicPage = function () {
                         onToggleTrack={toggleTrack}
                         onGoProfile={() => setTab('profile')}
                         onRefresh={loadTracks}
-                        activeItemRef={activeItemRef}
                     />
-                ) : (
+                </div>
+                <div
+                    className={`${styles.view}${tab === 'profile' ? ` ${styles['view-in']}` : ''}`}
+                    style={{ display: tab === 'profile' ? undefined : 'none' }}
+                >
                     <Profile
                         theme={theme}
                         onToggleTheme={toggleTheme}
@@ -518,7 +651,7 @@ const MusicPage = function () {
                         trackCount={tracks.length}
                         onGoList={() => setTab('list')}
                     />
-                )}
+                </div>
             </div>
 
             {current && !playerOpen && (
@@ -527,7 +660,7 @@ const MusicPage = function () {
                     isPlaying={isPlaying}
                     onTogglePlay={togglePlay}
                     onNext={playNext}
-                    onOpenPlayer={() => setPlayerOpen(true)}
+                    onOpenPlayer={openPlayer}
                 />
             )}
 
@@ -541,6 +674,9 @@ const MusicPage = function () {
                     shuffle={shuffle}
                     repeat={repeat}
                     listLoading={listLoading}
+                    closing={playerClosing}
+                    onClosed={finishClosePlayer}
+                    onCancelClose={cancelClosePlayer}
                     onToggleShuffle={() => setShuffle((on) => !on)}
                     onCycleRepeat={cycleRepeat}
                     onTogglePlay={togglePlay}
@@ -553,15 +689,9 @@ const MusicPage = function () {
                             setProgress((state) => ({ ...state, time: value }));
                         }
                     }}
-                    onClose={() => setPlayerOpen(false)}
-                    onOpenList={() => {
-                        setPlayerOpen(false);
-                        setTab('list');
-                    }}
-                    onOpenProfile={() => {
-                        setPlayerOpen(false);
-                        setTab('profile');
-                    }}
+                    onClose={() => closePlayer()}
+                    onOpenList={() => closePlayer('list')}
+                    onOpenProfile={() => closePlayer('profile')}
                     onRefresh={loadTracks}
                 />
             )}
@@ -575,6 +705,7 @@ const MusicPage = function () {
             <audio
                 ref={audioRef}
                 preload="auto"
+                playsInline
                 onEnded={handleEnded}
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}

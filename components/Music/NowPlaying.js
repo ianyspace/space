@@ -21,11 +21,11 @@ import styles from './NowPlaying.module.scss';
 
 /**
  * Now-playing page (the reference's dark player), rendered as a phone-width
- * sheet matching the song-list column — the rest of the viewport just dims.
- * It is an overlay view, not a route: chevron-down dismisses back to the
- * tab page it was opened from, person icon jumps to the profile page,
- * refresh re-pulls the song list, queue icon jumps back to the song list.
- * Fixed dark palette regardless of the app theme; no volume control by design.
+ * sheet that slides up over the dimmed tab pages — same gesture language as
+ * the mini bar: tap the bar to expand, tap 收起 / queue / person to collapse
+ * back. `closing` triggers the reverse animation; `onClosed` fires when the
+ * exit finished and the shell may unmount. Fixed dark palette regardless of
+ * the app theme; no volume control by design.
  */
 const NowPlaying = function ({
     track,
@@ -34,6 +34,9 @@ const NowPlaying = function ({
     shuffle,
     repeat,
     listLoading,
+    closing,
+    onClosed,
+    onCancelClose,
     onToggleShuffle,
     onCycleRepeat,
     onTogglePlay,
@@ -55,8 +58,12 @@ const NowPlaying = function ({
     ].filter(Boolean).join(' · ');
 
     return (
-        <div className={styles.veil}>
-            <div className={styles.page}>
+        <div
+            className={closing ? `${styles.veil} ${styles['veil-out']}` : styles.veil}
+            onAnimationEnd={() => { if (closing) onClosed(); }}
+            onPointerDown={() => { if (closing) onCancelClose(); }}
+        >
+            <div className={closing ? `${styles.page} ${styles['page-out']}` : styles.page}>
                 <div className={styles.topbar}>
                     <button type="button" className={styles['top-btn']} title="收起" aria-label="收起" onClick={onClose}>
                         <IconChevronDown />
