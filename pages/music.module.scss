@@ -155,10 +155,17 @@
 }
 
 .now-playing {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 8px;
     font-size: 15px;
     font-weight: 700;
     color: var(--textTitle);
+}
+
+.now-title {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -168,15 +175,117 @@
     width: 100%;
 }
 
+.player-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.player-modes {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.player-btn {
+    height: 28px;
+    padding: 0 12px;
+    border: 1px solid var(--hr);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--textNormal);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background-color 0.15s;
+
+    &:hover:not(:disabled) {
+        border-color: var(--textLink);
+        color: var(--textLink);
+    }
+
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+}
+
+.player-btn-on {
+    border-color: var(--textLink);
+    color: var(--textLink);
+    background: rgba(210, 54, 105, 0.1);
+}
+
+/* Equalizer bars shown on the playing row / now-playing title. */
+.eq {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+    flex-shrink: 0;
+
+    i {
+        display: block;
+        width: 3px;
+        height: 3px;
+        border-radius: 1px;
+        background: currentColor;
+        animation: eq-bounce 1s ease-in-out infinite;
+
+        &:nth-child(2) { animation-delay: 0.22s; }
+        &:nth-child(3) { animation-delay: 0.44s; }
+    }
+}
+
+.eq-paused i {
+    animation-play-state: paused;
+}
+
+@keyframes eq-bounce {
+    0%, 100% { height: 3px; }
+    50% { height: 12px; }
+}
+
 /* --- track list --- */
 
 .list-head {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 8px;
     font-size: 13px;
     opacity: 0.8;
+}
+
+.list-count {
+    flex-shrink: 0;
+}
+
+.list-search {
+    height: 26px;
+    flex: 0 1 170px;
+    box-sizing: border-box;
+    margin-left: auto;
+    padding: 0 10px;
+    border: 1px solid var(--hr);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--textNormal);
+    font-size: 12.5px;
+
+    &:focus {
+        outline: none;
+        border-color: var(--textLink);
+    }
+
+    &::placeholder {
+        color: var(--textNormal);
+        opacity: 0.55;
+    }
 }
 
 .list-refresh {
@@ -247,6 +356,20 @@
 }
 
 .track-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex: 1;
+    min-width: 0;
+}
+
+.track-glyph {
+    flex-shrink: 0;
+    font-size: 13px;
+}
+
+.track-label {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -258,8 +381,19 @@
     opacity: 0.55;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .eq i {
+        animation: none;
+        height: 6px;
+    }
+}
+
 @media (max-width: 650px) {
     .card {
         padding: 18px 14px;
+    }
+
+    .player-modes {
+        margin-left: 0;
     }
 }
