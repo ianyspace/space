@@ -768,6 +768,7 @@ const MusicPage = function () {
                 <MiniPlayer
                     current={current}
                     isPlaying={isPlaying}
+                    progress={progress}
                     onTogglePlay={togglePlay}
                     onNext={playNext}
                     onOpenPlayer={openPlayer}

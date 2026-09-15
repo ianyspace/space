@@ -19,11 +19,15 @@ import styles from './MiniPlayer.module.scss';
 const MiniPlayer = function ({
     current,
     isPlaying,
+    progress,
     onTogglePlay,
     onNext,
     onOpenPlayer,
 }) {
     const meta = parseTrackName(current.track.name);
+    const percent = progress.duration > 0
+        ? Math.min(100, Math.max(0, (progress.time / progress.duration) * 100))
+        : 0;
     return (
         <div className={styles.wrap}>
             <div
@@ -80,6 +84,11 @@ const MiniPlayer = function ({
                 >
                     <IconNext />
                 </span>
+                <span
+                    className={styles.progress}
+                    style={{ '--progress': `${percent}%` }}
+                    aria-hidden="true"
+                />
             </div>
         </div>
     );

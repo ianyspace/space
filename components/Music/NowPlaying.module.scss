@@ -18,13 +18,23 @@
 }
 
 @keyframes veil-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes veil-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }
 
 .page {
@@ -188,8 +198,8 @@
 }
 
 .lyrics-open .art {
-    max-height: 22vh;
-    border-radius: 16px;
+    max-height: 15vh;
+    border-radius: 14px;
 }
 
 .art-note {
@@ -247,13 +257,17 @@
 
 .lyrics {
     position: relative;
-    max-height: 32vh;
+    flex: 1 1 auto;
+    min-height: 220px;
+    max-height: 44vh;
     margin: 16px -8px 0;
-    padding: 20px 16px;
+    padding: 32px 18px;
     overflow-y: auto;
     text-align: center;
     scroll-behavior: smooth;
     scrollbar-width: none;
+    overscroll-behavior: contain;
+    scroll-padding-block: 38%;
     mask-image: linear-gradient(to bottom, transparent 0, #000 16%, #000 84%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16%, #000 84%, transparent 100%);
 }
@@ -265,20 +279,21 @@
 .lyric,
 .lyric-active {
     margin: 0;
-    padding: 5px 0;
+    padding: 8px 0;
     color: var(--np-text-2);
-    font-size: 14px;
-    line-height: 1.55;
+    font-size: 16px;
+    line-height: 1.6;
     opacity: 0.52;
-    scroll-margin: 12vh;
-    transition: color 0.25s, transform 0.25s, opacity 0.25s;
+    scroll-margin: 18vh;
+    transition: color 0.35s, transform 0.35s, opacity 0.35s;
 }
 
 .lyric-active {
     color: var(--np-text);
+    font-size: 18px;
     font-weight: 700;
     opacity: 1;
-    transform: scale(1.03);
+    transform: scale(1.04);
 }
 
 .np-icon {

@@ -4,7 +4,7 @@
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
-    bottom: 92px;
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
     z-index: 20;
     width: min(464px, calc(100vw - 24px));
     animation: mini-in 0.36s cubic-bezier(0.32, 0.72, 0.2, 1) both;
@@ -31,6 +31,7 @@
 }
 
 .mini {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -47,6 +48,28 @@
 
     &:active {
         transform: scale(0.985);
+    }
+}
+
+.progress {
+    position: absolute;
+    right: 12px;
+    bottom: -1px;
+    left: 12px;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 0 0 3px 3px;
+    background: color-mix(in srgb, var(--text-2) 28%, transparent);
+    pointer-events: none;
+
+    &::after {
+        display: block;
+        width: var(--progress, 0%);
+        height: 100%;
+        border-radius: inherit;
+        background: var(--text);
+        content: '';
+        transition: width 0.18s linear;
     }
 }
 
