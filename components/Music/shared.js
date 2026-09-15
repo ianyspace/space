@@ -5,6 +5,7 @@ export const DRIVE_FILES_URL = 'https://www.googleapis.com/drive/v3/files';
 export const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.readonly';
 export const FOLDER_MIME = 'application/vnd.google-apps.folder';
 export const CLIENT_ID_KEY = 'music:googleClientId';
+export const TOKEN_KEY = 'music:googleToken';
 export const FOLDER_ID_KEY = 'music:folderId';
 export const THEME_KEY = 'music:theme';
 // Drive returns at most `pageSize` files per response; follow nextPageToken
@@ -73,7 +74,7 @@ export const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAE
 export const safePlay = function (audio) {
     try {
         const request = audio.play();
-        if (request && typeof request.catch === 'function') request.catch(() => {});
+        if (request && typeof request.catch === 'function') request.catch(() => { });
     } catch (err) { /* autoplay denied etc. */ }
 };
 

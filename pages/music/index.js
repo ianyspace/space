@@ -9,6 +9,7 @@ import {
     DRIVE_SCOPE,
     FOLDER_MIME,
     CLIENT_ID_KEY,
+    TOKEN_KEY,
     FOLDER_ID_KEY,
     THEME_KEY,
     storageGet,
@@ -74,6 +75,7 @@ const MusicPage = function () {
     const [prefetchId, setPrefetchId] = useState('');
 
     const audioRef = useRef(null);
+    const tokenRestoreRef = useRef(false);
     const objectUrlRef = useRef('');
     // Guards against two blob downloads racing when several tracks are
     // clicked in quick succession — only the latest click may win.
@@ -90,6 +92,7 @@ const MusicPage = function () {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (resp.status === 401) {
+            storageSet(TOKEN_KEY, '');
             setToken('');
             throw new Error('授权已过期，请重新连接');
         }
@@ -108,7 +111,7 @@ const MusicPage = function () {
         const old = prefetchRef.current;
         if (old && old.promise && old.id !== track.id) {
             // Abandoned prefetch (user skipped ahead) — free its blob.
-            old.promise.then((r) => r.url && URL.revokeObjectURL(r.url)).catch(() => {});
+            old.promise.then((r) => r.url && URL.revokeObjectURL(r.url)).catch(() => { });
         }
         const entry = { id: track.id, promise: null };
         entry.promise = fetchTrackUrl(track, token)
@@ -173,11 +176,22 @@ const MusicPage = function () {
         if (savedFolder) setFolderId(savedFolder);
     }, []);
 
+    const saveToken = useCallback(function (accessToken, expiresIn, id) {
+        const expiresAt = Date.now() + Math.max(Number(expiresIn) || 3600, 60) * 1000;
+        storageSet(TOKEN_KEY, JSON.stringify({ accessToken, expiresAt, clientId: id }));
+        setToken(accessToken);
+    }, []);
+
+    const clearSavedToken = useCallback(function () {
+        storageSet(TOKEN_KEY, '');
+        setToken('');
+    }, []);
+
     // Revoke the blob URLs (current + prefetched) when leaving the page.
     useEffect(() => () => {
         if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
         const entry = prefetchRef.current;
-        if (entry && entry.promise) entry.promise.then((r) => r.url && URL.revokeObjectURL(r.url)).catch(() => {});
+        if (entry && entry.promise) entry.promise.then((r) => r.url && URL.revokeObjectURL(r.url)).catch(() => { });
     }, []);
 
     const driveGet = useCallback(async (params, accessToken) => {
@@ -185,7 +199,7 @@ const MusicPage = function () {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (resp.status === 401) {
-            setToken('');
+            clearSavedToken();
             setNotice('');
             throw new Error('授权已过期，请重新连接');
         }
@@ -198,7 +212,49 @@ const MusicPage = function () {
             throw new Error(message);
         }
         return resp.json();
-    }, []);
+    }, [clearSavedToken]);
+
+    const requestToken = useCallback(function (id, prompt, showError) {
+        const google = window.google;
+        if (!google || !google.accounts || !google.accounts.oauth2) return false;
+        try {
+            google.accounts.oauth2
+                .initTokenClient({
+                    client_id: id,
+                    scope: DRIVE_SCOPE,
+                    prompt,
+                    callback(resp) {
+                        if (resp.error) {
+                            if (showError) {
+                                setError(`连接失败：${resp.error}${resp.error_description ? `（${resp.error_description}）` : ''}`);
+                            }
+                            return;
+                        }
+                        saveToken(resp.access_token, resp.expires_in, id);
+                        setNotice('已连接 Google 云盘');
+                    },
+                })
+                .requestAccessToken();
+            return true;
+        } catch (err) {
+            if (showError) setError(`无法打开 Google 登录窗口：${err.message}（请检查浏览器是否拦截了弹窗）`);
+            return false;
+        }
+    }, [saveToken]);
+
+    // Restore the short-lived token between browser visits. If it expired,
+    // ask GIS for a silent replacement before showing the manual connect UI.
+    useEffect(() => {
+        if (!gsiReady || !clientId || tokenRestoreRef.current) return;
+        tokenRestoreRef.current = true;
+        let saved;
+        try { saved = JSON.parse(storageGet(TOKEN_KEY)); } catch (err) { saved = null; }
+        if (saved && saved.accessToken && saved.clientId === clientId && saved.expiresAt > Date.now() + 60000) {
+            setToken(saved.accessToken);
+            return;
+        }
+        requestToken(clientId, '', false);
+    }, [gsiReady, clientId, requestToken]);
 
     const connect = useCallback(function () {
         setError('');
@@ -215,38 +271,19 @@ const MusicPage = function () {
         }
         storageSet(CLIENT_ID_KEY, id);
         setClientId(id);
-        // `requestAccessToken()` opens a popup and may throw synchronously
-        // (e.g. popup blocked); keep that from bubbling into React.
-        try {
-            google.accounts.oauth2
-                .initTokenClient({
-                    client_id: id,
-                    scope: DRIVE_SCOPE,
-                    prompt: '',
-                    callback(resp) {
-                        if (resp.error) {
-                            setError(`连接失败：${resp.error}${resp.error_description ? `（${resp.error_description}）` : ''}`);
-                            return;
-                        }
-                        setToken(resp.access_token);
-                        setNotice('已连接 Google 云盘');
-                    },
-                })
-                .requestAccessToken();
-        } catch (err) {
-            setError(`无法打开 Google 登录窗口：${err.message}（请检查浏览器是否拦截了弹窗）`);
-        }
-    }, [clientIdDraft]);
+        tokenRestoreRef.current = true;
+        requestToken(id, '', true);
+    }, [clientIdDraft, requestToken]);
 
     const disconnect = useCallback(function () {
-        setToken('');
+        clearSavedToken();
         setFolders([]);
         setTracks([]);
         setCurrent(null);
         setIsPlaying(false);
         setSearch('');
         setNotice('已断开连接');
-    }, []);
+    }, [clearSavedToken]);
 
     useEffect(() => {
         if (!token) return undefined;
@@ -322,7 +359,7 @@ const MusicPage = function () {
                 request.then(function () {
                     audio.pause();
                     audio.currentTime = 0;
-                }).catch(() => {});
+                }).catch(() => { });
             } else {
                 audio.pause();
             }
