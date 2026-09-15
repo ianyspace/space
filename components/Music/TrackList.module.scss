@@ -62,9 +62,11 @@
     flex-shrink: 0;
     transition: color 0.2s, transform 0.15s;
 
-    &:hover:not(:disabled) {
-        color: var(--text);
-        transform: scale(1.08);
+    @media (hover: hover) {
+        &:hover:not(:disabled) {
+            color: var(--text);
+            transform: scale(1.08);
+        }
     }
 
     &:disabled {
@@ -193,8 +195,10 @@
     box-shadow: 0 10px 24px -8px rgba(250, 35, 59, 0.55);
     transition: transform 0.15s;
 
-    &:hover {
-        transform: scale(1.03);
+    @media (hover: hover) {
+        &:hover {
+            transform: scale(1.03);
+        }
     }
 
     &:active {
@@ -232,11 +236,13 @@
     border-bottom: 1px solid var(--hairline);
     transition: background-color 0.18s, transform 0.12s;
 
-    &:hover:not(:disabled) {
-        background: var(--row-hover);
+    @media (hover: hover) {
+        &:hover:not(:disabled) {
+            background: var(--row-hover);
 
-        .track-play {
-            opacity: 1;
+            .track-play {
+                opacity: 1;
+            }
         }
     }
 

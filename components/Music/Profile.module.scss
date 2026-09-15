@@ -94,8 +94,10 @@
     cursor: pointer;
     transition: transform 0.15s;
 
-    &:hover:not(:disabled) {
-        transform: scale(1.08);
+    @media (hover: hover) {
+        &:hover:not(:disabled) {
+            transform: scale(1.08);
+        }
     }
 
     &:disabled {
@@ -163,8 +165,10 @@
             font-weight: 600;
             text-decoration: none;
 
-            &:hover {
-                text-decoration: underline;
+            @media (hover: hover) {
+                &:hover {
+                    text-decoration: underline;
+                }
             }
         }
     }
@@ -211,8 +215,10 @@
     box-shadow: 0 12px 26px -10px rgba(10, 132, 255, 0.6);
     transition: transform 0.15s;
 
-    &:hover:not(:disabled) {
-        transform: scale(1.015);
+    @media (hover: hover) {
+        &:hover:not(:disabled) {
+            transform: scale(1.015);
+        }
     }
 
     &:active:not(:disabled) {
@@ -256,8 +262,10 @@
     border-radius: 10px;
     transition: background-color 0.18s;
 
-    &:hover {
-        background: var(--row-hover);
+    @media (hover: hover) {
+        &:hover {
+            background: var(--row-hover);
+        }
     }
 }
 

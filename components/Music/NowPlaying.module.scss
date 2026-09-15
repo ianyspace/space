@@ -117,8 +117,10 @@
     cursor: pointer;
     transition: transform 0.15s, background-color 0.2s;
 
-    &:hover {
-        background: rgba(255, 255, 255, 0.08);
+    @media (hover: hover) {
+        &:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
     }
 
     &:active {
@@ -341,9 +343,10 @@
         transition: transform 0.15s;
     }
 
-    &:hover::-webkit-slider-thumb,
-    &:active::-webkit-slider-thumb {
-        transform: scale(1.18);
+    @media (hover: hover) {
+        &:hover::-webkit-slider-thumb {
+            transform: scale(1.18);
+        }
     }
 
     &::-moz-range-track {
@@ -410,9 +413,11 @@
     cursor: pointer;
     transition: color 0.2s, transform 0.15s;
 
-    &:hover {
-        color: var(--np-text);
-        transform: scale(1.08);
+    @media (hover: hover) {
+        &:hover {
+            color: var(--np-text);
+            transform: scale(1.08);
+        }
     }
 
     &:active {
@@ -442,8 +447,10 @@
     cursor: pointer;
     transition: transform 0.15s;
 
-    &:hover {
-        transform: scale(1.1);
+    @media (hover: hover) {
+        &:hover {
+            transform: scale(1.1);
+        }
     }
 
     &:active {
@@ -465,8 +472,10 @@
     cursor: pointer;
     transition: transform 0.15s;
 
-    &:hover {
-        transform: scale(1.08);
+    @media (hover: hover) {
+        &:hover {
+            transform: scale(1.08);
+        }
     }
 
     &:active {
@@ -496,9 +505,11 @@
         color: var(--np-text-2);
         font-family: inherit;
 
-        &:hover {
-            background: rgba(255, 255, 255, 0.16);
-            transform: none;
+        @media (hover: hover) {
+            &:hover {
+                background: rgba(255, 255, 255, 0.16);
+                transform: none;
+            }
         }
     }
 
