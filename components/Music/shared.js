@@ -91,6 +91,16 @@ export const parseTrackName = function (name) {
     if (parts.length >= 2) {
         return { artist: parts[0].trim() || '未知艺术家', title: parts.slice(1).join(' - ').trim(), ext };
     }
+    // The music library convention is also `Title-Artist`, often without
+    // spaces, so keep the first separator as the title/artist boundary.
+    const compactParts = base.split(/\s*[-—–]\s*/);
+    if (compactParts.length >= 2) {
+        return {
+            artist: compactParts.slice(1).join('-').trim() || '未知艺术家',
+            title: compactParts[0].trim(),
+            ext,
+        };
+    }
     return { artist: '未知艺术家', title: base, ext };
 };
 
