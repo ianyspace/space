@@ -11,9 +11,7 @@ import {
     IconRepeatOne,
     IconQueue,
     IconChevronDown,
-    IconHeart,
     IconPerson,
-    IconRefresh,
 } from './icons';
 import { parseTrackName, trackGradient, formatSize, formatTime } from './shared';
 
@@ -33,7 +31,6 @@ const NowPlaying = function ({
     progress,
     shuffle,
     repeat,
-    listLoading,
     closing,
     onClosed,
     onCancelClose,
@@ -46,7 +43,6 @@ const NowPlaying = function ({
     onClose,
     onOpenList,
     onOpenProfile,
-    onRefresh,
     lyrics,
     lyricsLoading,
     lyricsVisible,
@@ -77,26 +73,15 @@ const NowPlaying = function ({
             onAnimationEnd={() => { if (closing) onClosed(); }}
             onPointerDown={() => { if (closing) onCancelClose(); }}
         >
-            <div className={closing ? `${styles.page} ${styles['page-out']}` : styles.page}>
+            <div className={`${closing ? `${styles.page} ${styles['page-out']}` : styles.page}${lyricsVisible && lyrics ? ` ${styles['lyrics-open']}` : ''}`}>
                 <div className={styles.topbar}>
                     <button type="button" className={styles['top-btn']} title="收起" aria-label="收起" onClick={onClose}>
                         <IconChevronDown />
                     </button>
                     <span className={styles['quality-pill']}>
                         {quality}
-                        <span className={styles.hq}>HQ</span>
                     </span>
                     <div className={styles['top-actions']}>
-                        <button
-                            type="button"
-                            className={`${styles['top-btn']}${listLoading ? ` ${styles.spinning}` : ''}`}
-                            title="刷新列表"
-                            aria-label="刷新列表"
-                            disabled={listLoading}
-                            onClick={onRefresh}
-                        >
-                            <IconRefresh />
-                        </button>
                         <button
                             type="button"
                             className={styles['top-btn']}
@@ -126,9 +111,6 @@ const NowPlaying = function ({
                                 {meta.artist === '未知艺术家' ? '' : ` - ${meta.title}`}
                             </span>
                         </div>
-                        <span className={`${styles['np-icon']}${isPlaying ? ` ${styles['np-icon-on']}` : ''}`} aria-hidden="true">
-                            <IconHeart />
-                        </span>
                     </div>
 
                     {lyricsVisible && lyrics && (

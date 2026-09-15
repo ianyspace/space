@@ -12,6 +12,8 @@ import {
     TOKEN_KEY,
     FOLDER_ID_KEY,
     THEME_KEY,
+    LAST_TRACK_KEY,
+    LAST_PROGRESS_KEY,
     storageGet,
     storageSet,
     safePlay,
@@ -91,6 +93,7 @@ const MusicPage = function () {
     const unlockRef = useRef(false);
     // { id, promise } of the in-flight/finished next-track prefetch.
     const prefetchRef = useRef(null);
+    const restoredTrackRef = useRef(false);
 
     const fetchTrackUrl = useCallback(async function (track, accessToken) {
         const resp = await fetch(`${DRIVE_FILES_URL}/${track.id}?alt=media`, {
@@ -351,7 +354,7 @@ const MusicPage = function () {
     useEffect(() => {
         const lyricFile = current && current.track.lyricFile;
         setLyrics(null);
-        setLyricsVisible(false);
+        setLyricsVisible(Boolean(lyricFile));
         if (!lyricFile || !token) return undefined;
         let cancelled = false;
         setLyricsLoading(true);
@@ -402,7 +405,7 @@ const MusicPage = function () {
         } catch (err) { /* old webviews: element already unlocked or unusable */ }
     }, []);
 
-    const play = useCallback(async function (track) {
+    const play = useCallback(async function (track, startTime = 0, shouldPlay = true) {
         setError('');
         setLoadingId(track.id);
         const seq = ++playSeqRef.current;
@@ -422,14 +425,39 @@ const MusicPage = function () {
             }
             if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
             objectUrlRef.current = url;
-            setProgress({ time: 0, duration: 0 });
-            setCurrent({ track, url });
+            setProgress({ time: startTime, duration: 0 });
+            setCurrent({ track, url, startTime, shouldPlay });
         } catch (err) {
             if (seq === playSeqRef.current) setError(`播放「${track.name}」失败：${err.message}`);
         } finally {
             if (seq === playSeqRef.current) setLoadingId('');
         }
     }, [token, fetchTrackUrl, claimPrefetch]);
+
+    useEffect(() => {
+        if (restoredTrackRef.current || tracks.length === 0 || !token) return;
+        let savedTrack;
+        let savedProgress;
+        try { savedTrack = JSON.parse(storageGet(LAST_TRACK_KEY)); } catch (err) { savedTrack = null; }
+        try { savedProgress = JSON.parse(storageGet(LAST_PROGRESS_KEY)); } catch (err) { savedProgress = null; }
+        const track = savedTrack && tracks.find((item) => item.id === savedTrack.id);
+        if (!track) return;
+        restoredTrackRef.current = true;
+        play(track, savedProgress && savedProgress.id === track.id ? savedProgress.time : 0, false);
+    }, [tracks, token, play]);
+
+    useEffect(() => {
+        if (!current) return;
+        storageSet(LAST_TRACK_KEY, JSON.stringify({ id: current.track.id, name: current.track.name }));
+    }, [current]);
+
+    useEffect(() => {
+        if (!current || !Number.isFinite(progress.time)) return;
+        const timer = setTimeout(() => {
+            storageSet(LAST_PROGRESS_KEY, JSON.stringify({ id: current.track.id, time: progress.time }));
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [current, progress.time]);
 
     // Tapping a list row starts playback or toggles the current track in place.
     // The mini player is the explicit entry point for the now-playing sheet.
@@ -579,6 +607,14 @@ const MusicPage = function () {
         const audio = audioRef.current;
         if (!audio || !current) return;
         audio.src = current.url;
+        audio.load();
+        const seekOnMetadata = () => {
+            if (current.startTime > 0 && Number.isFinite(audio.duration)) {
+                audio.currentTime = Math.min(current.startTime, Math.max(0, audio.duration - 0.25));
+            }
+        };
+        audio.addEventListener('loadedmetadata', seekOnMetadata, { once: true });
+        if (!current.shouldPlay) return () => audio.removeEventListener('loadedmetadata', seekOnMetadata);
         try {
             const request = audio.play();
             if (request && typeof request.catch === 'function') {
@@ -587,6 +623,7 @@ const MusicPage = function () {
         } catch (err) {
             setNotice('浏览器阻止了自动播放，请点击播放按钮');
         }
+        return () => audio.removeEventListener('loadedmetadata', seekOnMetadata);
     }, [current]);
 
     /* --- media session (lock screen / hardware keys) --- */
@@ -765,7 +802,6 @@ const MusicPage = function () {
                     onClose={() => closePlayer()}
                     onOpenList={() => closePlayer('list')}
                     onOpenProfile={() => closePlayer('profile')}
-                    onRefresh={loadTracks}
                     lyrics={lyrics && lyrics.trackId === current.track.id ? lyrics : null}
                     lyricsLoading={lyricsLoading}
                     lyricsVisible={lyricsVisible}

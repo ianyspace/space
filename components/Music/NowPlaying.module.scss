@@ -157,18 +157,6 @@
     text-overflow: ellipsis;
 }
 
-.hq {
-    display: inline-flex;
-    align-items: center;
-    padding: 1px 6px;
-    border-radius: 5px;
-    background: #2f7bd9;
-    color: #fff;
-    font-size: 10.5px;
-    font-weight: 800;
-    letter-spacing: 0.4px;
-}
-
 /* --- body --- */
 
 .body {
@@ -196,6 +184,12 @@
     justify-content: center;
     box-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.75),
         inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    transition: max-height 0.45s ease, border-radius 0.45s ease, opacity 0.35s ease;
+}
+
+.lyrics-open .art {
+    max-height: 22vh;
+    border-radius: 16px;
 }
 
 .art-note {
@@ -252,13 +246,20 @@
 }
 
 .lyrics {
-    max-height: 24vh;
-    margin: 18px 0 0;
-    padding: 4px 8px;
+    position: relative;
+    max-height: 32vh;
+    margin: 16px -8px 0;
+    padding: 20px 16px;
     overflow-y: auto;
     text-align: center;
     scroll-behavior: smooth;
-    scrollbar-width: thin;
+    scrollbar-width: none;
+    mask-image: linear-gradient(to bottom, transparent 0, #000 16%, #000 84%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16%, #000 84%, transparent 100%);
+}
+
+.lyrics::-webkit-scrollbar {
+    display: none;
 }
 
 .lyric,
@@ -268,12 +269,15 @@
     color: var(--np-text-2);
     font-size: 14px;
     line-height: 1.55;
+    opacity: 0.52;
+    scroll-margin: 12vh;
     transition: color 0.25s, transform 0.25s, opacity 0.25s;
 }
 
 .lyric-active {
     color: var(--np-text);
     font-weight: 700;
+    opacity: 1;
     transform: scale(1.03);
 }
 

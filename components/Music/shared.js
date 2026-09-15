@@ -8,6 +8,8 @@ export const CLIENT_ID_KEY = 'music:googleClientId';
 export const TOKEN_KEY = 'music:googleToken';
 export const FOLDER_ID_KEY = 'music:folderId';
 export const THEME_KEY = 'music:theme';
+export const LAST_TRACK_KEY = 'music:lastTrack';
+export const LAST_PROGRESS_KEY = 'music:lastProgress';
 // Drive returns at most `pageSize` files per response; follow nextPageToken
 // so libraries bigger than one page still show up (capped to stay sane).
 export const LIST_HARD_CAP = 1000;
