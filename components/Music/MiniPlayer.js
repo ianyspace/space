@@ -45,7 +45,14 @@ const MiniPlayer = function ({
                 >
                     <IconNote />
                 </span>
-                <span className={styles.text}>
+                <span
+                    className={styles.text}
+                    title={isPlaying ? '暂停' : '播放'}
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        onTogglePlay();
+                    }}
+                >
                     <span className={styles.title}>{meta.title}</span>
                     <span className={styles.artist}>{meta.artist}</span>
                 </span>
