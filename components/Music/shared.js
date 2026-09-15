@@ -137,3 +137,27 @@ export const listAllFiles = async function (driveGet, params, accessToken) {
     } while (pageToken && files.length < LIST_HARD_CAP);
     return files;
 };
+
+export const normalizeLyricKey = function (name) {
+    return name
+        .replace(/\.[a-z0-9]+$/i, '')
+        .replace(/^\s*\d{1,3}[\s._-]+/, '')
+        .toLowerCase()
+        .replace(/[\s._()[\]{}-]+/g, '');
+};
+
+export const parseLyrics = function (text) {
+    const lines = [];
+    const lrcPattern = /\[(\d{1,3}):(\d{2})(?:[.:](\d{1,3}))?\]([^\r\n]*)/g;
+    let match;
+    while ((match = lrcPattern.exec(text)) !== null) {
+        const fraction = match[3] ? Number(`0.${match[3].padEnd(3, '0')}`) : 0;
+        const lyric = match[4].trim();
+        if (lyric) lines.push({ time: Number(match[1]) * 60 + Number(match[2]) + fraction, text: lyric });
+    }
+    if (lines.length > 0) return { timed: true, lines: lines.sort((a, b) => a.time - b.time) };
+    return {
+        timed: false,
+        lines: text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => ({ time: 0, text: line })),
+    };
+};

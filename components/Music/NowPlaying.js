@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import {
     IconNote,
@@ -47,6 +47,10 @@ const NowPlaying = function ({
     onOpenList,
     onOpenProfile,
     onRefresh,
+    lyrics,
+    lyricsLoading,
+    lyricsVisible,
+    onToggleLyrics,
 }) {
     const meta = parseTrackName(track.name);
     const { time, duration } = progress;
@@ -56,6 +60,16 @@ const NowPlaying = function ({
         meta.ext || 'AUDIO',
         track.size ? formatSize(track.size) : '',
     ].filter(Boolean).join(' · ');
+    const activeLyric = lyrics && lyrics.timed
+        ? lyrics.lines.reduce((index, line, lineIndex) => (line.time <= time ? lineIndex : index), -1)
+        : -1;
+    const activeLyricRef = useRef(null);
+
+    useEffect(() => {
+        if (activeLyricRef.current) {
+            activeLyricRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+    }, [activeLyric]);
 
     return (
         <div
@@ -116,6 +130,20 @@ const NowPlaying = function ({
                             <IconHeart />
                         </span>
                     </div>
+
+                    {lyricsVisible && lyrics && (
+                        <div className={styles.lyrics} aria-label="同步歌词">
+                            {lyrics.lines.map((line, index) => (
+                                <p
+                                    key={`${line.time}-${index}`}
+                                    ref={index === activeLyric ? activeLyricRef : null}
+                                    className={index === activeLyric ? styles['lyric-active'] : styles.lyric}
+                                >
+                                    {line.text}
+                                </p>
+                            ))}
+                        </div>
+                    )}
 
                     <div className={styles['np-progress']}>
                         <input
@@ -182,6 +210,17 @@ const NowPlaying = function ({
                     </div>
 
                     <div className={styles['np-repeat']}>
+                        {(lyrics || lyricsLoading) && (
+                            <button
+                                type="button"
+                                className={`${styles['mode-btn']} ${lyricsVisible ? styles['mode-btn-on'] : ''}`}
+                                aria-pressed={lyricsVisible}
+                                title={lyricsVisible ? '隐藏歌词' : '显示歌词'}
+                                onClick={onToggleLyrics}
+                            >
+                                歌词
+                            </button>
+                        )}
                         <button
                             type="button"
                             className={`${styles['mode-btn']}${repeat !== 'off' ? ` ${styles['mode-btn-on']}` : ''}`}

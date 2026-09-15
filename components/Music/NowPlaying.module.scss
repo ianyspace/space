@@ -251,6 +251,32 @@
     color: var(--np-text-2);
 }
 
+.lyrics {
+    max-height: 24vh;
+    margin: 18px 0 0;
+    padding: 4px 8px;
+    overflow-y: auto;
+    text-align: center;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+}
+
+.lyric,
+.lyric-active {
+    margin: 0;
+    padding: 5px 0;
+    color: var(--np-text-2);
+    font-size: 14px;
+    line-height: 1.55;
+    transition: color 0.25s, transform 0.25s, opacity 0.25s;
+}
+
+.lyric-active {
+    color: var(--np-text);
+    font-weight: 700;
+    transform: scale(1.03);
+}
+
 .np-icon {
     display: inline-flex;
     flex-shrink: 0;

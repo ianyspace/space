@@ -20,6 +20,8 @@ import {
     parseTrackName,
     makeArtwork,
     listAllFiles,
+    normalizeLyricKey,
+    parseLyrics,
 } from 'components/Music/shared';
 import TrackList from 'components/Music/TrackList';
 import NowPlaying from 'components/Music/NowPlaying';
@@ -73,6 +75,9 @@ const MusicPage = function () {
     const [progress, setProgress] = useState({ time: 0, duration: 0 });
     // Id of the track whose audio blob is (or is being) prefetched.
     const [prefetchId, setPrefetchId] = useState('');
+    const [lyrics, setLyrics] = useState(null);
+    const [lyricsLoading, setLyricsLoading] = useState(false);
+    const [lyricsVisible, setLyricsVisible] = useState(false);
 
     const audioRef = useRef(null);
     const tokenRestoreRef = useRef(false);
@@ -313,7 +318,7 @@ const MusicPage = function () {
 
     const loadTracks = useCallback(async function () {
         if (!token) return;
-        let q = "mimeType contains 'audio' and trashed=false";
+        let q = "(mimeType contains 'audio' or name contains '.lrc' or name contains '.txt') and trashed=false";
         if (folderId) q += ` and '${folderId}' in parents`;
         setListLoading(true);
         setError('');
@@ -324,7 +329,14 @@ const MusicPage = function () {
                 pageSize: '200',
                 orderBy: 'name',
             }, token);
-            setTracks(files);
+            const lyricFiles = files.filter((file) => /\.(lrc|txt)$/i.test(file.name));
+            const lyricByKey = new Map(lyricFiles.map((file) => [normalizeLyricKey(file.name), file]));
+            setTracks(files
+                .filter((file) => file.mimeType && file.mimeType.startsWith('audio/'))
+                .map((file) => ({
+                    ...file,
+                    lyricFile: lyricByKey.get(normalizeLyricKey(file.name)) || null,
+                })));
         } catch (err) {
             setError(`获取音乐列表失败：${err.message}`);
         } finally {
@@ -335,6 +347,30 @@ const MusicPage = function () {
     useEffect(() => {
         loadTracks();
     }, [loadTracks]);
+
+    useEffect(() => {
+        const lyricFile = current && current.track.lyricFile;
+        setLyrics(null);
+        setLyricsVisible(false);
+        if (!lyricFile || !token) return undefined;
+        let cancelled = false;
+        setLyricsLoading(true);
+        fetch(`${DRIVE_FILES_URL}/${lyricFile.id}?alt=media`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.text();
+            })
+            .then((text) => {
+                if (!cancelled) setLyrics({ trackId: current.track.id, ...parseLyrics(text) });
+            })
+            .catch(() => { })
+            .finally(() => {
+                if (!cancelled) setLyricsLoading(false);
+            });
+        return () => { cancelled = true; };
+    }, [current, token]);
 
     const handleFolderChange = useCallback(function (event) {
         const value = event.target.value;
@@ -730,6 +766,10 @@ const MusicPage = function () {
                     onOpenList={() => closePlayer('list')}
                     onOpenProfile={() => closePlayer('profile')}
                     onRefresh={loadTracks}
+                    lyrics={lyrics && lyrics.trackId === current.track.id ? lyrics : null}
+                    lyricsLoading={lyricsLoading}
+                    lyricsVisible={lyricsVisible}
+                    onToggleLyrics={() => setLyricsVisible((visible) => !visible)}
                 />
             )}
 
