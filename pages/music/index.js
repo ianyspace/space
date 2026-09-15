@@ -358,8 +358,9 @@ const MusicPage = function () {
         }
     }, [token, fetchTrackUrl, claimPrefetch]);
 
-    // Clicking the row of the track that is already loaded toggles
-    // play/pause instead of downloading the whole file again.
+    // First tap on a (not yet loaded) song starts playback AND slides the
+    // now-playing sheet open directly — no detour through the mini bar.
+    // Tapping the already-loaded row just toggles play/pause in place.
     const toggleTrack = useCallback(function (track) {
         unlockAudio();
         if (current && current.track.id === track.id) {
@@ -370,6 +371,8 @@ const MusicPage = function () {
             return;
         }
         play(track);
+        setPlayerClosing(false);
+        setPlayerOpen(true);
     }, [current, play, unlockAudio]);
 
     const togglePlay = useCallback(function () {
