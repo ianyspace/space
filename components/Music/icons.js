@@ -109,11 +109,11 @@ export const IconRefresh = () => (
 );
 
 export const IconNote = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M9 17.5V6.2a1.5 1.5 0 0 1 1.24-1.48l8-1.45A1.5 1.5 0 0 1 20 4.75v10.9" />
-        <circle cx="6.5" cy="17.5" r="3" />
-        <circle cx="17.5" cy="15.6" r="3" />
-    </svg>
+    <SvgStroke size={18}>
+        <path d="M9 18V5l11-2v13" />
+        <circle cx="6" cy="18" r="3" />
+        <circle cx="17" cy="16" r="3" />
+    </SvgStroke>
 );
 
 // Three beamed notes — the app's / list tab's mark, closer to the reference.
