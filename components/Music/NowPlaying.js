@@ -108,7 +108,6 @@ const NowPlaying = function ({
                             <span className={styles['np-title']}>{meta.title}</span>
                             <span className={styles['np-artist']}>
                                 {meta.artist}
-                                {meta.artist === '未知艺术家' ? '' : ` - ${meta.title}`}
                             </span>
                         </div>
                     </div>

@@ -124,7 +124,6 @@ const TrackList = function ({
                                         <span className={styles['track-meta']}>
                                             <span className={styles['track-artist']}>
                                                 {meta.artist}
-                                                {meta.artist === '未知艺术家' ? '' : ` - ${meta.title}`}
                                             </span>
                                             {meta.ext && (
                                                 <span className={`${styles.badge} ${styles['badge-ext']}`}>
