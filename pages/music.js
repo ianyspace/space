@@ -99,21 +99,27 @@ const MusicPage = function () {
             window.localStorage.setItem(CLIENT_ID_KEY, id);
         } catch (err) { /* keep working without persistence */ }
         setClientId(id);
-        google.accounts.oauth2
-            .initTokenClient({
-                client_id: id,
-                scope: DRIVE_SCOPE,
-                prompt: '',
-                callback(resp) {
-                    if (resp.error) {
-                        setError(`连接失败：${resp.error}${resp.error_description ? `（${resp.error_description}）` : ''}`);
-                        return;
-                    }
-                    setToken(resp.access_token);
-                    setNotice('已连接 Google 云盘');
-                },
-            })
-            .requestAccessToken();
+        // `requestAccessToken()` opens a popup and may throw synchronously
+        // (e.g. popup blocked); keep that from bubbling into React.
+        try {
+            google.accounts.oauth2
+                .initTokenClient({
+                    client_id: id,
+                    scope: DRIVE_SCOPE,
+                    prompt: '',
+                    callback(resp) {
+                        if (resp.error) {
+                            setError(`连接失败：${resp.error}${resp.error_description ? `（${resp.error_description}）` : ''}`);
+                            return;
+                        }
+                        setToken(resp.access_token);
+                        setNotice('已连接 Google 云盘');
+                    },
+                })
+                .requestAccessToken();
+        } catch (err) {
+            setError(`无法打开 Google 登录窗口：${err.message}（请检查浏览器是否拦截了弹窗）`);
+        }
     }, [clientIdDraft]);
 
     const disconnect = useCallback(function () {
@@ -190,11 +196,21 @@ const MusicPage = function () {
 
     // Mount the fetched blob into the audio element; browsers only allow
     // autoplay inside the user-gesture chain, so fall back to a hint.
+    // `play()` may reject as a promise OR throw synchronously (the latter
+    // would otherwise bubble out of this effect and crash the whole page),
+    // so both failure modes are handled here.
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio || !current) return;
         audio.src = current.url;
-        audio.play().catch(() => setNotice('浏览器阻止了自动播放，请点击播放按钮'));
+        try {
+            const request = audio.play();
+            if (request && typeof request.catch === 'function') {
+                request.catch(() => setNotice('浏览器阻止了自动播放，请点击播放按钮'));
+            }
+        } catch (err) {
+            setNotice('浏览器阻止了自动播放，请点击播放按钮');
+        }
     }, [current]);
 
     const handleEnded = useCallback(function () {
