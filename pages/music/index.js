@@ -395,9 +395,8 @@ const MusicPage = function () {
         }
     }, [token, fetchTrackUrl, claimPrefetch]);
 
-    // First tap on a (not yet loaded) song starts playback AND slides the
-    // now-playing sheet open directly — no detour through the mini bar.
-    // Tapping the already-loaded row just toggles play/pause in place.
+    // Tapping a list row starts playback or toggles the current track in place.
+    // The mini player is the explicit entry point for the now-playing sheet.
     const toggleTrack = useCallback(function (track) {
         unlockAudio();
         if (current && current.track.id === track.id) {
@@ -408,8 +407,6 @@ const MusicPage = function () {
             return;
         }
         play(track);
-        setPlayerClosing(false);
-        setPlayerOpen(true);
     }, [current, play, unlockAudio]);
 
     const togglePlay = useCallback(function () {
