@@ -2,9 +2,14 @@
 //
 // Minimal by design: one flat background, a hairline-separated list on the
 // left, and the whole middle column given to the lyric player. Only three
-// surfaces are Liquid Glass (gear button, cover disc, bottom bar) — their shape
-// comes from the library's `cornerRadius`, so no CSS border-radius is set here
-// except in the `.glass-fallback` path for browsers where WebGL fails.
+// surfaces are Liquid Glass (gear button, cover disc, bottom bar).
+//
+// Everything the library owns stays in the library: shape comes from
+// `data-config.cornerRadius`, and hover/press/refraction/bevel/shadow are its
+// presets — so these three rules only carry layout (size, grid area, spacing)
+// plus a transparent background, and no CSS border-radius. The single
+// exception is `.glass-fallback`, which exists only for browsers where WebGL
+// cannot start and the surfaces would otherwise be invisible.
 
 .root {
     --side: 340px;
@@ -262,15 +267,7 @@
     background: transparent;
     color: var(--text);
     cursor: pointer;
-    transition: transform 0.18s;
-
-    &:hover {
-        transform: scale(1.04);
-    }
-
-    &:active {
-        transform: scale(0.96);
-    }
+    // The library's `button` mode owns hover/press feedback — no CSS here.
 }
 
 /* --- middle: cover disc (glass) --- */
@@ -290,24 +287,9 @@
     background: transparent;
     color: var(--text);
     cursor: pointer;
-    transition: transform 0.32s cubic-bezier(0.32, 0.72, 0.2, 1);
 
     &:disabled {
         cursor: default;
-    }
-
-    &:not(:disabled):hover {
-        transform: scale(1.02);
-    }
-}
-
-.disc-playing {
-    animation: disc-spin 18s linear infinite;
-}
-
-@keyframes disc-spin {
-    to {
-        transform: rotate(360deg);
     }
 }
 
@@ -781,7 +763,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .disc-playing,
     .spin,
     .settings {
         animation: none;

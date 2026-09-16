@@ -37,38 +37,16 @@ import styles from './DesktopMusic.module.scss';
  * elements must be *direct children* of the root, which is why these three are
  * positioned with grid areas instead of being nested in wrappers.
  */
-const SETTINGS_GLASS = JSON.stringify({
-    blurAmount: 0.18,
-    refraction: 0.4,
-    chromAberration: 0.02,
-    edgeHighlight: 0.12,
-    cornerRadius: 27,
-    zRadius: 18,
-    shadowOpacity: 0.16,
-    button: true,
-});
-
-const DISC_GLASS = JSON.stringify({
-    blurAmount: 0.32,
-    refraction: 0.62,
-    chromAberration: 0.035,
-    edgeHighlight: 0.14,
-    fresnel: 0.9,
-    cornerRadius: 112,
-    zRadius: 44,
-    shadowOpacity: 0.3,
-    button: true,
-});
-
-const BAR_GLASS = JSON.stringify({
-    blurAmount: 0.22,
-    refraction: 0.45,
-    chromAberration: 0.025,
-    edgeHighlight: 0.1,
-    cornerRadius: 30,
-    zRadius: 22,
-    shadowOpacity: 0.18,
-});
+// Glass configuration follows the examples published on
+// https://liquid-glass.ybouane.com and nothing else — "Frosted Panel"
+// (`{ blurAmount: 0.25, cornerRadius: 30 }`) and "Button Mode"
+// (`{ button: true, cornerRadius: 24 }`). No hand-invented parameter combos,
+// and no extra CSS pretending to be glass: anything the library owns
+// (refraction, bevel, shadow, corner radius) is left to its own config.
+const SETTINGS_GLASS = JSON.stringify({ button: true, cornerRadius: 27, blurAmount: 0.25 });
+// Same preset, at the radius that makes the cover disc a circle (224px wide).
+const DISC_GLASS = JSON.stringify({ button: true, cornerRadius: 112, blurAmount: 0.25 });
+const BAR_GLASS = JSON.stringify({ blurAmount: 0.25, cornerRadius: 30 });
 
 const DesktopMusic = function ({
     theme,
@@ -246,7 +224,7 @@ const DesktopMusic = function ({
             {/* 2/3 — cover disc */}
             <button
                 type="button"
-                className={`${styles.disc}${isPlaying ? ` ${styles['disc-playing']}` : ''}`}
+                className={styles.disc}
                 data-glass
                 data-config={DISC_GLASS}
                 onClick={onTogglePlay}
