@@ -181,20 +181,30 @@ const NowPlaying = function ({
                         </button>
                         <button
                             type="button"
-                            className={styles['mode-btn']}
-                            title="播放列表"
-                            aria-label="打开播放列表"
-                            onClick={onOpenList}
+                            className={`${styles['mode-btn']}${repeat !== 'off' ? ` ${styles['mode-btn-on']}` : ''}`}
+                            aria-pressed={repeat !== 'off'}
+                            title={repeat === 'one' ? '单曲循环' : repeat === 'all' ? '列表循环' : '循环关闭'}
+                            onClick={onCycleRepeat}
                         >
-                            <IconQueue />
+                            {repeat === 'one' ? <IconRepeatOne /> : <IconRepeat />}
                         </button>
                     </div>
 
-                    <div className={styles['np-repeat']}>
+                    {/* Secondaries: playlist jump + lyrics toggle */}
+                    <div className={styles['np-extras']}>
+                        <button
+                            type="button"
+                            className={styles['extra-btn']}
+                            title="播放列表"
+                            onClick={onOpenList}
+                        >
+                            <IconQueue />
+                            <span>播放列表</span>
+                        </button>
                         {(lyrics || lyricsLoading) && (
                             <button
                                 type="button"
-                                className={`${styles['mode-btn']} ${lyricsVisible ? styles['mode-btn-on'] : ''}`}
+                                className={`${styles['extra-btn']}${lyricsVisible ? ` ${styles['extra-btn-on']}` : ''}`}
                                 aria-pressed={lyricsVisible}
                                 title={lyricsVisible ? '隐藏歌词' : '显示歌词'}
                                 onClick={onToggleLyrics}
@@ -202,18 +212,6 @@ const NowPlaying = function ({
                                 歌词
                             </button>
                         )}
-                        <button
-                            type="button"
-                            className={`${styles['mode-btn']}${repeat !== 'off' ? ` ${styles['mode-btn-on']}` : ''}`}
-                            aria-pressed={repeat !== 'off'}
-                            title={repeat === 'one' ? '单曲循环' : repeat === 'all' ? '列表循环' : '循环关闭'}
-                            onClick={onCycleRepeat}
-                        >
-                            {repeat === 'one' ? <IconRepeatOne /> : <IconRepeat />}
-                            <span className={styles['repeat-label']}>
-                                {repeat === 'one' ? '单曲循环' : repeat === 'all' ? '列表循环' : '循环关闭'}
-                            </span>
-                        </button>
                     </div>
                 </div>
             </div>

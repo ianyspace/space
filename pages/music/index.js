@@ -763,7 +763,9 @@ const MusicPage = function () {
                 </div>
             </div>
 
-            {current && !playerOpen && (
+            {/* Mini bar belongs to the song list only — the profile page
+                shows settings, not playback UI. */}
+            {tab === 'list' && current && !playerOpen && (
                 <MiniPlayer
                     current={current}
                     isPlaying={isPlaying}
