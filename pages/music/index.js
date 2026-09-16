@@ -292,7 +292,7 @@ const MusicPage = function () {
         return resp.json();
     }, [clearSavedToken]);
 
-    const requestToken = useCallback(function (id, prompt, showError, onSuccess) {
+    const requestToken = useCallback(function (id, prompt, showError, onSuccess, onFailure) {
         const google = window.google;
         if (!google || !google.accounts || !google.accounts.oauth2) return false;
         try {
@@ -306,6 +306,7 @@ const MusicPage = function () {
                             if (showError) {
                                 setError(`连接失败：${resp.error}${resp.error_description ? `（${resp.error_description}）` : ''}`);
                             }
+                            if (onFailure) onFailure(resp.error);
                             return;
                         }
                         saveToken(resp.access_token, resp.expires_in, id);
@@ -324,31 +325,40 @@ const MusicPage = function () {
         }
     }, [saveToken]);
 
-    // Restore the short-lived token between browser visits. If it expired,
-    // ask GIS for a silent replacement before showing the manual connect UI.
+    // Restore the short-lived token between browser visits.
+    //
+    // Authorization must only ever happen because the visitor asked for it, so
+    // this path uses GIS `prompt: 'none'` — it never renders consent UI and
+    // simply fails when Google cannot renew without interaction. It also only
+    // runs when a stored token proves a previous successful connection;
+    // otherwise the page stays on the public library without touching Google.
     useEffect(() => {
         if (!gsiReady || !clientId || tokenRestoreRef.current) return;
         tokenRestoreRef.current = true;
         let saved;
         try { saved = JSON.parse(storageGet(TOKEN_KEY)); } catch (err) { saved = null; }
-        if (saved && saved.accessToken && saved.clientId === clientId && saved.expiresAt > Date.now() + 60000) {
+        if (!saved || !saved.clientId) return;
+        if (saved.accessToken && saved.clientId === clientId && saved.expiresAt > Date.now() + 60000) {
             setTokenExpiresAt(saved.expiresAt);
             setToken(saved.accessToken);
             // Still authorized from a previous visit — keep using Drive.
             setLibrarySource(DRIVE_SOURCE);
             return;
         }
-        requestToken(clientId, '', false);
+        requestToken(clientId, 'none', false);
     }, [gsiReady, clientId, requestToken]);
 
     // GIS access tokens are short-lived. Refresh before expiry and also when
-    // the tab becomes visible again after the browser suspended it.
+    // the tab becomes visible again after the browser suspended it. This is a
+    // background renewal and must stay invisible: `prompt: 'none'` never opens
+    // Google's consent UI, and a failure is simply ignored (the player falls
+    // back to the cached / public library until the visitor connects again).
     useEffect(() => {
         if (!gsiReady || !clientId || !token || !tokenExpiresAt) return undefined;
         const refresh = function () {
             if (tokenRefreshRef.current || Date.now() < tokenExpiresAt - 300000) return;
             tokenRefreshRef.current = true;
-            requestToken(clientId, '', false);
+            requestToken(clientId, 'none', false);
             window.setTimeout(() => { tokenRefreshRef.current = false; }, 1000);
         };
         const timer = window.setTimeout(refresh, Math.max(0, tokenExpiresAt - Date.now() - 300000));
@@ -578,7 +588,11 @@ const MusicPage = function () {
             setCurrent({ track, url, startTime, shouldPlay });
         } catch (err) {
             if (seq === playSeqRef.current && err.code === 'TOKEN_REQUIRED' && clientId && gsiReady) {
-                requestToken(clientId, '', true, (newToken) => play(track, startTime, shouldPlay, newToken));
+                // Renew silently first: tapping a song must never be the reason a
+                // Google consent window appears. Only a real failure surfaces.
+                requestToken(clientId, 'none', false, (newToken) => play(track, startTime, shouldPlay, newToken), () => {
+                    setError('Google 授权已失效，请在「我的」页面重新连接');
+                });
                 return;
             }
             if (seq === playSeqRef.current) setError(`播放「${track.name}」失败：${err.message}`);
