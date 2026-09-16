@@ -26,33 +26,33 @@ const MODES = {
 };
 
 /**
- * Decorative tonearm, drawn in the stage's own coordinate space (100 × 107 —
- * the stage's aspect ratio) so it scales with the record instead of drifting
- * off it: pivot near the top, arm reaching the record's upper-right rim.
- * `playing` swings the arm a few degrees down so it reads as tracking.
+ * Decorative tonearm, drawn in the record rig's own coordinate space
+ * (100 × 122 — the rig's aspect ratio) so it scales with the record instead of
+ * drifting off it: pivot near the top, arm reaching the record's upper-right
+ * rim. `playing` swings the arm a few degrees down so it reads as tracking.
  */
 const Tonearm = function ({ playing }) {
     return (
         <svg
             className={playing ? `${styles.arm} ${styles['arm-playing']}` : styles.arm}
-            viewBox="0 0 100 107"
+            viewBox="0 0 100 122"
             aria-hidden="true"
             focusable="false"
         >
             <g className={styles['arm-swing']}>
                 <path
-                    d="M53.4 9.8 L73.4 21.2"
+                    d="M52.5 7.7 L79 24.9"
                     fill="none"
                     stroke="#f2f3f7"
-                    strokeWidth="2.3"
+                    strokeWidth="2.4"
                     strokeLinecap="round"
                 />
-                <g transform="rotate(28 74 22.5)">
-                    <rect x="72.6" y="19.6" width="9.4" height="5.8" rx="1.9" fill="#f2f3f7" />
-                    <rect x="80.2" y="21.3" width="2.6" height="2.4" rx="0.9" fill="#26272e" />
+                <g transform="rotate(33 79 24.9)">
+                    <rect x="76.5" y="22.2" width="10.4" height="5.4" rx="1.9" fill="#f2f3f7" />
+                    <rect x="84.4" y="23.9" width="2.6" height="2.2" rx="0.9" fill="#26272e" />
                 </g>
-                <circle cx="53.4" cy="9.8" r="4.4" fill="#191a20" stroke="#f2f3f7" strokeWidth="1.7" />
-                <circle cx="53.4" cy="9.8" r="1.4" fill="#f2f3f7" />
+                <circle cx="52.5" cy="7.7" r="4.4" fill="#191a20" stroke="#f2f3f7" strokeWidth="1.7" />
+                <circle cx="52.5" cy="7.7" r="1.4" fill="#f2f3f7" />
             </g>
         </svg>
     );
@@ -134,28 +134,32 @@ const NowPlaying = function ({
 
                 <div className={styles.body}>
                     <div className={`${styles.stage}${lyricsShown ? ` ${styles['stage-lyrics']}` : ''}`}>
-                        <Tonearm playing={isPlaying} />
+                        {/* Record + tonearm share one scaling unit so they stay
+                            locked together whatever space the stage gets. */}
+                        <div className={styles.rig}>
+                            <Tonearm playing={isPlaying} />
 
-                        <button
-                            type="button"
-                            className={`${styles.disc}${isPlaying ? ` ${styles['disc-playing']}` : ''}`}
-                            onClick={canToggleLyrics ? onToggleLyrics : undefined}
-                            disabled={!canToggleLyrics}
-                            aria-hidden={lyricsShown}
-                            tabIndex={lyricsShown ? -1 : 0}
-                            title={canToggleLyrics ? '查看歌词' : '这首歌没有歌词'}
-                            aria-label={canToggleLyrics ? '查看歌词' : '这首歌没有歌词'}
-                        >
-                            <span className={styles.rotor} aria-hidden="true">
-                                <span className={styles['disc-grooves']} />
-                                <span className={styles['disc-label']} style={{ background: gradient }}>
-                                    <IconNote />
+                            <button
+                                type="button"
+                                className={`${styles.disc}${isPlaying ? ` ${styles['disc-playing']}` : ''}`}
+                                onClick={canToggleLyrics ? onToggleLyrics : undefined}
+                                disabled={!canToggleLyrics}
+                                aria-hidden={lyricsShown}
+                                tabIndex={lyricsShown ? -1 : 0}
+                                title={canToggleLyrics ? '查看歌词' : '这首歌没有歌词'}
+                                aria-label={canToggleLyrics ? '查看歌词' : '这首歌没有歌词'}
+                            >
+                                <span className={styles.rotor} aria-hidden="true">
+                                    <span className={styles['disc-grooves']} />
+                                    <span className={styles['disc-label']} style={{ background: gradient }}>
+                                        <IconNote />
+                                    </span>
+                                    <span className={styles['disc-ring']} />
+                                    <span className={styles['disc-hole']} />
+                                    <span className={styles['disc-sheen']} />
                                 </span>
-                                <span className={styles['disc-ring']} />
-                                <span className={styles['disc-hole']} />
-                                <span className={styles['disc-sheen']} />
-                            </span>
-                        </button>
+                            </button>
+                        </div>
 
                         {lyricsShown && (
                             <div
