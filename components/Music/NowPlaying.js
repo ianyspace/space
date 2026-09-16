@@ -154,8 +154,6 @@ const NowPlaying = function ({
                                     <span className={styles['disc-label']} style={{ background: gradient }}>
                                         <IconNote />
                                     </span>
-                                    <span className={styles['disc-ring']} />
-                                    <span className={styles['disc-hole']} />
                                     <span className={styles['disc-sheen']} />
                                 </span>
                             </button>

@@ -192,14 +192,14 @@
 }
 
 .arm-playing .arm-swing {
-    transform: rotate(7deg);
+    transform: rotate(15deg);
 }
 
 .disc {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 82%;
+    width: 86%;
     aspect-ratio: 1;
     padding: 0;
     border: 0;
@@ -227,9 +227,16 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background: radial-gradient(circle at 50% 50%, #202127 0%, #131418 44%, #0a0b0e 80%, #15161b 100%);
-    box-shadow: 0 34px 64px -20px rgba(0, 0, 0, 0.85),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    /* Off-centre light over a near-black surface, so the vinyl reads as a
+       material instead of a flat black disc. */
+    background: radial-gradient(120% 120% at 32% 16%, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 48%),
+        radial-gradient(circle at 50% 50%, #23242a 0%, #16171c 40%, #0b0c0f 78%, #111218 100%);
+    /* Outer rim line with the soft halo the reference record has, then depth. */
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 0 24px 2px rgba(255, 255, 255, 0.08),
+        0 30px 60px -22px rgba(0, 0, 0, 0.85),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+        inset 0 0 46px rgba(0, 0, 0, 0.5);
     animation: disc-spin 18s linear infinite;
     animation-play-state: paused;
     overflow: hidden;
@@ -239,10 +246,15 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
+    /* Two ring spacings read as grooves; the mask keeps them off the label. */
     background: repeating-radial-gradient(circle at 50% 50%,
-            rgba(255, 255, 255, 0.05) 0 1px,
-            rgba(0, 0, 0, 0) 1px 4px);
-    opacity: 0.9;
+            rgba(255, 255, 255, 0.06) 0 0.6px,
+            rgba(255, 255, 255, 0) 0.6px 3.2px),
+        repeating-radial-gradient(circle at 50% 50%,
+            rgba(0, 0, 0, 0.4) 0 1px,
+            rgba(0, 0, 0, 0) 1px 11px);
+    mask-image: radial-gradient(circle at 50% 50%, transparent 0 17%, #000 25%, #000 100%);
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0 17%, #000 25%, #000 100%);
 }
 
 /* Label = the track's gradient (same one tinting the page backdrop). */
@@ -258,7 +270,7 @@
     border-radius: 50%;
     transform: translate(-50%, -50%);
     color: rgba(255, 255, 255, 0.94);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24),
         inset 0 -6px 18px rgba(0, 0, 0, 0.28);
 
     svg {
@@ -267,43 +279,28 @@
     }
 }
 
-.disc-ring {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 36%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09),
-        0 0 22px rgba(0, 0, 0, 0.55);
-    pointer-events: none;
-}
-
-.disc-hole {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 4.5%;
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: #0b0c10;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
-    transform: translate(-50%, -50%);
-}
-
-/* The highlight sweep is what makes the rotation visible. */
+/* The highlight sweep is what makes the rotation visible: two opposing
+   specular streaks plus a broad wash, blurred so they read as light on
+   plastic rather than painted wedges. */
 .disc-sheen {
     position: absolute;
     inset: 0;
     border-radius: 50%;
     background: conic-gradient(from 0deg,
             rgba(255, 255, 255, 0) 0deg,
-            rgba(255, 255, 255, 0.07) 30deg,
-            rgba(255, 255, 255, 0) 86deg,
-            rgba(255, 255, 255, 0) 180deg,
-            rgba(255, 255, 255, 0.05) 212deg,
-            rgba(255, 255, 255, 0) 268deg);
+            rgba(255, 255, 255, 0.15) 16deg,
+            rgba(255, 255, 255, 0.03) 44deg,
+            rgba(255, 255, 255, 0) 82deg,
+            rgba(255, 255, 255, 0) 176deg,
+            rgba(255, 255, 255, 0.11) 196deg,
+            rgba(255, 255, 255, 0.02) 224deg,
+            rgba(255, 255, 255, 0) 260deg),
+        conic-gradient(from 0deg,
+            rgba(255, 255, 255, 0) 300deg,
+            rgba(255, 255, 255, 0.05) 336deg,
+            rgba(255, 255, 255, 0.05) 24deg,
+            rgba(255, 255, 255, 0) 60deg);
+    filter: blur(1.5px);
     mix-blend-mode: screen;
     pointer-events: none;
 }
@@ -607,7 +604,7 @@
     }
 }
 
-/* The record is ~72% of the phone's width (~82% of the stage) — the rest of
+/* The record is ~75% of the phone's width (~86% of the stage) — the rest of
    the page keeps its own rows. Short phones only need the tightened rhythm
    below; the stage's max-width already shrinks the record. */
 @media (max-height: 700px) {
