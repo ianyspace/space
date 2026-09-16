@@ -13,6 +13,7 @@
         "lint": "next lint"
     },
     "dependencies": {
+        "@ybouane/liquidglass": "^1.0.3",
         "github-slugger": "^2.0.0",
         "gray-matter": "^4.0.3",
         "hast-util-to-string": "^3.0.1",
@@ -40,6 +41,7 @@
         "unist-util-visit": "^5.0.0"
     },
     "devDependencies": {
+        "patch-package": "^8.0.1",
         "sass": "^1.104.0"
     }
 }

@@ -34,6 +34,7 @@ import TrackList from 'components/Music/TrackList';
 import NowPlaying from 'components/Music/NowPlaying';
 import Profile from 'components/Music/Profile';
 import MiniPlayer from 'components/Music/MiniPlayer';
+import DesktopMusic from 'components/Music/DesktopMusic';
 
 import styles from './index.module.scss';
 
@@ -54,6 +55,7 @@ import styles from './index.module.scss';
  */
 const MusicPage = function () {
     const [theme, setTheme] = useState('light');
+    const [isDesktop, setIsDesktop] = useState(false);
     // 'list' | 'profile' — which tab page is showing; the full-screen
     // now-playing page floats above it while `playerOpen` is true.
     const [tab, setTab] = useState('list');
@@ -101,6 +103,14 @@ const MusicPage = function () {
     const prefetchRef = useRef(null);
     const restoredTrackRef = useRef(false);
     const tokenRefreshRef = useRef(false);
+
+    useEffect(() => {
+        const media = window.matchMedia('(min-width: 900px)');
+        const update = () => setIsDesktop(media.matches);
+        update();
+        media.addEventListener('change', update);
+        return () => media.removeEventListener('change', update);
+    }, []);
 
     useEffect(() => {
         pruneCachedAudio();
@@ -812,6 +822,54 @@ const MusicPage = function () {
                 <span className={`${styles.blob} ${styles['blob-3']}`} />
             </div>
 
+            {isDesktop ? (
+                <DesktopMusic
+                    theme={theme}
+                    onToggleTheme={toggleTheme}
+                    connected={!!token}
+                    cached={listCacheAvailable}
+                    gsiReady={gsiReady}
+                    clientId={clientId}
+                    clientIdDraft={clientIdDraft}
+                    onClientIdDraft={setClientIdDraft}
+                    onConnect={connect}
+                    onDisconnect={disconnect}
+                    folders={folders}
+                    folderId={folderId}
+                    folderName={folderName}
+                    onFolderChange={handleFolderChange}
+                    onRefresh={refreshTracks}
+                    listLoading={listLoading}
+                    tracks={tracks}
+                    visibleTracks={visibleTracks}
+                    search={search}
+                    onSearch={setSearch}
+                    current={current}
+                    loadingId={loadingId}
+                    isPlaying={isPlaying}
+                    onToggleTrack={toggleTrack}
+                    onTogglePlay={togglePlay}
+                    onPrev={playPrev}
+                    onNext={playNext}
+                    onSeek={(value) => {
+                        const audio = audioRef.current;
+                        if (audio && Number.isFinite(value)) {
+                            audio.currentTime = value;
+                            setProgress((state) => ({ ...state, time: value }));
+                        }
+                    }}
+                    progress={progress}
+                    shuffle={shuffle}
+                    repeat={repeat}
+                    onToggleShuffle={() => setShuffle((on) => !on)}
+                    onCycleRepeat={cycleRepeat}
+                    lyrics={lyrics && current && lyrics.trackId === current.track.id ? lyrics : null}
+                    lyricsLoading={lyricsLoading}
+                    lyricsVisible={lyricsVisible}
+                    onToggleLyrics={() => setLyricsVisible((visible) => !visible)}
+                />
+            ) : (
+            <>
             <div className={styles.app}>
                 {/* Both tab pages stay mounted (scroll position survives the
                     switch); the shown one replays its enter transition. */}
@@ -905,6 +963,8 @@ const MusicPage = function () {
                     lyricsVisible={lyricsVisible}
                     onToggleLyrics={() => setLyricsVisible((visible) => !visible)}
                 />
+            )}
+            </>
             )}
 
             {(error || notice) && (
