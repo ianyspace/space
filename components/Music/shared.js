@@ -10,6 +10,8 @@ export const FOLDER_ID_KEY = 'music:folderId';
 export const THEME_KEY = 'music:theme';
 export const LAST_TRACK_KEY = 'music:lastTrack';
 export const LAST_PROGRESS_KEY = 'music:lastProgress';
+export const TRACK_LIST_CACHE_KEY = 'music:trackListCache';
+export const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 // Drive returns at most `pageSize` files per response; follow nextPageToken
 // so libraries bigger than one page still show up (capped to stay sane).
 export const LIST_HARD_CAP = 1000;
@@ -50,6 +52,100 @@ export const storageSet = function (key, value) {
     try {
         window.localStorage.setItem(key, value);
     } catch (err) { /* private mode etc. — keep working without persistence */ }
+};
+
+const AUDIO_DB_NAME = 'music-audio-cache';
+const AUDIO_STORE_NAME = 'tracks';
+
+const openAudioDb = function () {
+    return new Promise((resolve, reject) => {
+        if (typeof window === 'undefined' || !window.indexedDB) {
+            reject(new Error('IndexedDB unavailable'));
+            return;
+        }
+        const request = window.indexedDB.open(AUDIO_DB_NAME, 1);
+        request.onupgradeneeded = () => {
+            request.result.createObjectStore(AUDIO_STORE_NAME, { keyPath: 'id' });
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+};
+
+export const getCachedAudio = async function (id) {
+    let db;
+    try {
+        db = await openAudioDb();
+        const record = await new Promise((resolve, reject) => {
+            const request = db.transaction(AUDIO_STORE_NAME, 'readonly').objectStore(AUDIO_STORE_NAME).get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+        if (!record || record.expiresAt <= Date.now()) {
+            if (record) await deleteCachedAudio(id);
+            return null;
+        }
+        return record.blob;
+    } catch (err) {
+        return null;
+    } finally {
+        if (db) db.close();
+    }
+};
+
+export const cacheAudio = async function (id, blob) {
+    let db;
+    try {
+        db = await openAudioDb();
+        await new Promise((resolve, reject) => {
+            const request = db.transaction(AUDIO_STORE_NAME, 'readwrite').objectStore(AUDIO_STORE_NAME).put({
+                id,
+                blob,
+                expiresAt: Date.now() + CACHE_TTL,
+            });
+            request.onsuccess = resolve;
+            request.onerror = () => reject(request.error);
+        });
+    } catch (err) { /* quota/private mode: playback still works without cache */
+    } finally {
+        if (db) db.close();
+    }
+};
+
+export const deleteCachedAudio = async function (id) {
+    let db;
+    try {
+        db = await openAudioDb();
+        await new Promise((resolve, reject) => {
+            const request = db.transaction(AUDIO_STORE_NAME, 'readwrite').objectStore(AUDIO_STORE_NAME).delete(id);
+            request.onsuccess = resolve;
+            request.onerror = () => reject(request.error);
+        });
+    } catch (err) { /* cache cleanup is best effort */
+    } finally {
+        if (db) db.close();
+    }
+};
+
+export const pruneCachedAudio = async function () {
+    let db;
+    try {
+        db = await openAudioDb();
+        await new Promise((resolve, reject) => {
+            const store = db.transaction(AUDIO_STORE_NAME, 'readwrite').objectStore(AUDIO_STORE_NAME);
+            const request = store.openCursor();
+            request.onsuccess = () => {
+                const cursor = request.result;
+                if (!cursor) { resolve(); return; }
+                if (cursor.value.expiresAt <= Date.now()) cursor.delete();
+                cursor.continue();
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (err) { /* cache cleanup is best effort */
+    } finally {
+        if (db) db.close();
+    }
 };
 
 // iOS (and iOS-only browsers like Alook — they are all WKWebView) needs the

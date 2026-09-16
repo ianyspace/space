@@ -14,6 +14,8 @@ import {
     THEME_KEY,
     LAST_TRACK_KEY,
     LAST_PROGRESS_KEY,
+    TRACK_LIST_CACHE_KEY,
+    CACHE_TTL,
     storageGet,
     storageSet,
     safePlay,
@@ -24,6 +26,9 @@ import {
     listAllFiles,
     normalizeLyricKey,
     parseLyrics,
+    getCachedAudio,
+    cacheAudio,
+    pruneCachedAudio,
 } from 'components/Music/shared';
 import TrackList from 'components/Music/TrackList';
 import NowPlaying from 'components/Music/NowPlaying';
@@ -66,6 +71,7 @@ const MusicPage = function () {
     const [folders, setFolders] = useState([]);
     const [folderId, setFolderId] = useState('');
     const [tracks, setTracks] = useState([]);
+    const [listCacheAvailable, setListCacheAvailable] = useState(false);
     const [search, setSearch] = useState('');
     const [listLoading, setListLoading] = useState(false);
     const [current, setCurrent] = useState(null);
@@ -96,7 +102,18 @@ const MusicPage = function () {
     const restoredTrackRef = useRef(false);
     const tokenRefreshRef = useRef(false);
 
+    useEffect(() => {
+        pruneCachedAudio();
+    }, []);
+
     const fetchTrackUrl = useCallback(async function (track, accessToken) {
+        const cachedBlob = await getCachedAudio(track.id);
+        if (cachedBlob) return URL.createObjectURL(cachedBlob);
+        if (!accessToken) {
+            const error = new Error('本地没有缓存音频');
+            error.code = 'TOKEN_REQUIRED';
+            throw error;
+        }
         const resp = await fetch(`${DRIVE_FILES_URL}/${track.id}?alt=media`, {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
@@ -106,7 +123,9 @@ const MusicPage = function () {
             throw new Error('授权已过期，请重新连接');
         }
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        return URL.createObjectURL(await resp.blob());
+        const blob = await resp.blob();
+        cacheAudio(track.id, blob);
+        return URL.createObjectURL(blob);
     }, []);
 
     // Pre-download the next track while the current one still plays: iOS
@@ -185,6 +204,21 @@ const MusicPage = function () {
         if (savedFolder) setFolderId(savedFolder);
     }, []);
 
+    useEffect(() => {
+        let cached;
+        try { cached = JSON.parse(storageGet(TRACK_LIST_CACHE_KEY)); } catch (err) { cached = null; }
+        if (!cached || cached.expiresAt <= Date.now()) {
+            storageSet(TRACK_LIST_CACHE_KEY, '');
+            return;
+        }
+        const savedId = storageGet(CLIENT_ID_KEY);
+        if (cached.clientId && cached.clientId !== savedId) return;
+        setTracks(Array.isArray(cached.tracks) ? cached.tracks : []);
+        setFolders(Array.isArray(cached.folders) ? cached.folders : []);
+        if (cached.folderId) setFolderId(cached.folderId);
+        setListCacheAvailable(true);
+    }, []);
+
     const saveToken = useCallback(function (accessToken, expiresIn, id) {
         const expiresAt = Date.now() + Math.max(Number(expiresIn) || 3600, 60) * 1000;
         storageSet(TOKEN_KEY, JSON.stringify({ accessToken, expiresAt, clientId: id }));
@@ -225,7 +259,7 @@ const MusicPage = function () {
         return resp.json();
     }, [clearSavedToken]);
 
-    const requestToken = useCallback(function (id, prompt, showError) {
+    const requestToken = useCallback(function (id, prompt, showError, onSuccess) {
         const google = window.google;
         if (!google || !google.accounts || !google.accounts.oauth2) return false;
         try {
@@ -243,6 +277,7 @@ const MusicPage = function () {
                         }
                         saveToken(resp.access_token, resp.expires_in, id);
                         setNotice('已连接 Google 云盘');
+                        if (onSuccess) onSuccess(resp.access_token);
                     },
                 })
                 .requestAccessToken();
@@ -310,8 +345,10 @@ const MusicPage = function () {
 
     const disconnect = useCallback(function () {
         clearSavedToken();
+        storageSet(TRACK_LIST_CACHE_KEY, '');
         setFolders([]);
         setTracks([]);
+        setListCacheAvailable(false);
         setCurrent(null);
         setIsPlaying(false);
         setSearch('');
@@ -359,18 +396,44 @@ const MusicPage = function () {
             }, token);
             const lyricFiles = files.filter((file) => /\.(lrc|txt)$/i.test(file.name));
             const lyricByKey = new Map(lyricFiles.map((file) => [normalizeLyricKey(file.name), file]));
-            setTracks(files
+            const nextTracks = files
                 .filter((file) => file.mimeType && file.mimeType.startsWith('audio/'))
                 .map((file) => ({
                     ...file,
                     lyricFile: lyricByKey.get(normalizeLyricKey(file.name)) || null,
-                })));
+                }));
+            setTracks(nextTracks);
+            setListCacheAvailable(true);
+            storageSet(TRACK_LIST_CACHE_KEY, JSON.stringify({
+                savedAt: Date.now(),
+            expiresAt: Date.now() + CACHE_TTL,
+                clientId,
+                folderId,
+                folders,
+                tracks: nextTracks,
+            }));
         } catch (err) {
             setError(`获取音乐列表失败：${err.message}`);
         } finally {
             setListLoading(false);
         }
-    }, [token, folderId, driveGet]);
+    }, [token, folderId, driveGet, clientId, folders]);
+
+    const refreshTracks = useCallback(function () {
+        if (token) {
+            loadTracks();
+            return;
+        }
+        if (!clientId) {
+            setError('请先连接 Google 云盘后刷新歌曲列表');
+            return;
+        }
+        if (!gsiReady) {
+            setError('Google 登录组件尚未加载完成，请稍后再试');
+            return;
+        }
+        requestToken(clientId, '', true);
+    }, [token, loadTracks, clientId, gsiReady, requestToken]);
 
     useEffect(() => {
         loadTracks();
@@ -401,6 +464,10 @@ const MusicPage = function () {
     }, [current, token]);
 
     const handleFolderChange = useCallback(function (event) {
+        if (!token) {
+            setNotice('更换文件夹需要重新连接 Google 云盘');
+            return;
+        }
         const value = event.target.value;
         setFolderId(value);
         storageSet(FOLDER_ID_KEY, value);
@@ -430,10 +497,11 @@ const MusicPage = function () {
         } catch (err) { /* old webviews: element already unlocked or unusable */ }
     }, []);
 
-    const play = useCallback(async function (track, startTime = 0, shouldPlay = true) {
+    const play = useCallback(async function (track, startTime = 0, shouldPlay = true, accessTokenOverride = '') {
         setError('');
         setLoadingId(track.id);
         const seq = ++playSeqRef.current;
+        const accessToken = accessTokenOverride || token;
         try {
             // Use the prefetched blob when it matches — instant start, and
             // the only path that survives background auto-advance on iOS.
@@ -442,7 +510,7 @@ const MusicPage = function () {
                 if (url) URL.revokeObjectURL(url);
                 return;
             }
-            if (!url) url = await fetchTrackUrl(track, token);
+            if (!url) url = await fetchTrackUrl(track, accessToken);
             if (seq !== playSeqRef.current) {
                 // A newer click superseded this download — drop its blob.
                 if (url) URL.revokeObjectURL(url);
@@ -453,14 +521,18 @@ const MusicPage = function () {
             setProgress({ time: startTime, duration: 0 });
             setCurrent({ track, url, startTime, shouldPlay });
         } catch (err) {
+            if (seq === playSeqRef.current && err.code === 'TOKEN_REQUIRED' && clientId && gsiReady) {
+                requestToken(clientId, '', true, (newToken) => play(track, startTime, shouldPlay, newToken));
+                return;
+            }
             if (seq === playSeqRef.current) setError(`播放「${track.name}」失败：${err.message}`);
         } finally {
             if (seq === playSeqRef.current) setLoadingId('');
         }
-    }, [token, fetchTrackUrl, claimPrefetch]);
+    }, [token, fetchTrackUrl, claimPrefetch, clientId, gsiReady, requestToken]);
 
     useEffect(() => {
-        if (restoredTrackRef.current || tracks.length === 0 || !token) return;
+        if (restoredTrackRef.current || tracks.length === 0 || (!token && !listCacheAvailable)) return;
         let savedTrack;
         let savedProgress;
         try { savedTrack = JSON.parse(storageGet(LAST_TRACK_KEY)); } catch (err) { savedTrack = null; }
@@ -469,7 +541,7 @@ const MusicPage = function () {
         if (!track) return;
         restoredTrackRef.current = true;
         play(track, savedProgress && savedProgress.id === track.id ? savedProgress.time : 0, false);
-    }, [tracks, token, play]);
+    }, [tracks, token, listCacheAvailable, play]);
 
     useEffect(() => {
         if (!current) return;
@@ -748,7 +820,7 @@ const MusicPage = function () {
                     style={{ display: tab === 'list' ? undefined : 'none' }}
                 >
                     <TrackList
-                        connected={!!token}
+                        connected={!!token || listCacheAvailable}
                         folderName={folderName}
                         listLoading={listLoading}
                         tracks={tracks}
@@ -760,7 +832,7 @@ const MusicPage = function () {
                         isPlaying={isPlaying}
                         onToggleTrack={toggleTrack}
                         onGoProfile={() => setTab('profile')}
-                        onRefresh={loadTracks}
+                        onRefresh={refreshTracks}
                     />
                 </div>
                 <div
@@ -770,7 +842,7 @@ const MusicPage = function () {
                     <Profile
                         theme={theme}
                         onToggleTheme={toggleTheme}
-                        connected={!!token}
+                        connected={!!token || listCacheAvailable}
                         gsiReady={gsiReady}
                         clientId={clientId}
                         clientIdDraft={clientIdDraft}
@@ -781,7 +853,7 @@ const MusicPage = function () {
                         folderId={folderId}
                         folderName={folderName}
                         onFolderChange={handleFolderChange}
-                        onRefresh={loadTracks}
+                        onRefresh={refreshTracks}
                         loading={listLoading}
                         trackCount={tracks.length}
                         onGoList={() => setTab('list')}
