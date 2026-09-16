@@ -47,9 +47,10 @@ const DesktopMusic = function ({
     theme,
     onToggleTheme,
     connected,
+    sourceName,
+    hasLibrary,
     cached,
     gsiReady,
-    clientId,
     clientIdDraft,
     onClientIdDraft,
     onConnect,
@@ -120,11 +121,11 @@ const DesktopMusic = function ({
     const currentMeta = current ? parseTrackName(current.track.name) : null;
     const visibleLyrics = lyrics && lyricsVisible ? lyrics.lines : [];
     const progressPercent = progress.duration > 0 ? Math.min(100, (progress.time / progress.duration) * 100) : 0;
-    const status = connected ? 'Google 云盘已连接' : cached ? '本地缓存 · 7 天内可用' : '尚未连接云盘';
-    const emptyState = !connected && !cached;
+    const status = connected ? 'Google 云盘已连接' : `${sourceName} · 无需登录`;
+    const emptyState = !hasLibrary;
 
     const title = currentMeta ? currentMeta.title : '选择一首歌开始';
-    const artist = currentMeta ? currentMeta.artist : '你的云盘音乐库';
+    const artist = currentMeta ? currentMeta.artist : sourceName;
 
     return (
         <div ref={rootRef} className={`${styles.root} ${theme === 'dark' ? styles['theme-dark'] : ''} ${glassFailed ? styles['glass-fallback'] : ''}`}>
@@ -162,7 +163,9 @@ const DesktopMusic = function ({
                 <label className={styles['folder-select']}>
                     <IconFolder />
                     <select value={folderId} onChange={onFolderChange} disabled={!connected}>
-                        <option value="">整个云盘</option>
+                        {connected
+                            ? <option value="">整个云盘</option>
+                            : <option value="">{sourceName}</option>}
                         {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
                     </select>
                     <IconChevronRight />
@@ -171,13 +174,13 @@ const DesktopMusic = function ({
                 <div className={styles['account-card']}>
                     <IconPerson />
                     <div>
-                        <strong>{connected ? '已连接' : cached ? '离线缓存' : '访客模式'}</strong>
-                        <small>{clientId ? 'Google Drive' : '等待连接'}</small>
+                        <strong>{connected ? '我的 Google 云盘' : sourceName}</strong>
+                        <small>{connected ? 'Google Drive' : cached ? '本地缓存 · 无需登录' : 'Cloudflare R2'}</small>
                     </div>
                 </div>
                 {!connected && (
                     <div className={styles['connect-box']}>
-                        <p>{cached ? '当前使用本地歌曲缓存。刷新列表或播放未缓存歌曲时需要重新连接。' : '连接你的 Google Drive，建立个人曲库。'}</p>
+                        <p>公共曲库开箱可用；连接 Google Drive 可改用你自己云盘里的歌。</p>
                         <input value={clientIdDraft} onChange={(event) => onClientIdDraft(event.target.value)} placeholder="OAuth 客户端 ID" />
                         <button type="button" className={styles['accent-btn']} disabled={!gsiReady} onClick={onConnect}>
                             {gsiReady ? '连接 Google Drive' : '加载中…'}
@@ -200,7 +203,7 @@ const DesktopMusic = function ({
                     </label>
                 </div>
                 {emptyState ? (
-                    <div className={styles.empty}><IconCloudless /><h2>还没有本地曲库</h2><p>在左侧连接 Google Drive 后，歌曲会在这里出现。</p></div>
+                    <div className={styles.empty}><IconCloudless /><h2>曲库里还没有歌曲</h2><p>公共曲库暂时是空的；也可以在左侧连接 Google Drive 播放你自己的音乐。</p></div>
                 ) : (
                     <div className={styles['track-list']}>
                         {visibleTracks.map((track) => {

@@ -14,8 +14,6 @@ import {
     THEME_KEY,
     LAST_TRACK_KEY,
     LAST_PROGRESS_KEY,
-    TRACK_LIST_CACHE_KEY,
-    CACHE_TTL,
     storageGet,
     storageSet,
     safePlay,
@@ -24,12 +22,25 @@ import {
     parseTrackName,
     makeArtwork,
     listAllFiles,
-    normalizeLyricKey,
     parseLyrics,
     getCachedAudio,
     cacheAudio,
     pruneCachedAudio,
 } from 'components/Music/shared';
+import {
+    CLOUD_SOURCE,
+    DRIVE_SOURCE,
+    audioCacheKey,
+    clearListCache,
+    downloadTrackBlob,
+    fetchCloudTracks,
+    fetchDriveTracks,
+    fetchLyricsText,
+    hasLyrics,
+    readListCache,
+    sourceLabel,
+    writeListCache,
+} from 'components/Music/librarySource';
 import TrackList from 'components/Music/TrackList';
 import NowPlaying from 'components/Music/NowPlaying';
 import Profile from 'components/Music/Profile';
@@ -74,6 +85,9 @@ const MusicPage = function () {
     const [folderId, setFolderId] = useState('');
     const [tracks, setTracks] = useState([]);
     const [listCacheAvailable, setListCacheAvailable] = useState(false);
+    // 'cloud' = public R2 library (works with no authorization at all),
+    // 'drive' = the visitor's own Google Drive, used once they connect.
+    const [librarySource, setLibrarySource] = useState(CLOUD_SOURCE);
     const [search, setSearch] = useState('');
     const [listLoading, setListLoading] = useState(false);
     const [current, setCurrent] = useState(null);
@@ -103,6 +117,13 @@ const MusicPage = function () {
     const prefetchRef = useRef(null);
     const restoredTrackRef = useRef(false);
     const tokenRefreshRef = useRef(false);
+    // `loadTracks` writes the folder list into the cache; reading it through a
+    // ref keeps `folders` out of the callback deps (which would re-trigger the
+    // load effect every time the folder list arrives).
+    const foldersRef = useRef([]);
+    // Lets `loadTracks` tell "we already show a usable list" from "the list is
+    // empty", so a failed refresh degrades into a quiet notice.
+    const tracksRef = useRef([]);
 
     useEffect(() => {
         const media = window.matchMedia('(min-width: 900px)');
@@ -116,25 +137,24 @@ const MusicPage = function () {
         pruneCachedAudio();
     }, []);
 
+    // Cached blobs are read first and are keyed per source, so a track already
+    // downloaded from either library plays back with no network and no token.
     const fetchTrackUrl = useCallback(async function (track, accessToken) {
-        const cachedBlob = await getCachedAudio(track.id);
+        const cacheKey = audioCacheKey(track);
+        const cachedBlob = await getCachedAudio(cacheKey);
         if (cachedBlob) return URL.createObjectURL(cachedBlob);
-        if (!accessToken) {
-            const error = new Error('本地没有缓存音频');
-            error.code = 'TOKEN_REQUIRED';
-            throw error;
+
+        let blob;
+        try {
+            blob = await downloadTrackBlob(track, { token: accessToken });
+        } catch (err) {
+            if (err.code === 'UNAUTHORIZED') {
+                storageSet(TOKEN_KEY, '');
+                setToken('');
+            }
+            throw err;
         }
-        const resp = await fetch(`${DRIVE_FILES_URL}/${track.id}?alt=media`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        if (resp.status === 401) {
-            storageSet(TOKEN_KEY, '');
-            setToken('');
-            throw new Error('授权已过期，请重新连接');
-        }
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const blob = await resp.blob();
-        cacheAudio(track.id, blob);
+        cacheAudio(cacheKey, blob);
         return URL.createObjectURL(blob);
     }, []);
 
@@ -214,20 +234,23 @@ const MusicPage = function () {
         if (savedFolder) setFolderId(savedFolder);
     }, []);
 
+    // The public library is the default experience, so the page shows songs
+    // straight from the 7-day cache with no authorization involved.
     useEffect(() => {
-        let cached;
-        try { cached = JSON.parse(storageGet(TRACK_LIST_CACHE_KEY)); } catch (err) { cached = null; }
-        if (!cached || cached.expiresAt <= Date.now()) {
-            storageSet(TRACK_LIST_CACHE_KEY, '');
-            return;
-        }
         const savedId = storageGet(CLIENT_ID_KEY);
-        if (cached.clientId && cached.clientId !== savedId) return;
-        setTracks(Array.isArray(cached.tracks) ? cached.tracks : []);
-        setFolders(Array.isArray(cached.folders) ? cached.folders : []);
-        if (cached.folderId) setFolderId(cached.folderId);
+        const cached = readListCache(CLOUD_SOURCE, savedId);
+        if (!cached || cached.tracks.length === 0) return;
+        setTracks(cached.tracks);
         setListCacheAvailable(true);
     }, []);
+
+    useEffect(() => {
+        foldersRef.current = folders;
+    }, [folders]);
+
+    useEffect(() => {
+        tracksRef.current = tracks;
+    }, [tracks]);
 
     const saveToken = useCallback(function (accessToken, expiresIn, id) {
         const expiresAt = Date.now() + Math.max(Number(expiresIn) || 3600, 60) * 1000;
@@ -286,6 +309,9 @@ const MusicPage = function () {
                             return;
                         }
                         saveToken(resp.access_token, resp.expires_in, id);
+                        // Connected → the visitor's own Drive library takes
+                        // over from the public one.
+                        setLibrarySource(DRIVE_SOURCE);
                         setNotice('已连接 Google 云盘');
                         if (onSuccess) onSuccess(resp.access_token);
                     },
@@ -308,6 +334,8 @@ const MusicPage = function () {
         if (saved && saved.accessToken && saved.clientId === clientId && saved.expiresAt > Date.now() + 60000) {
             setTokenExpiresAt(saved.expiresAt);
             setToken(saved.accessToken);
+            // Still authorized from a previous visit — keep using Drive.
+            setLibrarySource(DRIVE_SOURCE);
             return;
         }
         requestToken(clientId, '', false);
@@ -355,15 +383,18 @@ const MusicPage = function () {
 
     const disconnect = useCallback(function () {
         clearSavedToken();
-        storageSet(TRACK_LIST_CACHE_KEY, '');
+        clearListCache(DRIVE_SOURCE, clientId);
         setFolders([]);
         setTracks([]);
         setListCacheAvailable(false);
         setCurrent(null);
         setIsPlaying(false);
         setSearch('');
-        setNotice('已断开连接');
-    }, [clearSavedToken]);
+        // Switching the source re-triggers the load effect, which pulls the
+        // public library back in without touching Google again.
+        setLibrarySource(CLOUD_SOURCE);
+        setNotice('已断开 Google 云盘，已切回公共曲库');
+    }, [clearSavedToken, clientId]);
 
     useEffect(() => {
         if (!token) return undefined;
@@ -391,47 +422,62 @@ const MusicPage = function () {
         if (!folders.some((folder) => folder.id === folderId)) setFolderId('');
     }, [folderId, folders]);
 
-    const loadTracks = useCallback(async function () {
-        if (!token) return;
-        let q = "(mimeType contains 'audio' or name contains '.lrc' or name contains '.txt') and trashed=false";
-        if (folderId) q += ` and '${folderId}' in parents`;
+    // Loads whichever library is active. The cloud source never needs a token,
+    // so a visitor with no Google authorization still gets a full song list.
+    const loadTracks = useCallback(async function (targetSource = librarySource, options = {}) {
+        if (targetSource === DRIVE_SOURCE && !token) return;
         setListLoading(true);
         setError('');
         try {
-            const files = await listAllFiles(driveGet, {
-                q,
-                fields: 'files(id,name,mimeType,size)',
-                pageSize: '200',
-                orderBy: 'name',
-            }, token);
-            const lyricFiles = files.filter((file) => /\.(lrc|txt)$/i.test(file.name));
-            const lyricByKey = new Map(lyricFiles.map((file) => [normalizeLyricKey(file.name), file]));
-            const nextTracks = files
-                .filter((file) => file.mimeType && file.mimeType.startsWith('audio/'))
-                .map((file) => ({
-                    ...file,
-                    lyricFile: lyricByKey.get(normalizeLyricKey(file.name)) || null,
-                }));
-            setTracks(nextTracks);
-            setListCacheAvailable(true);
-            storageSet(TRACK_LIST_CACHE_KEY, JSON.stringify({
-                savedAt: Date.now(),
-            expiresAt: Date.now() + CACHE_TTL,
-                clientId,
-                folderId,
-                folders,
-                tracks: nextTracks,
-            }));
+            const result = targetSource === DRIVE_SOURCE
+                ? await fetchDriveTracks({ driveGet, token, folderId })
+                : await fetchCloudTracks({ forceRefresh: Boolean(options.forceRefresh) });
+
+            setTracks(result.tracks);
+            setListCacheAvailable(result.tracks.length > 0);
+            writeListCache(targetSource, clientId, {
+                tracks: result.tracks,
+                folders: targetSource === DRIVE_SOURCE ? foldersRef.current : [],
+                folderId: targetSource === DRIVE_SOURCE ? folderId : '',
+            });
         } catch (err) {
-            setError(`获取音乐列表失败：${err.message}`);
+            if (err.code === 'TOKEN_REQUIRED') {
+                // Google authorization died mid-session — avoid a dead end by
+                // dropping back to the public library.
+                clearSavedToken();
+                setLibrarySource(CLOUD_SOURCE);
+                setNotice('Google 授权已失效，已切回公共曲库');
+                try {
+                    const fallback = await fetchCloudTracks();
+                    setTracks(fallback.tracks);
+                    setListCacheAvailable(fallback.tracks.length > 0);
+                    writeListCache(CLOUD_SOURCE, clientId, { tracks: fallback.tracks });
+                } catch (inner) {
+                    setError(`获取音乐列表失败：${inner.message}`);
+                }
+                return;
+            }
+            // A failed refresh must not wipe out a list we can still play from,
+            // so degrade to a quiet notice when cached songs are on screen.
+            if (tracksRef.current.length > 0) {
+                setNotice(`曲库暂时无法访问，正在使用本地缓存（${err.message}）`);
+            } else {
+                setError(`获取音乐列表失败：${err.message}`);
+            }
         } finally {
             setListLoading(false);
         }
-    }, [token, folderId, driveGet, clientId, folders]);
+    }, [librarySource, driveGet, token, folderId, clientId, clearSavedToken]);
 
     const refreshTracks = useCallback(function () {
+        // Refreshing the public library must never open a Google consent
+        // screen; only the Drive source can require reauthorization.
+        if (librarySource === CLOUD_SOURCE) {
+            loadTracks(CLOUD_SOURCE, { forceRefresh: true });
+            return;
+        }
         if (token) {
-            loadTracks();
+            loadTracks(DRIVE_SOURCE);
             return;
         }
         if (!clientId) {
@@ -443,28 +489,24 @@ const MusicPage = function () {
             return;
         }
         requestToken(clientId, '', true);
-    }, [token, loadTracks, clientId, gsiReady, requestToken]);
+    }, [librarySource, token, loadTracks, clientId, gsiReady, requestToken]);
 
     useEffect(() => {
-        loadTracks();
-    }, [loadTracks]);
+        if (librarySource === DRIVE_SOURCE && !token) return;
+        loadTracks(librarySource);
+    }, [librarySource, token, loadTracks]);
 
     useEffect(() => {
-        const lyricFile = current && current.track.lyricFile;
+        const track = current && current.track;
+        const withLyrics = Boolean(track && hasLyrics(track));
         setLyrics(null);
-        setLyricsVisible(Boolean(lyricFile));
-        if (!lyricFile || !token) return undefined;
+        setLyricsVisible(withLyrics);
+        if (!withLyrics) return undefined;
         let cancelled = false;
         setLyricsLoading(true);
-        fetch(`${DRIVE_FILES_URL}/${lyricFile.id}?alt=media`, {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then((response) => {
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return response.text();
-            })
+        fetchLyricsText(track, { token })
             .then((text) => {
-                if (!cancelled) setLyrics({ trackId: current.track.id, ...parseLyrics(text) });
+                if (!cancelled && text) setLyrics({ trackId: track.id, ...parseLyrics(text) });
             })
             .catch(() => { })
             .finally(() => {
@@ -474,6 +516,10 @@ const MusicPage = function () {
     }, [current, token]);
 
     const handleFolderChange = useCallback(function (event) {
+        if (librarySource !== DRIVE_SOURCE) {
+            setNotice('公共曲库没有文件夹，连接 Google 云盘后可按文件夹筛选');
+            return;
+        }
         if (!token) {
             setNotice('更换文件夹需要重新连接 Google 云盘');
             return;
@@ -481,7 +527,7 @@ const MusicPage = function () {
         const value = event.target.value;
         setFolderId(value);
         storageSet(FOLDER_ID_KEY, value);
-    }, []);
+    }, [librarySource, token]);
 
     /* --- playback --- */
 
@@ -801,9 +847,15 @@ const MusicPage = function () {
 
     /* --- render --- */
 
-    const folderName = folderId
-        ? ((folders.find((folder) => folder.id === folderId) || {}).name || '')
-        : '整个云盘';
+    const folderName = librarySource === CLOUD_SOURCE
+        ? sourceLabel(CLOUD_SOURCE)
+        : (folderId
+            ? ((folders.find((folder) => folder.id === folderId) || {}).name || '')
+            : '整个云盘');
+
+    // The UI's "connected" flag now means "a library is available", not "Google
+    // is authorized": the public R2 library needs no authorization at all.
+    const hasLibrary = tracks.length > 0 || listCacheAvailable || Boolean(token);
 
     return (
         <div className={`${styles.page} ${theme === 'dark' ? styles['theme-dark'] : ''}`}>
@@ -827,9 +879,11 @@ const MusicPage = function () {
                     theme={theme}
                     onToggleTheme={toggleTheme}
                     connected={!!token}
+                    source={librarySource}
+                    sourceName={sourceLabel(librarySource)}
+                    hasLibrary={hasLibrary}
                     cached={listCacheAvailable}
                     gsiReady={gsiReady}
-                    clientId={clientId}
                     clientIdDraft={clientIdDraft}
                     onClientIdDraft={setClientIdDraft}
                     onConnect={connect}
@@ -869,102 +923,105 @@ const MusicPage = function () {
                     onToggleLyrics={() => setLyricsVisible((visible) => !visible)}
                 />
             ) : (
-            <>
-            <div className={styles.app}>
-                {/* Both tab pages stay mounted (scroll position survives the
+                <>
+                    <div className={styles.app}>
+                        {/* Both tab pages stay mounted (scroll position survives the
                     switch); the shown one replays its enter transition. */}
-                <div
-                    className={`${styles.view}${tab === 'list' ? ` ${styles['view-in']}` : ''}`}
-                    style={{ display: tab === 'list' ? undefined : 'none' }}
-                >
-                    <TrackList
-                        connected={!!token || listCacheAvailable}
-                        folderName={folderName}
-                        listLoading={listLoading}
-                        tracks={tracks}
-                        visibleTracks={visibleTracks}
-                        search={search}
-                        onSearch={setSearch}
-                        current={current}
-                        loadingId={loadingId}
-                        isPlaying={isPlaying}
-                        onToggleTrack={toggleTrack}
-                        onGoProfile={() => setTab('profile')}
-                        onRefresh={refreshTracks}
-                    />
-                </div>
-                <div
-                    className={`${styles.view}${tab === 'profile' ? ` ${styles['view-in']}` : ''}`}
-                    style={{ display: tab === 'profile' ? undefined : 'none' }}
-                >
-                    <Profile
-                        theme={theme}
-                        onToggleTheme={toggleTheme}
-                        connected={!!token || listCacheAvailable}
-                        gsiReady={gsiReady}
-                        clientId={clientId}
-                        clientIdDraft={clientIdDraft}
-                        onClientIdDraft={setClientIdDraft}
-                        onConnect={connect}
-                        onDisconnect={disconnect}
-                        folders={folders}
-                        folderId={folderId}
-                        folderName={folderName}
-                        onFolderChange={handleFolderChange}
-                        onRefresh={refreshTracks}
-                        loading={listLoading}
-                        trackCount={tracks.length}
-                        onGoList={() => setTab('list')}
-                    />
-                </div>
-            </div>
+                        <div
+                            className={`${styles.view}${tab === 'list' ? ` ${styles['view-in']}` : ''}`}
+                            style={{ display: tab === 'list' ? undefined : 'none' }}
+                        >
+                            <TrackList
+                                connected={hasLibrary}
+                                folderName={folderName}
+                                listLoading={listLoading}
+                                tracks={tracks}
+                                visibleTracks={visibleTracks}
+                                search={search}
+                                onSearch={setSearch}
+                                current={current}
+                                loadingId={loadingId}
+                                isPlaying={isPlaying}
+                                onToggleTrack={toggleTrack}
+                                onGoProfile={() => setTab('profile')}
+                                onRefresh={refreshTracks}
+                            />
+                        </div>
+                        <div
+                            className={`${styles.view}${tab === 'profile' ? ` ${styles['view-in']}` : ''}`}
+                            style={{ display: tab === 'profile' ? undefined : 'none' }}
+                        >
+                            <Profile
+                                theme={theme}
+                                onToggleTheme={toggleTheme}
+                                connected={hasLibrary}
+                                source={librarySource}
+                                sourceName={sourceLabel(librarySource)}
+                                driveConnected={!!token}
+                                gsiReady={gsiReady}
+                                clientId={clientId}
+                                clientIdDraft={clientIdDraft}
+                                onClientIdDraft={setClientIdDraft}
+                                onConnect={connect}
+                                onDisconnect={disconnect}
+                                folders={folders}
+                                folderId={folderId}
+                                folderName={folderName}
+                                onFolderChange={handleFolderChange}
+                                onRefresh={refreshTracks}
+                                loading={listLoading}
+                                trackCount={tracks.length}
+                                onGoList={() => setTab('list')}
+                            />
+                        </div>
+                    </div>
 
-            {/* Mini bar belongs to the song list only — the profile page
+                    {/* Mini bar belongs to the song list only — the profile page
                 shows settings, not playback UI. */}
-            {tab === 'list' && current && !playerOpen && (
-                <MiniPlayer
-                    current={current}
-                    isPlaying={isPlaying}
-                    progress={progress}
-                    onTogglePlay={togglePlay}
-                    onNext={playNext}
-                    onOpenPlayer={openPlayer}
-                />
-            )}
+                    {tab === 'list' && current && !playerOpen && (
+                        <MiniPlayer
+                            current={current}
+                            isPlaying={isPlaying}
+                            progress={progress}
+                            onTogglePlay={togglePlay}
+                            onNext={playNext}
+                            onOpenPlayer={openPlayer}
+                        />
+                    )}
 
-            {playerOpen && current && (
-                <NowPlaying
-                    track={current.track}
-                    isPlaying={isPlaying}
-                    progress={progress}
-                    shuffle={shuffle}
-                    repeat={repeat}
-                    listLoading={listLoading}
-                    closing={playerClosing}
-                    onClosed={finishClosePlayer}
-                    onCancelClose={cancelClosePlayer}
-                    onToggleShuffle={() => setShuffle((on) => !on)}
-                    onCycleRepeat={cycleRepeat}
-                    onTogglePlay={togglePlay}
-                    onPrev={playPrev}
-                    onNext={playNext}
-                    onSeek={(value) => {
-                        const audio = audioRef.current;
-                        if (audio && Number.isFinite(value)) {
-                            audio.currentTime = value;
-                            setProgress((state) => ({ ...state, time: value }));
-                        }
-                    }}
-                    onClose={() => closePlayer()}
-                    onOpenList={() => closePlayer('list')}
-                    onOpenProfile={() => closePlayer('profile')}
-                    lyrics={lyrics && lyrics.trackId === current.track.id ? lyrics : null}
-                    lyricsLoading={lyricsLoading}
-                    lyricsVisible={lyricsVisible}
-                    onToggleLyrics={() => setLyricsVisible((visible) => !visible)}
-                />
-            )}
-            </>
+                    {playerOpen && current && (
+                        <NowPlaying
+                            track={current.track}
+                            isPlaying={isPlaying}
+                            progress={progress}
+                            shuffle={shuffle}
+                            repeat={repeat}
+                            listLoading={listLoading}
+                            closing={playerClosing}
+                            onClosed={finishClosePlayer}
+                            onCancelClose={cancelClosePlayer}
+                            onToggleShuffle={() => setShuffle((on) => !on)}
+                            onCycleRepeat={cycleRepeat}
+                            onTogglePlay={togglePlay}
+                            onPrev={playPrev}
+                            onNext={playNext}
+                            onSeek={(value) => {
+                                const audio = audioRef.current;
+                                if (audio && Number.isFinite(value)) {
+                                    audio.currentTime = value;
+                                    setProgress((state) => ({ ...state, time: value }));
+                                }
+                            }}
+                            onClose={() => closePlayer()}
+                            onOpenList={() => closePlayer('list')}
+                            onOpenProfile={() => closePlayer('profile')}
+                            lyrics={lyrics && lyrics.trackId === current.track.id ? lyrics : null}
+                            lyricsLoading={lyricsLoading}
+                            lyricsVisible={lyricsVisible}
+                            onToggleLyrics={() => setLyricsVisible((visible) => !visible)}
+                        />
+                    )}
+                </>
             )}
 
             {(error || notice) && (

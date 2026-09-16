@@ -15,13 +15,19 @@ import styles from './Profile.module.scss';
 
 /**
  * The "我的" screen: sticky top bar (title + refresh + "歌曲" entry) over
- * settings-style grouped cards — Google Drive connection, library folder
- * choice and app theme. The list page's connect prompt deep-links here.
+ * settings-style grouped cards — the current library, the optional Google
+ * Drive connection, the library folder and the app theme.
+ *
+ * The default library is the public R2 catalogue, so this page never blocks
+ * playback behind an authorization step; connecting Drive is an opt-in
+ * upgrade that swaps the list for the visitor's own songs.
  */
 const Profile = function ({
     theme,
     onToggleTheme,
     connected,
+    sourceName,
+    driveConnected,
     gsiReady,
     clientId,
     clientIdDraft,
@@ -70,20 +76,24 @@ const Profile = function ({
                     </span>
                     <span className={styles['account-text']}>
                         <span className={styles['account-name']}>
-                            {connected ? '已连接 Google 云盘' : '未连接云盘'}
+                            {driveConnected ? '我的 Google 云盘' : sourceName}
                         </span>
                         <span className={styles['account-sub']}>
-                            {connected
+                            {driveConnected
                                 ? `${folderName} · ${loading ? '加载中…' : `${trackCount} 首歌曲`}`
-                                : '用你自己的云盘当曲库，无需服务器'}
+                                : `当前曲库 · ${loading ? '加载中…' : `${trackCount} 首歌曲`} · 无需授权`}
                         </span>
                     </span>
                 </div>
             </section>
 
-            {!connected ? (
+            {!driveConnected ? (
                 <section className={styles.group}>
-                    <div className={styles['group-label']}>连接云盘</div>
+                    <div className={styles['group-label']}>连接自己的云盘（可选）</div>
+                    <p className={styles.hint}>
+                        默认播放公共曲库，不需要任何授权。连接 Google 云盘后会改用你自己云盘里的歌曲，
+                        播放、歌词和离线缓存体验完全一致。
+                    </p>
                     <ol className={styles.steps}>
                         <li>
                             在{' '}
@@ -165,7 +175,8 @@ const Profile = function ({
             </section>
 
             <p className={styles.footnote}>
-                授权令牌与客户端 ID 只保存在本机浏览器中；播放页通过 Google Drive 只读权限拉取音频，不经过任何服务器。
+                公共曲库来自 Cloudflare R2，无需登录即可播放。连接 Google 云盘后改用你自己云盘里的歌曲；
+                授权令牌与客户端 ID 只保存在本机浏览器，音频缓存同样只存在本地。
             </p>
         </div>
     );

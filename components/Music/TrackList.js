@@ -80,13 +80,13 @@ const TrackList = function ({
             {!connected ? (
                 <section className={styles.connect}>
                     <span className={styles['connect-icon']}><IconNoteList /></span>
-                    <h2 className={styles['connect-title']}>还没有连接云盘</h2>
+                    <h2 className={styles['connect-title']}>曲库里还没有歌曲</h2>
                     <p className={styles['connect-sub']}>
-                        在「我的」页面连接 Google 云盘并选择音乐文件夹，
-                        这里就会列出全部歌曲。
+                        公共曲库暂时是空的；也可以在「我的」页面连接 Google 云盘，
+                        播放你自己云盘里的音乐。
                     </p>
                     <button type="button" className={styles['connect-btn']} onClick={onGoProfile}>
-                        去连接
+                        去看看
                     </button>
                 </section>
             ) : (
