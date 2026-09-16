@@ -1,70 +1,99 @@
-// "歌曲" screen: big title + search + track rows (mini bar and tab bar live in the shell).
+// "歌曲" screen: sticky top bar (title + refresh/我的 + search); folder
+// link, count and track rows scroll underneath.
 
 .page {
     box-sizing: border-box;
-    padding: 26px 18px 208px; /* bottom = tab bar + mini bar clearance */
+    padding: 0 18px 112px; /* bottom = mini bar (64) + dock (14) + breathing */
 }
 
-/* --- header --- */
+/* --- sticky top bar --- */
+
+.head {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin: 0 -18px;
+    padding: 10px 18px 10px;
+    background: var(--glass);
+    border-bottom: 1px solid var(--hairline);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+    backdrop-filter: blur(24px) saturate(1.8);
+}
+
+.head-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
 
 .title {
-    margin: 0 0 12px;
-    font-size: 34px;
+    margin: 0;
+    font-size: 26px;
     font-weight: 800;
     letter-spacing: 0.5px;
     color: var(--text);
 }
 
-.header-sub {
+.head-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-    min-width: 0;
+    gap: 8px;
+    flex-shrink: 0;
 }
 
-.folder-link {
+/* capsule entry to the other tab page */
+.nav-btn {
     display: inline-flex;
     align-items: center;
-    gap: 2px;
-    max-width: 55%;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--text-2);
+    gap: 6px;
+    height: 34px;
+    padding: 0 13px;
+    border: 1px solid var(--glass-border);
+    border-radius: 17px;
+    background: var(--glass-strong);
+    color: var(--text);
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     font-family: inherit;
     cursor: pointer;
+    box-shadow: 0 4px 12px -6px rgba(31, 38, 79, 0.35);
+    transition: transform 0.15s, background-color 0.2s;
 
-    span,
     svg {
-        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
     }
 
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    @media (hover: hover) {
+        &:hover {
+            transform: scale(1.04);
+            background: var(--glass-strong);
+        }
+    }
+
+    &:active {
+        transform: scale(0.95);
+    }
 }
 
 .refresh-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 34px;
+    height: 34px;
     padding: 0;
-    border: 0;
+    border: 1px solid var(--glass-border);
     border-radius: 50%;
-    background: transparent;
-    color: var(--text-2);
+    background: var(--glass-strong);
+    color: var(--text);
     cursor: pointer;
     flex-shrink: 0;
-    transition: color 0.2s, transform 0.15s;
+    transition: transform 0.15s, color 0.2s;
 
     @media (hover: hover) {
         &:hover:not(:disabled) {
-            color: var(--text);
             transform: scale(1.08);
         }
     }
@@ -85,22 +114,14 @@
     }
 }
 
-.count {
-    margin-left: auto;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-2);
-    font-variant-numeric: tabular-nums;
-}
-
 .search-box {
     display: flex;
     align-items: center;
     gap: 10px;
-    height: 48px;
-    margin-bottom: 8px;
-    padding: 0 18px;
-    border-radius: 24px;
+    height: 42px;
+    margin-top: 10px;
+    padding: 0 16px;
+    border-radius: 21px;
     background: var(--field);
     transition: box-shadow 0.2s;
 
@@ -136,6 +157,49 @@
     &::-webkit-search-cancel-button {
         -webkit-appearance: none;
     }
+}
+
+/* --- scrolling list meta (folder + count) --- */
+
+.list-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px 2px 4px;
+    min-width: 0;
+}
+
+.folder-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    max-width: 65%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+
+    svg {
+        flex-shrink: 0;
+    }
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.count {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
 }
 
 /* --- connect prompt (not connected yet) --- */
@@ -388,6 +452,7 @@
 }
 
 @keyframes eq-bounce {
+
     0%,
     100% {
         height: 4px;
@@ -407,15 +472,22 @@
 
 @media (max-width: 520px) {
     .page {
-        padding: 20px 12px 208px;
+        padding: 0 12px 112px;
+    }
+
+    .head {
+        margin: 0 -12px;
+        padding-left: 12px;
+        padding-right: 12px;
     }
 
     .title {
-        font-size: 30px;
+        font-size: 22px;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .spinning,
     .eq i {
         animation: none;

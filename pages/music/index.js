@@ -29,18 +29,17 @@ import TrackList from 'components/Music/TrackList';
 import NowPlaying from 'components/Music/NowPlaying';
 import Profile from 'components/Music/Profile';
 import MiniPlayer from 'components/Music/MiniPlayer';
-import TabBar from 'components/Music/TabBar';
 
 import styles from './index.module.scss';
 
 /**
- * Mobile-style music app (`/music/`): three screens — a song list, a
- * full-screen now-playing page and a profile page — switched through a
- * floating bottom tab bar (list ⇄ profile), while the mini play bar on the
- * list expands into the now-playing page. The visitor connects their own
- * Google Drive with Google Identity Services (implicit token flow,
- * drive.readonly), picks a folder on the profile page and plays files as
- * blobs — no backend, which the static export on GitHub Pages requires.
+ * Mobile-style music app (`/music/`): a song list and a profile page —
+ * switched through the top-right entry buttons of each page's sticky top
+ * bar — plus a full-screen now-playing page that the mini play bar expands
+ * into. The visitor connects their own Google Drive with Google Identity
+ * Services (implicit token flow, drive.readonly), picks a folder on the
+ * profile page and plays files as blobs — no backend, which the static
+ * export on GitHub Pages requires.
  *
  * Playback lives here (single <audio> element, so music keeps running while
  * screens switch): transport controls, shuffle/repeat, seek, in-list search,
@@ -774,8 +773,6 @@ const MusicPage = function () {
                     onOpenPlayer={openPlayer}
                 />
             )}
-
-            <TabBar tab={tab} hidden={playerOpen} onChange={setTab} />
 
             {playerOpen && current && (
                 <NowPlaying

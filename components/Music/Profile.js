@@ -14,9 +14,9 @@ import {
 import styles from './Profile.module.scss';
 
 /**
- * The "我的" screen: Google Drive connection (OAuth client ID setup lives
- * here), library folder choice, refresh and app theme — settings-style
- * grouped cards. The list page's connect prompt deep-links here.
+ * The "我的" screen: sticky top bar (title + refresh + "歌曲" entry) over
+ * settings-style grouped cards — Google Drive connection, library folder
+ * choice and app theme. The list page's connect prompt deep-links here.
  */
 const Profile = function ({
     theme,
@@ -39,7 +39,29 @@ const Profile = function ({
 }) {
     return (
         <div className={styles.page}>
-            <h1 className={styles.title}>我的</h1>
+            <header className={styles.head}>
+                <div className={styles['head-row']}>
+                    <h1 className={styles.title}>我的</h1>
+                    <div className={styles['head-actions']}>
+                        {connected && (
+                            <button
+                                type="button"
+                                className={`${styles['refresh-btn']}${loading ? ` ${styles.spinning}` : ''}`}
+                                title="刷新列表"
+                                aria-label="刷新列表"
+                                disabled={loading}
+                                onClick={onRefresh}
+                            >
+                                <IconRefresh />
+                            </button>
+                        )}
+                        <button type="button" className={styles['nav-btn']} onClick={onGoList} title="歌曲">
+                            <IconNoteList />
+                            <span>歌曲</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
 
             <section className={styles.group}>
                 <div className={styles.account}>
@@ -56,18 +78,6 @@ const Profile = function ({
                                 : '用你自己的云盘当曲库，无需服务器'}
                         </span>
                     </span>
-                    {connected && (
-                        <button
-                            type="button"
-                            className={`${styles['ghost-btn']}${loading ? ` ${styles.spinning}` : ''}`}
-                            title="刷新列表"
-                            aria-label="刷新列表"
-                            disabled={loading}
-                            onClick={onRefresh}
-                        >
-                            <IconRefresh />
-                        </button>
-                    )}
                 </div>
             </section>
 

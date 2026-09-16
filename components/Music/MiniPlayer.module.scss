@@ -1,10 +1,10 @@
-// Mini play bar docked above the floating tab bar (both tab pages).
+// Mini play bar docked at the bottom edge (both tab pages).
 
 .wrap {
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
-    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     z-index: 20;
     width: min(464px, calc(100vw - 24px));
     animation: mini-in 0.36s cubic-bezier(0.32, 0.72, 0.2, 1) both;

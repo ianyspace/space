@@ -109,9 +109,17 @@
 }
 
 @keyframes blob-float {
-    0% { transform: translate3d(0, 0, 0) scale(1); }
-    50% { transform: translate3d(4vmax, -3vmax, 0) scale(1.12); }
-    100% { transform: translate3d(-3vmax, 4vmax, 0) scale(0.94); }
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate3d(4vmax, -3vmax, 0) scale(1.12);
+    }
+
+    100% {
+        transform: translate3d(-3vmax, 4vmax, 0) scale(0.94);
+    }
 }
 
 /* --- phone-width app column --- */
@@ -179,6 +187,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .blob,
     .view-in {
         animation: none;
