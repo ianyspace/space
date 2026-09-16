@@ -33,6 +33,16 @@ const GLASS_CONFIG = JSON.stringify({
     shadowOpacity: 0.18,
 });
 
+const HEADER_GLASS_CONFIG = JSON.stringify({
+    blurAmount: 0.16,
+    refraction: 0.36,
+    chromAberration: 0.018,
+    edgeHighlight: 0.1,
+    cornerRadius: 22,
+    zRadius: 18,
+    shadowOpacity: 0.12,
+});
+
 const DesktopMusic = function ({
     theme,
     onToggleTheme,
@@ -119,7 +129,7 @@ const DesktopMusic = function ({
     return (
         <div ref={rootRef} className={`${styles.root} ${theme === 'dark' ? styles['theme-dark'] : ''} ${glassFailed ? styles['glass-fallback'] : ''}`}>
             <div className={styles.ambient} aria-hidden="true" />
-            <header className={styles.header} data-glass data-config={GLASS_CONFIG}>
+            <header className={styles.header} data-glass data-config={HEADER_GLASS_CONFIG}>
                 <div className={styles.brand}>
                     <span className={styles['brand-mark']}><IconNote /></span>
                     <span>
