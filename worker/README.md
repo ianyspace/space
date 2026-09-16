@@ -28,6 +28,18 @@
 - 同名 `.lrc` / `.txt` 会作为歌词挂在 `lyricsUrl`（忽略扩展名、空格、点、连字符和开头的序号，
   例如 `01. 牵丝戏 - 银临.mp3` 能匹配 `牵丝戏-银临.lrc`）
 
+## 当前部署（本仓库）
+
+| 项 | 值 |
+| --- | --- |
+| R2 桶 | `space` |
+| 公开域名 | `https://pub-5fd69e65dbb64faca6f6a164b495d7ba.r2.dev`（r2.dev 子域） |
+| Worker 名 | `space-music` |
+| Worker 地址 | 部署后填到 `config/index.js` 的 `music.workerUrl` |
+
+改动公开域名（比如换成自定义域）后，记得同步 `wrangler.toml` 的 `R2_PUBLIC_BASE` 并重新
+`npx wrangler deploy`，否则清单里返回的还是旧地址。
+
 ## 部署步骤
 
 1. 创建桶并上传音乐（保持文件名格式，例如 `牵丝戏-银临.mp3` 与同名 `.lrc`）。

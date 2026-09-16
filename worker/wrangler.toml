@@ -3,15 +3,15 @@ main = "src/index.js"
 compatibility_date = "2025-09-01"
 
 # The R2 bucket that holds the public music library. Create it once with:
-#   npx wrangler r2 bucket create space-music
+#   npx wrangler r2 bucket create space
 [[r2_buckets]]
 binding = "MUSIC_BUCKET"
-bucket_name = "space-music"
+bucket_name = "space"
 
 [vars]
 # Public R2 domain (r2.dev subdomain or your own custom domain). Used to build
 # the direct audio URLs returned in the track index — no trailing slash.
-R2_PUBLIC_BASE = "https://music-cdn.example.com"
+R2_PUBLIC_BASE = "https://pub-5fd69e65dbb64faca6f6a164b495d7ba.r2.dev"
 # Optional: only expose objects under this key prefix ("" = whole bucket).
 MUSIC_PREFIX = ""
 # Comma separated list of origins allowed to read the index and audio.
