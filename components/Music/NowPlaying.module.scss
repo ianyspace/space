@@ -254,7 +254,7 @@
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 36%;
+    width: 42%;
     aspect-ratio: 1;
     display: flex;
     align-items: center;
@@ -268,6 +268,51 @@
     svg {
         width: 46%;
         height: 46%;
+    }
+}
+
+/* Ripples that keep travelling across the outer band of the record while it
+   plays. The rotor clips them to the disc, so they never spill onto the page. */
+.ripples {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.ripple {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.45);
+    opacity: 0;
+    transform: scale(0.62);
+    animation: disc-ripple 3.6s ease-out infinite;
+    animation-play-state: paused;
+
+    &:nth-child(2) {
+        animation-delay: 1.2s;
+    }
+
+    &:nth-child(3) {
+        animation-delay: 2.4s;
+    }
+}
+
+@keyframes disc-ripple {
+    0% {
+        opacity: 0;
+        transform: scale(0.62);
+    }
+
+    18% {
+        opacity: 0.6;
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(0.97);
     }
 }
 
@@ -298,8 +343,9 @@
 }
 
 /* Paused whenever the transport is: the record keeps its angle instead of
-   snapping back to the top. */
-.disc-playing .rotor {
+   snapping back to the top, and the ripples wait with it. */
+.disc-playing .rotor,
+.disc-playing .ripple {
     animation-play-state: running;
 }
 
@@ -310,7 +356,8 @@
     pointer-events: none;
 }
 
-.stage-lyrics .rotor {
+.stage-lyrics .rotor,
+.stage-lyrics .ripple {
     animation-play-state: paused;
 }
 
@@ -653,7 +700,8 @@
         animation: none;
     }
 
-    .rotor {
+    .rotor,
+    .ripple {
         animation: none;
     }
 

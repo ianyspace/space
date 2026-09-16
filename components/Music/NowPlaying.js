@@ -155,6 +155,13 @@ const NowPlaying = function ({
                                         <IconNote />
                                     </span>
                                     <span className={styles['disc-sheen']} />
+                                    {/* Ripples travel across the outer band of
+                                        the record while it is playing. */}
+                                    <span className={styles.ripples}>
+                                        <span className={styles.ripple} />
+                                        <span className={styles.ripple} />
+                                        <span className={styles.ripple} />
+                                    </span>
                                 </span>
                             </button>
                         </div>
