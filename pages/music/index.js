@@ -60,6 +60,7 @@ const MusicPage = function () {
     const [clientId, setClientId] = useState('');
     const [clientIdDraft, setClientIdDraft] = useState('');
     const [token, setToken] = useState('');
+    const [tokenExpiresAt, setTokenExpiresAt] = useState(0);
     const [error, setError] = useState('');
     const [notice, setNotice] = useState('');
     const [folders, setFolders] = useState([]);
@@ -93,6 +94,7 @@ const MusicPage = function () {
     // { id, promise } of the in-flight/finished next-track prefetch.
     const prefetchRef = useRef(null);
     const restoredTrackRef = useRef(false);
+    const tokenRefreshRef = useRef(false);
 
     const fetchTrackUrl = useCallback(async function (track, accessToken) {
         const resp = await fetch(`${DRIVE_FILES_URL}/${track.id}?alt=media`, {
@@ -186,11 +188,13 @@ const MusicPage = function () {
     const saveToken = useCallback(function (accessToken, expiresIn, id) {
         const expiresAt = Date.now() + Math.max(Number(expiresIn) || 3600, 60) * 1000;
         storageSet(TOKEN_KEY, JSON.stringify({ accessToken, expiresAt, clientId: id }));
+        setTokenExpiresAt(expiresAt);
         setToken(accessToken);
     }, []);
 
     const clearSavedToken = useCallback(function () {
         storageSet(TOKEN_KEY, '');
+        setTokenExpiresAt(0);
         setToken('');
     }, []);
 
@@ -257,11 +261,33 @@ const MusicPage = function () {
         let saved;
         try { saved = JSON.parse(storageGet(TOKEN_KEY)); } catch (err) { saved = null; }
         if (saved && saved.accessToken && saved.clientId === clientId && saved.expiresAt > Date.now() + 60000) {
+            setTokenExpiresAt(saved.expiresAt);
             setToken(saved.accessToken);
             return;
         }
         requestToken(clientId, '', false);
     }, [gsiReady, clientId, requestToken]);
+
+    // GIS access tokens are short-lived. Refresh before expiry and also when
+    // the tab becomes visible again after the browser suspended it.
+    useEffect(() => {
+        if (!gsiReady || !clientId || !token || !tokenExpiresAt) return undefined;
+        const refresh = function () {
+            if (tokenRefreshRef.current || Date.now() < tokenExpiresAt - 300000) return;
+            tokenRefreshRef.current = true;
+            requestToken(clientId, '', false);
+            window.setTimeout(() => { tokenRefreshRef.current = false; }, 1000);
+        };
+        const timer = window.setTimeout(refresh, Math.max(0, tokenExpiresAt - Date.now() - 300000));
+        const onVisibilityChange = function () {
+            if (document.visibilityState === 'visible') refresh();
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+        return () => {
+            window.clearTimeout(timer);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+        };
+    }, [gsiReady, clientId, token, tokenExpiresAt, requestToken]);
 
     const connect = useCallback(function () {
         setError('');
