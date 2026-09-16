@@ -149,19 +149,19 @@ const NowPlaying = function ({
                                 title={canToggleLyrics ? '查看歌词' : '这首歌没有歌词'}
                                 aria-label={canToggleLyrics ? '查看歌词' : '这首歌没有歌词'}
                             >
+                                {/* Under the record, so each ring emerges at
+                                    the rim and travels outwards. */}
+                                <span className={styles.ripples} aria-hidden="true">
+                                    <span className={styles.ripple} />
+                                    <span className={styles.ripple} />
+                                    <span className={styles.ripple} />
+                                </span>
                                 <span className={styles.rotor} aria-hidden="true">
                                     <span className={styles['disc-grooves']} />
                                     <span className={styles['disc-label']} style={{ background: gradient }}>
                                         <IconNote />
                                     </span>
                                     <span className={styles['disc-sheen']} />
-                                    {/* Ripples travel across the outer band of
-                                        the record while it is playing. */}
-                                    <span className={styles.ripples}>
-                                        <span className={styles.ripple} />
-                                        <span className={styles.ripple} />
-                                        <span className={styles.ripple} />
-                                    </span>
                                 </span>
                             </button>
                         </div>

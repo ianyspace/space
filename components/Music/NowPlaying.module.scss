@@ -271,8 +271,10 @@
     }
 }
 
-/* Ripples that keep travelling across the outer band of the record while it
-   plays. The rotor clips them to the disc, so they never spill onto the page. */
+/* Ripples leaving the record: each ring starts at the rim and expands into the
+   space around it, so they read as waves pushed out by the music. They sit
+   under the record, which hides the inside half of every ring, and the whole
+   travel stays well inside the page's padding. */
 .ripples {
     position: absolute;
     inset: 0;
@@ -285,9 +287,9 @@
     inset: 0;
     box-sizing: border-box;
     border-radius: 50%;
-    border: 1.5px solid rgba(255, 255, 255, 0.45);
+    border: 1.5px solid rgba(255, 255, 255, 0.4);
     opacity: 0;
-    transform: scale(0.62);
+    transform: scale(0.98);
     animation: disc-ripple 3.6s ease-out infinite;
     animation-play-state: paused;
 
@@ -303,16 +305,16 @@
 @keyframes disc-ripple {
     0% {
         opacity: 0;
-        transform: scale(0.62);
+        transform: scale(0.98);
     }
 
-    18% {
-        opacity: 0.6;
+    14% {
+        opacity: 0.55;
     }
 
     100% {
         opacity: 0;
-        transform: scale(0.97);
+        transform: scale(1.26);
     }
 }
 
