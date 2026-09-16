@@ -35,10 +35,29 @@
 | R2 桶 | `space` |
 | 公开域名 | `https://pub-5fd69e65dbb64faca6f6a164b495d7ba.r2.dev`（r2.dev 子域） |
 | Worker 名 | `space-music` |
-| Worker 地址 | 部署后填到 `config/index.js` 的 `music.workerUrl` |
+| Worker 地址 | `https://space-music.ianyscript.workers.dev`（`config/index.js` 的 `music.workerUrl`） |
 
 改动公开域名（比如换成自定义域）后，记得同步 `wrangler.toml` 的 `R2_PUBLIC_BASE` 并重新
 `npx wrangler deploy`，否则清单里返回的还是旧地址。
+
+## 环境要求
+
+- **Node 版本**：`wrangler@4` 需要 **Node >= 22**。本机是 Node 20 的话，用 `wrangler@3` 部署
+  （本项目已把 `compatibility_date` 固定在 wrangler 3 也接受的值）。
+- 如果 `npx wrangler` 报 `ENOTEMPTY` / `EPERM` / `不是内部或外部命令`，是 npx 缓存目录损坏，
+  清掉后改用全局安装：
+
+  ```bash
+  npm cache verify
+  npm i -g wrangler@3
+  cd worker
+  wrangler login
+  wrangler deploy
+  ```
+
+- 完全不想装工具链，也可以直接在 Cloudflare Dashboard 里建 Worker（Workers & Pages →
+  Create → Worker），把 `src/index.js` 粘贴进去，再补上 `MUSIC_BUCKET` 绑定与
+  `R2_PUBLIC_BASE` / `ALLOWED_ORIGINS` 两个变量即可。
 
 ## 部署步骤
 

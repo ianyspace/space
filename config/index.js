@@ -43,7 +43,7 @@ const supportedLanguages = {
  */
 const music = {
     // Base URL of the space-music Worker exposing `GET /tracks`.
-    workerUrl: process.env.NEXT_PUBLIC_MUSIC_WORKER_URL || 'https://space-music.ianyspace.workers.dev',
+    workerUrl: process.env.NEXT_PUBLIC_MUSIC_WORKER_URL || 'https://space-music.ianyscript.workers.dev',
     // Public R2 domain. Only needed when the Worker answers with bare object
     // keys instead of absolute URLs; empty means "trust `track.url`".
     r2BaseUrl: process.env.NEXT_PUBLIC_MUSIC_R2_BASE || '',

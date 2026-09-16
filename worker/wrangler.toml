@@ -1,6 +1,9 @@
 name = "space-music"
 main = "src/index.js"
-compatibility_date = "2025-09-01"
+# Kept conservative on purpose: this project deploys with wrangler 3 on Node 20
+# (wrangler 4 requires Node >= 22). The Worker only uses standard APIs
+# (fetch/Response/caches + the R2 binding), so an older date is fine.
+compatibility_date = "2024-11-06"
 
 # The R2 bucket that holds the public music library. Create it once with:
 #   npx wrangler r2 bucket create space
