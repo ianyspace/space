@@ -504,7 +504,10 @@ const MusicApp = function ({ variant = 'h5' }) {
         const track = current && current.track;
         const withLyrics = Boolean(track && hasLyrics(track));
         setLyrics(null);
-        setLyricsVisible(withLyrics);
+        // The wide-screen layout shows the lyrics next to the cover and has no
+        // toggle, so it opens on them; the phone player opens on the record and
+        // reveals the lyrics when that record is tapped.
+        setLyricsVisible(variant === 'desktop' && withLyrics);
         if (!withLyrics) return undefined;
         let cancelled = false;
         setLyricsLoading(true);
@@ -517,7 +520,7 @@ const MusicApp = function ({ variant = 'h5' }) {
                 if (!cancelled) setLyricsLoading(false);
             });
         return () => { cancelled = true; };
-    }, [current, token]);
+    }, [current, token, variant]);
 
     const handleFolderChange = useCallback(function (event) {
         if (librarySource !== DRIVE_SOURCE) {
@@ -688,6 +691,24 @@ const MusicApp = function ({ variant = 'h5' }) {
     const cycleRepeat = useCallback(function () {
         setRepeat((mode) => (mode === 'off' ? 'all' : mode === 'all' ? 'one' : 'off'));
     }, []);
+
+    // The phone player folds shuffle and repeat into one cycling button, in the
+    // order 关闭 → 列表循环 → 单曲循环 → 随机 → 关闭; the wide-screen layout keeps
+    // them as two separate buttons.
+    const playbackMode = shuffle ? 'shuffle' : repeat;
+    const cyclePlaybackMode = useCallback(function () {
+        if (shuffle) {
+            setShuffle(false);
+            setRepeat('off');
+            return;
+        }
+        if (repeat === 'one') {
+            setShuffle(true);
+            setRepeat('off');
+            return;
+        }
+        setRepeat(repeat === 'off' ? 'all' : 'one');
+    }, [shuffle, repeat]);
 
     /* --- now-playing transitions (mini bar ⇄ sheet) --- */
 
@@ -1006,14 +1027,12 @@ const MusicApp = function ({ variant = 'h5' }) {
                             track={current.track}
                             isPlaying={isPlaying}
                             progress={progress}
-                            shuffle={shuffle}
-                            repeat={repeat}
+                            mode={playbackMode}
                             listLoading={listLoading}
                             closing={playerClosing}
                             onClosed={finishClosePlayer}
                             onCancelClose={cancelClosePlayer}
-                            onToggleShuffle={() => setShuffle((on) => !on)}
-                            onCycleRepeat={cycleRepeat}
+                            onCycleMode={cyclePlaybackMode}
                             onTogglePlay={togglePlay}
                             onPrev={playPrev}
                             onNext={playNext}
@@ -1026,7 +1045,6 @@ const MusicApp = function ({ variant = 'h5' }) {
                             }}
                             onClose={() => closePlayer()}
                             onOpenList={() => closePlayer('list')}
-                            onOpenProfile={() => closePlayer('profile')}
                             lyrics={lyrics && lyrics.trackId === current.track.id ? lyrics : null}
                             lyricsLoading={lyricsLoading}
                             lyricsVisible={lyricsVisible}

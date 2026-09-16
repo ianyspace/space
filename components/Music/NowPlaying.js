@@ -11,61 +11,110 @@ import {
     IconRepeatOne,
     IconQueue,
     IconChevronDown,
-    IconPerson,
 } from './icons';
-import { parseTrackName, trackGradient, formatSize, formatTime } from './shared';
+import { parseTrackName, trackGradient, formatTime } from './shared';
 
 import styles from './NowPlaying.module.scss';
+
+// Playback modes of the single cycling control, in the order the button walks
+// them: 关闭 → 列表循环 → 单曲循环 → 随机 → 关闭.
+const MODES = {
+    off: { icon: <IconRepeat />, title: '循环关闭' },
+    all: { icon: <IconRepeat />, title: '列表循环' },
+    one: { icon: <IconRepeatOne />, title: '单曲循环' },
+    shuffle: { icon: <IconShuffle />, title: '随机播放' },
+};
+
+/**
+ * Decorative tonearm, drawn in the stage's own coordinate space (100 × 107 —
+ * the stage's aspect ratio) so it scales with the record instead of drifting
+ * off it: pivot near the top, arm reaching the record's upper-right rim.
+ * `playing` swings the arm a few degrees down so it reads as tracking.
+ */
+const Tonearm = function ({ playing }) {
+    return (
+        <svg
+            className={playing ? `${styles.arm} ${styles['arm-playing']}` : styles.arm}
+            viewBox="0 0 100 107"
+            aria-hidden="true"
+            focusable="false"
+        >
+            <g className={styles['arm-swing']}>
+                <path
+                    d="M53.4 9.8 L73.4 21.2"
+                    fill="none"
+                    stroke="#f2f3f7"
+                    strokeWidth="2.3"
+                    strokeLinecap="round"
+                />
+                <g transform="rotate(28 74 22.5)">
+                    <rect x="72.6" y="19.6" width="9.4" height="5.8" rx="1.9" fill="#f2f3f7" />
+                    <rect x="80.2" y="21.3" width="2.6" height="2.4" rx="0.9" fill="#26272e" />
+                </g>
+                <circle cx="53.4" cy="9.8" r="4.4" fill="#191a20" stroke="#f2f3f7" strokeWidth="1.7" />
+                <circle cx="53.4" cy="9.8" r="1.4" fill="#f2f3f7" />
+            </g>
+        </svg>
+    );
+};
 
 /**
  * Now-playing page (the reference's dark player), rendered as a phone-width
  * sheet that slides up over the dimmed tab pages — same gesture language as
- * the mini bar: tap the bar to expand, tap 收起 / queue / person to collapse
- * back. `closing` triggers the reverse animation; `onClosed` fires when the
- * exit finished and the shell may unmount. Fixed dark palette regardless of
- * the app theme; no volume control by design.
+ * the mini bar: tap the bar to expand, tap 收起 to collapse back. The stage
+ * shows the spinning record; tapping it swaps in the lyrics, tapping the
+ * lyrics swaps the record back (only when the track has lyrics). `closing`
+ * triggers the reverse animation; `onClosed` fires when the exit finished and
+ * the shell may unmount. Fixed dark palette regardless of the app theme; no
+ * volume control by design.
  */
 const NowPlaying = function ({
     track,
     isPlaying,
     progress,
-    shuffle,
-    repeat,
+    mode = 'off',
     closing,
     onClosed,
     onCancelClose,
-    onToggleShuffle,
-    onCycleRepeat,
+    onCycleMode,
     onTogglePlay,
     onPrev,
     onNext,
     onSeek,
     onClose,
     onOpenList,
-    onOpenProfile,
     lyrics,
     lyricsLoading,
     lyricsVisible,
     onToggleLyrics,
 }) {
     const meta = parseTrackName(track.name);
+    const gradient = trackGradient(track.name);
     const { time, duration } = progress;
     const seekPercent = duration > 0 ? Math.min(100, (time / duration) * 100) : 0;
-    const remaining = duration > 0 ? duration - time : 0;
-    const quality = [
-        meta.ext || 'AUDIO',
-        track.size ? formatSize(track.size) : '',
-    ].filter(Boolean).join(' · ');
+    const playback = MODES[mode] || MODES.off;
+    // The record only doubles as a lyrics switch when there is something to
+    // show — a track without lyrics keeps it as plain artwork.
+    const canToggleLyrics = Boolean(lyrics) || lyricsLoading;
+    const lyricsShown = Boolean(lyricsVisible && canToggleLyrics);
     const activeLyric = lyrics && lyrics.timed
         ? lyrics.lines.reduce((index, line, lineIndex) => (line.time <= time ? lineIndex : index), -1)
         : -1;
     const activeLyricRef = useRef(null);
+    // Tap position, so a finger that was really scrolling the lyrics does not
+    // also count as "back to the record".
+    const pressYRef = useRef(0);
 
     useEffect(() => {
         if (activeLyricRef.current) {
             activeLyricRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
         }
-    }, [activeLyric]);
+    }, [activeLyric, lyricsShown]);
+
+    const handleLyricsClick = function (event) {
+        if (Math.abs(event.clientY - pressYRef.current) > 8) return;
+        onToggleLyrics();
+    };
 
     return (
         <div
@@ -73,34 +122,72 @@ const NowPlaying = function ({
             onAnimationEnd={() => { if (closing) onClosed(); }}
             onPointerDown={() => { if (closing) onCancelClose(); }}
         >
-            <div className={`${closing ? `${styles.page} ${styles['page-out']}` : styles.page}${lyricsVisible && lyrics ? ` ${styles['lyrics-open']}` : ''}`}>
+            <div
+                className={closing ? `${styles.page} ${styles['page-out']}` : styles.page}
+                style={{ '--np-grad': gradient }}
+            >
                 <div className={styles.topbar}>
                     <button type="button" className={styles['top-btn']} title="收起" aria-label="收起" onClick={onClose}>
                         <IconChevronDown />
                     </button>
-                    <span className={styles['quality-pill']}>
-                        {quality}
-                    </span>
-                    <div className={styles['top-actions']}>
-                        <button
-                            type="button"
-                            className={styles['top-btn']}
-                            title="我的"
-                            aria-label="我的"
-                            onClick={onOpenProfile}
-                        >
-                            <IconPerson />
-                        </button>
-                    </div>
                 </div>
 
                 <div className={styles.body}>
-                    <div
-                        className={styles.art}
-                        style={{ background: trackGradient(track.name) }}
-                    >
-                        <span className={styles['art-note']}><IconNote /></span>
-                        <span className={styles['art-gloss']} aria-hidden="true" />
+                    <div className={`${styles.stage}${lyricsShown ? ` ${styles['stage-lyrics']}` : ''}`}>
+                        <Tonearm playing={isPlaying} />
+
+                        <button
+                            type="button"
+                            className={`${styles.disc}${isPlaying ? ` ${styles['disc-playing']}` : ''}`}
+                            onClick={canToggleLyrics ? onToggleLyrics : undefined}
+                            disabled={!canToggleLyrics}
+                            aria-hidden={lyricsShown}
+                            tabIndex={lyricsShown ? -1 : 0}
+                            title={canToggleLyrics ? '查看歌词' : '这首歌没有歌词'}
+                            aria-label={canToggleLyrics ? '查看歌词' : '这首歌没有歌词'}
+                        >
+                            <span className={styles.rotor} aria-hidden="true">
+                                <span className={styles['disc-grooves']} />
+                                <span className={styles['disc-label']} style={{ background: gradient }}>
+                                    <IconNote />
+                                </span>
+                                <span className={styles['disc-ring']} />
+                                <span className={styles['disc-hole']} />
+                                <span className={styles['disc-sheen']} />
+                            </span>
+                        </button>
+
+                        {lyricsShown && (
+                            <div
+                                className={styles.lyrics}
+                                role="button"
+                                tabIndex={0}
+                                aria-label="歌词，点击返回唱片"
+                                title="返回唱片"
+                                onPointerDown={(event) => { pressYRef.current = event.clientY; }}
+                                onClick={handleLyricsClick}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Enter' || event.key === ' ') {
+                                        event.preventDefault();
+                                        onToggleLyrics();
+                                    }
+                                }}
+                            >
+                                {lyrics ? lyrics.lines.map((line, index) => (
+                                    <p
+                                        key={`${line.time}-${index}`}
+                                        ref={index === activeLyric ? activeLyricRef : null}
+                                        className={index === activeLyric ? styles['lyric-active'] : styles.lyric}
+                                    >
+                                        {line.text}
+                                    </p>
+                                )) : (
+                                    <p className={styles['lyrics-empty']}>
+                                        {lyricsLoading ? '歌词加载中…' : '这首歌没有歌词'}
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className={styles['np-head']}>
@@ -111,20 +198,6 @@ const NowPlaying = function ({
                             </span>
                         </div>
                     </div>
-
-                    {lyricsVisible && lyrics && (
-                        <div className={styles.lyrics} aria-label="同步歌词">
-                            {lyrics.lines.map((line, index) => (
-                                <p
-                                    key={`${line.time}-${index}`}
-                                    ref={index === activeLyric ? activeLyricRef : null}
-                                    className={index === activeLyric ? styles['lyric-active'] : styles.lyric}
-                                >
-                                    {line.text}
-                                </p>
-                            ))}
-                        </div>
-                    )}
 
                     <div className={styles['np-progress']}>
                         <input
@@ -141,19 +214,19 @@ const NowPlaying = function ({
                         />
                         <div className={styles['time-row']}>
                             <span>{formatTime(time)}</span>
-                            <span>-{formatTime(remaining)}</span>
+                            <span>{formatTime(duration)}</span>
                         </div>
                     </div>
 
                     <div className={styles['np-controls']}>
                         <button
                             type="button"
-                            className={`${styles['mode-btn']}${shuffle ? ` ${styles['mode-btn-on']}` : ''}`}
-                            aria-pressed={shuffle}
-                            title="随机播放"
-                            onClick={onToggleShuffle}
+                            className={`${styles['mode-btn']}${mode !== 'off' ? ` ${styles['mode-btn-on']}` : ''}`}
+                            aria-pressed={mode !== 'off'}
+                            title={playback.title}
+                            onClick={onCycleMode}
                         >
-                            <IconShuffle />
+                            {playback.icon}
                         </button>
                         <button
                             type="button"
@@ -181,37 +254,12 @@ const NowPlaying = function ({
                         </button>
                         <button
                             type="button"
-                            className={`${styles['mode-btn']}${repeat !== 'off' ? ` ${styles['mode-btn-on']}` : ''}`}
-                            aria-pressed={repeat !== 'off'}
-                            title={repeat === 'one' ? '单曲循环' : repeat === 'all' ? '列表循环' : '循环关闭'}
-                            onClick={onCycleRepeat}
-                        >
-                            {repeat === 'one' ? <IconRepeatOne /> : <IconRepeat />}
-                        </button>
-                    </div>
-
-                    {/* Secondaries: playlist jump + lyrics toggle */}
-                    <div className={styles['np-extras']}>
-                        <button
-                            type="button"
-                            className={styles['extra-btn']}
+                            className={styles['mode-btn']}
                             title="播放列表"
                             onClick={onOpenList}
                         >
                             <IconQueue />
-                            <span>播放列表</span>
                         </button>
-                        {(lyrics || lyricsLoading) && (
-                            <button
-                                type="button"
-                                className={`${styles['extra-btn']}${lyricsVisible ? ` ${styles['extra-btn-on']}` : ''}`}
-                                aria-pressed={lyricsVisible}
-                                title={lyricsVisible ? '隐藏歌词' : '显示歌词'}
-                                onClick={onToggleLyrics}
-                            >
-                                歌词
-                            </button>
-                        )}
                     </div>
                 </div>
             </div>

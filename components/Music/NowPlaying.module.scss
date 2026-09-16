@@ -1,5 +1,7 @@
-// Now-playing page — a phone-width dark sheet (same column as the song
-// list) over a dimmed viewport. Slide-up entrance; no volume controls.
+// Now-playing page — a phone-width dark sheet (same column as the song list)
+// over a dimmed viewport. The stage holds a spinning record with its tonearm;
+// tapping the record swaps in the lyrics and tapping the lyrics swaps back.
+// Slide-up entrance; no volume controls.
 
 .veil {
     position: fixed;
@@ -41,7 +43,6 @@
     --np-text: #f2f3f7;
     --np-text-2: rgba(228, 230, 240, 0.6);
     --np-track: rgba(255, 255, 255, 0.22);
-    --np-pill: rgba(255, 255, 255, 0.1);
 
     display: flex;
     flex-direction: column;
@@ -50,7 +51,11 @@
     width: min(480px, 100%);
     height: 100%;
     box-sizing: border-box;
-    background: radial-gradient(140% 90% at 50% -10%, #363a52 0%, #23263a 48%, #191b2a 100%);
+    /* Ambient backdrop: the track's own gradient pushed far back under a dark
+       wash (--np-grad comes from the component) so white text stays readable. */
+    background:
+        radial-gradient(120% 76% at 50% -6%, rgba(24, 26, 40, 0.4) 0%, rgba(15, 16, 27, 0.8) 48%, rgba(9, 10, 18, 0.94) 100%),
+        var(--np-grad, linear-gradient(135deg, #363a52, #191b2a));
     box-shadow: 0 0 80px rgba(0, 0, 0, 0.5);
     color: var(--np-text);
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC',
@@ -90,7 +95,7 @@
     }
 }
 
-/* --- top bar --- */
+/* --- top bar: collapse only --- */
 
 .topbar {
     position: relative;
@@ -99,7 +104,6 @@
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 14px 18px 0;
 }
 
@@ -126,47 +130,6 @@
     &:active {
         transform: scale(0.92);
     }
-
-    &:disabled {
-        opacity: 0.5;
-        cursor: wait;
-    }
-}
-
-.top-actions {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-}
-
-.spinning {
-    animation: np-spin 0.9s linear infinite;
-}
-
-@keyframes np-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.quality-pill {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 5px 12px;
-    border-radius: 13px;
-    background: var(--np-pill);
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--np-text-2);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    max-width: 70%;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 /* --- body --- */
@@ -178,48 +141,235 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    padding: 6px 24px calc(12px + env(safe-area-inset-bottom, 0px));
+    padding: 4px 24px calc(12px + env(safe-area-inset-bottom, 0px));
     overflow-y: auto;
 }
 
-.art {
+/* --- record stage: vinyl + tonearm, or the lyrics --- */
+
+.stage {
     position: relative;
     width: 100%;
+    /* 100 × 107 also fixes the tonearm's SVG coordinate space. */
+    aspect-ratio: 100 / 107;
+    flex-shrink: 0;
+}
+
+.arm {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    transition: opacity 0.32s ease;
+}
+
+/* The whole arm rotates around its pivot (53.4, 9.8 in the viewBox). */
+.arm-swing {
+    transform-box: view-box;
+    transform-origin: 53.4% 9.16%;
+    transition: transform 0.6s cubic-bezier(0.32, 0.72, 0.2, 1);
+}
+
+.arm-playing .arm-swing {
+    transform: rotate(7deg);
+}
+
+.disc {
+    position: absolute;
+    left: 50%;
+    top: 51.4%;
+    width: 68%;
     aspect-ratio: 1;
-    max-height: 44vh;
-    margin: 8px auto 0;
-    flex-shrink: 1;
-    border-radius: 22px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.75),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.18);
-    transition: max-height 0.45s ease, border-radius 0.45s ease, opacity 0.35s ease;
-}
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    transition: opacity 0.32s ease, transform 0.15s;
 
-.lyrics-open .art {
-    max-height: 15vh;
-    border-radius: 14px;
-}
+    &:active:not(:disabled) {
+        transform: translate(-50%, -50%) scale(0.985);
+    }
 
-.art-note {
-    display: inline-flex;
-    color: rgba(255, 255, 255, 0.94);
+    &:disabled {
+        cursor: default;
+    }
 
-    svg {
-        width: clamp(56px, 14vw, 100px);
-        height: clamp(56px, 14vw, 100px);
+    &:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.65);
+        outline-offset: 8px;
     }
 }
 
-.art-gloss {
+.rotor {
     position: absolute;
     inset: 0;
-    background: linear-gradient(160deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 42%),
-        radial-gradient(120% 90% at 50% 118%, rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0) 55%);
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, #202127 0%, #131418 44%, #0a0b0e 80%, #15161b 100%);
+    box-shadow: 0 34px 64px -20px rgba(0, 0, 0, 0.85),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    animation: disc-spin 18s linear infinite;
+    animation-play-state: paused;
+    overflow: hidden;
+}
+
+.disc-grooves {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: repeating-radial-gradient(circle at 50% 50%,
+            rgba(255, 255, 255, 0.05) 0 1px,
+            rgba(0, 0, 0, 0) 1px 4px);
+    opacity: 0.9;
+}
+
+/* Label = the track's gradient (same one tinting the page backdrop). */
+.disc-label {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 36%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.94);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+        inset 0 -6px 18px rgba(0, 0, 0, 0.28);
+
+    svg {
+        width: 46%;
+        height: 46%;
+    }
+}
+
+.disc-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 36%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09),
+        0 0 22px rgba(0, 0, 0, 0.55);
     pointer-events: none;
+}
+
+.disc-hole {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4.5%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #0b0c10;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    transform: translate(-50%, -50%);
+}
+
+/* The highlight sweep is what makes the rotation visible. */
+.disc-sheen {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg,
+            rgba(255, 255, 255, 0) 0deg,
+            rgba(255, 255, 255, 0.07) 30deg,
+            rgba(255, 255, 255, 0) 86deg,
+            rgba(255, 255, 255, 0) 180deg,
+            rgba(255, 255, 255, 0.05) 212deg,
+            rgba(255, 255, 255, 0) 268deg);
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+/* Paused whenever the transport is: the record keeps its angle instead of
+   snapping back to the top. */
+.disc-playing .rotor {
+    animation-play-state: running;
+}
+
+/* Lyrics view: the record and its arm fade out behind the words. */
+.stage-lyrics .arm,
+.stage-lyrics .disc {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.stage-lyrics .rotor {
+    animation-play-state: paused;
+}
+
+@keyframes disc-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- lyrics --- */
+
+.lyrics {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    padding: 10px 6px;
+    overflow-y: auto;
+    text-align: center;
+    cursor: pointer;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    overscroll-behavior: contain;
+    scroll-padding-block: 38%;
+    mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
+    animation: lyrics-in 0.32s ease-out both;
+}
+
+.lyrics::-webkit-scrollbar {
+    display: none;
+}
+
+@keyframes lyrics-in {
+    from {
+        opacity: 0;
+        transform: scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.lyric,
+.lyric-active {
+    margin: 0;
+    padding: 8px 0;
+    color: var(--np-text-2);
+    font-size: 16px;
+    line-height: 1.6;
+    opacity: 0.52;
+    scroll-margin: 18vh;
+    transition: color 0.35s, transform 0.35s, opacity 0.35s;
+}
+
+.lyric-active {
+    color: var(--np-text);
+    font-size: 18px;
+    font-weight: 700;
+    opacity: 1;
+    transform: scale(1.04);
+}
+
+.lyrics-empty {
+    margin: 38% 0 0;
+    color: var(--np-text-2);
+    font-size: 14px;
 }
 
 /* --- title row --- */
@@ -228,7 +378,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 2px 0;
+    padding: 6px 2px 0;
     min-width: 0;
 }
 
@@ -255,47 +405,6 @@
     white-space: nowrap;
     font-size: 13px;
     color: var(--np-text-2);
-}
-
-.lyrics {
-    position: relative;
-    flex: 1 1 auto;
-    min-height: 180px;
-    max-height: 42vh;
-    margin: 12px -8px 0;
-    padding: 24px 18px;
-    overflow-y: auto;
-    text-align: center;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-    overscroll-behavior: contain;
-    scroll-padding-block: 38%;
-    mask-image: linear-gradient(to bottom, transparent 0, #000 16%, #000 84%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16%, #000 84%, transparent 100%);
-}
-
-.lyrics::-webkit-scrollbar {
-    display: none;
-}
-
-.lyric,
-.lyric-active {
-    margin: 0;
-    padding: 8px 0;
-    color: var(--np-text-2);
-    font-size: 16px;
-    line-height: 1.6;
-    opacity: 0.52;
-    scroll-margin: 18vh;
-    transition: color 0.35s, transform 0.35s, opacity 0.35s;
-}
-
-.lyric-active {
-    color: var(--np-text);
-    font-size: 18px;
-    font-weight: 700;
-    opacity: 1;
-    transform: scale(1.04);
 }
 
 /* --- progress --- */
@@ -386,7 +495,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 4px;
-    padding: 16px 2px 0;
+    padding: 14px 2px 0;
 }
 
 .mode-btn {
@@ -478,71 +587,43 @@
     }
 }
 
-/* --- secondary row: playlist jump + lyrics toggle --- */
-
-.np-extras {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 14px 2px 0;
-    min-height: 30px;
-}
-
-.extra-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    height: 30px;
-    padding: 0 13px;
-    border: 0;
-    border-radius: 15px;
-    background: var(--np-pill);
-    color: var(--np-text-2);
-    font-size: 12.5px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-    transition: color 0.2s, background-color 0.2s, transform 0.15s;
-
-    svg {
-        width: 15px;
-        height: 15px;
+/* Short phones: shrink the whole stage, geometry intact (everything inside it
+   is sized in % of the stage width). */
+@media (max-height: 700px) {
+    .stage {
+        width: min(100%, 84%);
     }
 
-    @media (hover: hover) {
-        &:hover {
-            color: var(--np-text);
-            background: rgba(255, 255, 255, 0.16);
-        }
-    }
-
-    &:active {
-        transform: scale(0.94);
-    }
-}
-
-.extra-btn-on {
-    color: var(--np-text);
-    background: rgba(255, 255, 255, 0.18);
-}
-
-@media (max-height: 680px) {
-    .art {
-        margin-top: 4px;
+    .np-progress {
+        padding-top: 8px;
     }
 
     .np-controls {
-        padding-top: 12px;
+        padding-top: 8px;
     }
 
-    .np-extras {
-        padding-top: 10px;
+    .play-btn {
+        width: 64px;
+        height: 64px;
+
+        svg {
+            width: 40px;
+            height: 40px;
+        }
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .page {
+    .page,
+    .lyrics {
         animation: none;
+    }
+
+    .rotor {
+        animation: none;
+    }
+
+    .arm-swing {
+        transition: none;
     }
 }
