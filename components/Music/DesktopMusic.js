@@ -1,16 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import {
-    IconChevronRight,
+    IconClose,
     IconFolder,
+    IconGear,
+    IconLogout,
     IconMoon,
+    IconNext,
     IconNote,
-    IconNoteList,
     IconPause,
-    IconPerson,
     IconPlay,
     IconPrev,
-    IconNext,
     IconRefresh,
     IconRepeat,
     IconRepeatOne,
@@ -18,29 +18,56 @@ import {
     IconShuffle,
     IconSun,
 } from './icons';
-import { formatSize, formatTime, parseTrackName, trackGradient } from './shared';
+import { formatTime, parseTrackName } from './shared';
 
 import styles from './DesktopMusic.module.scss';
 
-const GLASS_CONFIG = JSON.stringify({
-    blurAmount: 0.2,
-    refraction: 0.45,
-    chromAberration: 0.025,
-    edgeHighlight: 0.08,
-    fresnel: 0.7,
-    cornerRadius: 28,
-    zRadius: 22,
-    shadowOpacity: 0.18,
+/**
+ * Wide-screen (tablet / desktop) music workspace, used by `/music/desktop`.
+ *
+ * Layout: the song list sits on the left, the whole middle column is the
+ * lyric player — cover disc on top, then metadata, then the scrolling lyrics —
+ * and the transport bar is docked at the bottom of that column. Everything
+ * that needs Google (source switch, Drive connection, folder, theme) lives
+ * behind the single gear button in the top-right corner.
+ *
+ * Liquid Glass is used on exactly three surfaces: the gear button, the cover
+ * disc and the bottom bar. Everything else is flat, which keeps the minimal
+ * look and spares the WebGL compositor. Note the library's constraint: glass
+ * elements must be *direct children* of the root, which is why these three are
+ * positioned with grid areas instead of being nested in wrappers.
+ */
+const SETTINGS_GLASS = JSON.stringify({
+    blurAmount: 0.18,
+    refraction: 0.4,
+    chromAberration: 0.02,
+    edgeHighlight: 0.12,
+    cornerRadius: 27,
+    zRadius: 18,
+    shadowOpacity: 0.16,
+    button: true,
 });
 
-const HEADER_GLASS_CONFIG = JSON.stringify({
-    blurAmount: 0.16,
-    refraction: 0.36,
-    chromAberration: 0.018,
+const DISC_GLASS = JSON.stringify({
+    blurAmount: 0.32,
+    refraction: 0.62,
+    chromAberration: 0.035,
+    edgeHighlight: 0.14,
+    fresnel: 0.9,
+    cornerRadius: 112,
+    zRadius: 44,
+    shadowOpacity: 0.3,
+    button: true,
+});
+
+const BAR_GLASS = JSON.stringify({
+    blurAmount: 0.22,
+    refraction: 0.45,
+    chromAberration: 0.025,
     edgeHighlight: 0.1,
-    cornerRadius: 22,
-    zRadius: 18,
-    shadowOpacity: 0.12,
+    cornerRadius: 30,
+    zRadius: 22,
+    shadowOpacity: 0.18,
 });
 
 const DesktopMusic = function ({
@@ -49,7 +76,6 @@ const DesktopMusic = function ({
     connected,
     sourceName,
     hasLibrary,
-    cached,
     gsiReady,
     clientIdDraft,
     onClientIdDraft,
@@ -81,12 +107,12 @@ const DesktopMusic = function ({
     lyrics,
     lyricsLoading,
     lyricsVisible,
-    onToggleLyrics,
 }) {
     const rootRef = useRef(null);
+    const activeLyricRef = useRef(null);
     const [glassReady, setGlassReady] = useState(false);
     const [glassFailed, setGlassFailed] = useState(false);
-    const [activeLyricRef, setActiveLyricRef] = useState(null);
+    const [settingsOpen, setSettingsOpen] = useState(false);
 
     useEffect(() => {
         let instance;
@@ -111,155 +137,305 @@ const DesktopMusic = function ({
         };
     }, []);
 
-    useEffect(() => {
-        if (activeLyricRef) activeLyricRef.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    }, [activeLyricRef]);
-
+    const meta = current ? parseTrackName(current.track.name) : null;
+    const title = meta ? meta.title : '还没有播放中的歌曲';
+    const artist = meta ? meta.artist : sourceName;
+    const percent = progress.duration > 0 ? Math.min(100, (progress.time / progress.duration) * 100) : 0;
     const activeLyric = lyrics && lyrics.timed
         ? lyrics.lines.reduce((index, line, lineIndex) => (line.time <= progress.time ? lineIndex : index), -1)
         : -1;
-    const currentMeta = current ? parseTrackName(current.track.name) : null;
-    const visibleLyrics = lyrics && lyricsVisible ? lyrics.lines : [];
-    const progressPercent = progress.duration > 0 ? Math.min(100, (progress.time / progress.duration) * 100) : 0;
-    const status = connected ? 'Google 云盘已连接' : `${sourceName} · 无需登录`;
-    const emptyState = !hasLibrary;
+    const showLyrics = Boolean(lyrics) && lyricsVisible;
 
-    const title = currentMeta ? currentMeta.title : '选择一首歌开始';
-    const artist = currentMeta ? currentMeta.artist : sourceName;
+    useEffect(() => {
+        if (activeLyric >= 0 && activeLyricRef.current) {
+            activeLyricRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+    }, [activeLyric]);
+
+    useEffect(() => {
+        if (!settingsOpen) return undefined;
+        const onKeyDown = (event) => { if (event.key === 'Escape') setSettingsOpen(false); };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [settingsOpen]);
 
     return (
-        <div ref={rootRef} className={`${styles.root} ${theme === 'dark' ? styles['theme-dark'] : ''} ${glassFailed ? styles['glass-fallback'] : ''}`}>
-            <div className={styles.ambient} aria-hidden="true" />
-            <header className={styles.header} data-glass data-config={HEADER_GLASS_CONFIG}>
-                <div className={styles.brand}>
-                    <span className={styles['brand-mark']}><IconNote /></span>
-                    <span>
-                        <strong>云端音乐</strong>
-                        <small>{status}</small>
-                    </span>
-                </div>
-                <div className={styles['header-actions']}>
-                    <button type="button" className={styles['icon-btn']} title="切换主题" onClick={onToggleTheme}>
-                        {theme === 'dark' ? <IconSun /> : <IconMoon />}
-                    </button>
-                    <span className={`${styles['glass-status']} ${glassReady ? styles['glass-on'] : ''}`}>
-                        {glassReady ? 'GLASS' : 'STUDIO'}
-                    </span>
-                </div>
-            </header>
+        <div
+            ref={rootRef}
+            className={`${styles.root} ${theme === 'dark' ? styles['theme-dark'] : ''} ${glassFailed ? styles['glass-fallback'] : ''}`}
+        >
+            {/* Sampled by the glass shader; the root's own background is not. */}
+            <div className={styles.backdrop} aria-hidden="true" />
 
-            <aside className={styles.sidebar} data-glass data-config={GLASS_CONFIG}>
-                <div className={styles['side-title']}>
-                    <span>音乐库</span>
-                    <button type="button" className={styles['icon-btn']} title="刷新歌曲列表" onClick={onRefresh} disabled={listLoading}>
-                        <IconRefresh className={listLoading ? styles.spin : undefined} />
+            <aside className={styles.sidebar}>
+                <header className={styles['side-head']}>
+                    <div className={styles['side-title']}>
+                        <h1>音乐</h1>
+                        <p>{sourceName} · {listLoading ? '同步中…' : `${tracks.length} 首`}</p>
+                    </div>
+                    <button
+                        type="button"
+                        className={`${styles['ghost-btn']}${listLoading ? ` ${styles.spin}` : ''}`}
+                        title="刷新列表"
+                        aria-label="刷新列表"
+                        disabled={listLoading}
+                        onClick={onRefresh}
+                    >
+                        <IconRefresh />
                     </button>
-                </div>
-                <button type="button" className={`${styles['side-link']} ${styles['side-link-active']}`}>
-                    <IconNoteList />
-                    <span>全部歌曲</span>
-                    <b>{tracks.length}</b>
-                </button>
-                <label className={styles['folder-select']}>
-                    <IconFolder />
-                    <select value={folderId} onChange={onFolderChange} disabled={!connected}>
-                        {connected
-                            ? <option value="">整个云盘</option>
-                            : <option value="">{sourceName}</option>}
-                        {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
-                    </select>
-                    <IconChevronRight />
+                </header>
+
+                <label className={styles.search}>
+                    <IconSearch />
+                    <input
+                        type="search"
+                        value={search}
+                        onChange={(event) => onSearch(event.target.value)}
+                        placeholder="搜索歌曲或歌手"
+                        aria-label="搜索歌曲或歌手"
+                    />
                 </label>
-                <div className={styles['sidebar-spacer']} />
-                <div className={styles['account-card']}>
-                    <IconPerson />
-                    <div>
-                        <strong>{connected ? '我的 Google 云盘' : sourceName}</strong>
-                        <small>{connected ? 'Google Drive' : cached ? '本地缓存 · 无需登录' : 'Cloudflare R2'}</small>
-                    </div>
-                </div>
-                {!connected && (
-                    <div className={styles['connect-box']}>
-                        <p>公共曲库开箱可用；连接 Google Drive 可改用你自己云盘里的歌。</p>
-                        <input value={clientIdDraft} onChange={(event) => onClientIdDraft(event.target.value)} placeholder="OAuth 客户端 ID" />
-                        <button type="button" className={styles['accent-btn']} disabled={!gsiReady} onClick={onConnect}>
-                            {gsiReady ? '连接 Google Drive' : '加载中…'}
-                        </button>
-                    </div>
-                )}
-                {connected && <button type="button" className={styles['disconnect-btn']} onClick={onDisconnect}>断开连接</button>}
-            </aside>
 
-            <main className={styles.library} data-glass data-config={GLASS_CONFIG}>
-                <div className={styles['library-head']}>
-                    <div>
-                        <span className={styles.eyebrow}>YOUR LIBRARY</span>
-                        <h1>全部歌曲</h1>
-                        <p>{folderName} · {listLoading ? '正在同步…' : `${tracks.length} 首歌曲`}</p>
-                    </div>
-                    <label className={styles.search}>
-                        <IconSearch />
-                        <input value={search} onChange={(event) => onSearch(event.target.value)} placeholder="搜索歌名或歌手" />
-                    </label>
-                </div>
-                {emptyState ? (
-                    <div className={styles.empty}><IconCloudless /><h2>曲库里还没有歌曲</h2><p>公共曲库暂时是空的；也可以在左侧连接 Google Drive 播放你自己的音乐。</p></div>
+                {visibleTracks.length === 0 ? (
+                    <p className={styles['list-empty']}>
+                        {hasLibrary ? '没有匹配的歌曲' : '曲库还没有歌曲，右侧设置里可以连接自己的云盘'}
+                    </p>
                 ) : (
-                    <div className={styles['track-list']}>
+                    <ul className={styles.list}>
                         {visibleTracks.map((track) => {
-                            const meta = parseTrackName(track.name);
+                            const item = parseTrackName(track.name);
                             const active = current && current.track.id === track.id;
                             return (
-                                <button type="button" key={track.id} className={`${styles['track-row']} ${active ? styles['track-row-active'] : ''}`} onClick={() => onToggleTrack(track)} disabled={loadingId === track.id}>
-                                    <span className={styles['track-art']} style={{ background: trackGradient(track.name) }}><IconNote /></span>
-                                    <span className={styles['track-copy']}><strong>{meta.title}</strong><small>{meta.artist}</small></span>
-                                    <span className={styles['track-format']}>{meta.ext || 'AUDIO'}</span>
-                                    <span className={styles['track-size']}>{track.size ? formatSize(track.size) : ''}</span>
-                                    <span className={styles['track-action']}>{active && isPlaying ? <IconPause /> : <IconPlay />}</span>
-                                </button>
+                                <li key={track.id}>
+                                    <button
+                                        type="button"
+                                        className={`${styles.item}${active ? ` ${styles['item-active']}` : ''}`}
+                                        disabled={loadingId === track.id}
+                                        onClick={() => onToggleTrack(track)}
+                                    >
+                                        <span className={styles['item-text']}>
+                                            <span className={styles['item-title']}>{item.title}</span>
+                                            <span className={styles['item-artist']}>{item.artist}</span>
+                                        </span>
+                                        {loadingId === track.id
+                                            ? <span className={`${styles['item-flag']} ${styles.spin}`}>◌</span>
+                                            : active && isPlaying
+                                                ? <span className={styles['item-flag']}>♪</span>
+                                                : null}
+                                    </button>
+                                </li>
                             );
                         })}
-                        {!listLoading && visibleTracks.length === 0 && <div className={styles.empty}>没有匹配的歌曲</div>}
-                    </div>
+                    </ul>
                 )}
-            </main>
+            </aside>
 
-            <section className={styles.player} data-glass data-config={GLASS_CONFIG}>
-                <div className={styles['player-top']}><span>NOW PLAYING</span><span>{currentMeta ? currentMeta.ext || 'AUDIO' : 'READY'}</span></div>
-                <div className={styles['player-art']} style={{ background: current ? trackGradient(current.track.name) : 'linear-gradient(135deg, #69758f, #27304a)' }}>
-                    <IconNote />
+            {/* 1/3 — settings entry, top-right */}
+            <button
+                type="button"
+                className={styles['settings-btn']}
+                data-glass
+                data-config={SETTINGS_GLASS}
+                onClick={() => setSettingsOpen(true)}
+                aria-label="打开设置"
+                title="设置"
+            >
+                <IconGear />
+            </button>
+
+            {/* 2/3 — cover disc */}
+            <button
+                type="button"
+                className={`${styles.disc}${isPlaying ? ` ${styles['disc-playing']}` : ''}`}
+                data-glass
+                data-config={DISC_GLASS}
+                onClick={onTogglePlay}
+                disabled={!current}
+                aria-label={isPlaying ? '暂停' : '播放'}
+                title={isPlaying ? '暂停' : '播放'}
+            >
+                <span className={styles['disc-icon']}>
+                    {!current ? <IconNote /> : isPlaying ? <IconPause /> : <IconPlay />}
+                </span>
+            </button>
+
+            {/* 3/3 — lyrics stage (flat) */}
+            <section className={styles.stage}>
+                <div className={styles.meta}>
+                    <h2 className={styles['meta-title']}>{title}</h2>
+                    <p className={styles['meta-artist']}>{artist}</p>
                 </div>
-                <div className={styles['player-meta']}><h2>{title}</h2><p>{artist}</p></div>
-                {lyricsVisible && lyrics ? (
-                    <div className={styles['desktop-lyrics']}>
-                        {visibleLyrics.map((line, index) => <p key={`${line.time}-${index}`} ref={index === activeLyric ? setActiveLyricRef : null} className={index === activeLyric ? styles['lyric-active'] : ''}>{line.text}</p>)}
+
+                {showLyrics ? (
+                    <div className={styles.lyrics} aria-label="歌词">
+                        {lyrics.lines.map((line, index) => (
+                            <p
+                                key={`${line.time}-${index}`}
+                                ref={index === activeLyric ? activeLyricRef : null}
+                                className={index === activeLyric ? styles['lyric-active'] : styles.lyric}
+                            >
+                                {line.text}
+                            </p>
+                        ))}
                     </div>
-                ) : <div className={styles['lyrics-placeholder']}>{lyricsLoading ? '歌词加载中…' : lyrics ? '歌词已准备好' : '暂无歌词'}</div>}
-                <div className={styles['seek-line']}>
-                    <input type="range" min="0" max={progress.duration || 1} value={Math.min(progress.time, progress.duration || 1)} disabled={!current || !progress.duration} onChange={(event) => onSeek(Number(event.target.value))} />
-                    <div><span>{formatTime(progress.time)}</span><span>{formatTime(progress.duration)}</span></div>
-                </div>
-                <div className={styles.controls}>
-                    <button type="button" className={shuffle ? styles['control-on'] : ''} title="随机播放" onClick={onToggleShuffle}><IconShuffle /></button>
-                    <button type="button" title="上一首" onClick={onPrev}><IconPrev /></button>
-                    <button type="button" className={styles['play-control']} title={isPlaying ? '暂停' : '播放'} onClick={onTogglePlay}>{isPlaying ? <IconPause /> : <IconPlay />}</button>
-                    <button type="button" title="下一首" onClick={onNext}><IconNext /></button>
-                    <button type="button" className={repeat !== 'off' ? styles['control-on'] : ''} title="循环模式" onClick={onCycleRepeat}>{repeat === 'one' ? <IconRepeatOne /> : <IconRepeat />}</button>
-                </div>
-                <div className={styles['player-actions']}>
-                    {lyrics && <button type="button" className={lyricsVisible ? styles['action-on'] : ''} onClick={onToggleLyrics}>歌词</button>}
-                    <span>{progressPercent.toFixed(0)}%</span>
-                </div>
+                ) : (
+                    <p className={styles['lyrics-empty']}>
+                        {lyricsLoading ? '歌词加载中…' : lyrics ? '歌词已隐藏' : '这首歌没有歌词'}
+                    </p>
+                )}
             </section>
+
+            {/* 3/3 — bottom transport bar */}
+            <div className={styles.bar} data-glass data-config={BAR_GLASS}>
+                <input
+                    className={styles.seek}
+                    type="range"
+                    min={0}
+                    max={progress.duration || 1}
+                    step={0.1}
+                    value={Math.min(progress.time, progress.duration || 1)}
+                    disabled={!current || !progress.duration}
+                    onChange={(event) => onSeek(Number(event.target.value))}
+                    style={{ '--fill': `${percent}%` }}
+                    aria-label="播放进度"
+                />
+                <div className={styles['bar-row']}>
+                    <span className={styles.time}>{formatTime(progress.time)}</span>
+                    <div className={styles.controls}>
+                        <button
+                            type="button"
+                            className={`${styles['ctrl-btn']}${shuffle ? ` ${styles['ctrl-on']}` : ''}`}
+                            onClick={onToggleShuffle}
+                            title="随机播放"
+                            aria-pressed={shuffle}
+                        >
+                            <IconShuffle />
+                        </button>
+                        <button type="button" className={styles['ctrl-btn']} onClick={onPrev} title="上一首">
+                            <IconPrev />
+                        </button>
+                        <button
+                            type="button"
+                            className={styles['ctrl-play']}
+                            onClick={onTogglePlay}
+                            disabled={!current}
+                            title={isPlaying ? '暂停' : '播放'}
+                        >
+                            {isPlaying ? <IconPause /> : <IconPlay />}
+                        </button>
+                        <button type="button" className={styles['ctrl-btn']} onClick={onNext} title="下一首">
+                            <IconNext />
+                        </button>
+                        <button
+                            type="button"
+                            className={`${styles['ctrl-btn']}${repeat !== 'off' ? ` ${styles['ctrl-on']}` : ''}`}
+                            onClick={onCycleRepeat}
+                            title={repeat === 'one' ? '单曲循环' : repeat === 'all' ? '列表循环' : '循环关闭'}
+                            aria-pressed={repeat !== 'off'}
+                        >
+                            {repeat === 'one' ? <IconRepeatOne /> : <IconRepeat />}
+                        </button>
+                    </div>
+                    <span className={styles.time}>{formatTime(progress.duration)}</span>
+                </div>
+            </div>
+
+            {settingsOpen && (
+                <div className={styles['settings-scrim']} onClick={() => setSettingsOpen(false)} role="presentation">
+                    <div
+                        className={styles.settings}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="设置"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <header className={styles['settings-head']}>
+                            <h2>设置</h2>
+                            <button
+                                type="button"
+                                className={styles['ghost-btn']}
+                                onClick={() => setSettingsOpen(false)}
+                                aria-label="关闭设置"
+                            >
+                                <IconClose />
+                            </button>
+                        </header>
+
+                        <section className={styles.group}>
+                            <div className={styles['group-label']}>当前曲库</div>
+                            <div className={styles['source-row']}>
+                                <span className={styles['source-name']}>{connected ? '我的 Google 云盘' : sourceName}</span>
+                                <span className={styles['source-sub']}>{folderName} · {tracks.length} 首</span>
+                            </div>
+                        </section>
+
+                        {connected ? (
+                            <section className={styles.group}>
+                                <div className={styles['group-label']}>我的云盘</div>
+                                <label className={styles.row} htmlFor="desktop-folder">
+                                    <IconFolder />
+                                    <span className={styles['row-label']}>文件夹</span>
+                                    <select
+                                        id="desktop-folder"
+                                        className={styles['row-select']}
+                                        value={folderId}
+                                        onChange={onFolderChange}
+                                    >
+                                        <option value="">整个云盘</option>
+                                        {folders.map((folder) => (
+                                            <option key={folder.id} value={folder.id}>{folder.name}</option>
+                                        ))}
+                                    </select>
+                                </label>
+                                <button type="button" className={`${styles.row} ${styles['row-btn']}`} onClick={onDisconnect}>
+                                    <IconLogout />
+                                    <span className={styles['row-label']}>断开连接，回到公共曲库</span>
+                                </button>
+                            </section>
+                        ) : (
+                            <section className={styles.group}>
+                                <div className={styles['group-label']}>连接自己的云盘（可选）</div>
+                                <p className={styles.hint}>
+                                    默认播放公共曲库，不需要任何授权。填入 Google OAuth 客户端 ID
+                                    连接后，会改用你自己云盘里的歌曲。
+                                </p>
+                                <input
+                                    className={styles.input}
+                                    type="text"
+                                    value={clientIdDraft}
+                                    onChange={(event) => onClientIdDraft(event.target.value)}
+                                    placeholder="粘贴 OAuth 客户端 ID"
+                                    aria-label="Google OAuth 客户端 ID"
+                                />
+                                <button
+                                    type="button"
+                                    className={styles['primary-btn']}
+                                    onClick={onConnect}
+                                    disabled={!gsiReady}
+                                >
+                                    {gsiReady ? '连接 Google 云盘' : '正在加载 Google 组件…'}
+                                </button>
+                            </section>
+                        )}
+
+                        <section className={styles.group}>
+                            <div className={styles['group-label']}>外观</div>
+                            <button type="button" className={`${styles.row} ${styles['row-btn']}`} onClick={onToggleTheme}>
+                                {theme === 'dark' ? <IconSun /> : <IconMoon />}
+                                <span className={styles['row-label']}>
+                                    {theme === 'dark' ? '切换到浅色' : '切换到深色'}
+                                </span>
+                            </button>
+                        </section>
+
+                        <p className={styles.footnote}>
+                            {glassReady ? '液态玻璃已启用' : glassFailed ? '液态玻璃不可用，已回退为普通样式' : '正在初始化液态玻璃…'}
+                        </p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
-
-const IconCloudless = () => (
-    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-        <path d="M4 17.5A4.5 4.5 0 0 1 7.6 9a6 6 0 0 1 10.7 2.2A4 4 0 0 1 19 19H7" />
-        <path d="M3 3l18 18" />
-    </svg>
-);
 
 export default DesktopMusic;

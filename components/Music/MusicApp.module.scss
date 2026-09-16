@@ -1,0 +1,195 @@
+// Global scaffold of the music app page (`pages/music/index.js`): design
+// tokens (light/dark), ambient background, the centered phone-width app
+// column and the toast. Each screen lives next to it in its own module and
+// reads these tokens via CSS variables — the full-screen player is the only
+// exception: it keeps its own fixed dark palette, like the reference design.
+
+.page {
+    --accent: #fa233b;
+    --accent-2: #fb5c74;
+    --text: #111;
+    --text-2: rgba(60, 60, 67, 0.62);
+    --glass: rgba(255, 255, 255, 0.6);
+    --glass-strong: rgba(255, 255, 255, 0.78);
+    --glass-border: rgba(255, 255, 255, 0.65);
+    --hairline: rgba(0, 0, 0, 0.07);
+    --row-hover: rgba(0, 0, 0, 0.05);
+    --row-active: rgba(250, 35, 59, 0.1);
+    --field: rgba(120, 120, 128, 0.12);
+    --card: rgba(255, 255, 255, 0.82);
+    --thumb: #fff;
+    --slider-track: rgba(120, 120, 128, 0.22);
+    --slider-fill: #1d1d1f;
+    --option-color: #1d1d1f;
+    --option-bg: #fff;
+    --shadow-card: 0 24px 60px -24px rgba(31, 38, 79, 0.35), 0 2px 8px rgba(31, 38, 79, 0.06);
+    --blob-opacity: 0.4;
+
+    position: relative;
+    min-height: 100vh;
+    box-sizing: border-box;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC',
+        'Helvetica Neue', 'Microsoft YaHei', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+
+    input,
+    textarea,
+    select {
+        -webkit-user-select: text;
+        user-select: text;
+    }
+
+    img,
+    svg {
+        -webkit-user-drag: none;
+    }
+
+    &.theme-dark {
+        --text: #f5f5f7;
+        --text-2: rgba(235, 235, 245, 0.62);
+        --glass: rgba(30, 30, 36, 0.55);
+        --glass-strong: rgba(44, 44, 52, 0.65);
+        --glass-border: rgba(255, 255, 255, 0.12);
+        --hairline: rgba(255, 255, 255, 0.09);
+        --row-hover: rgba(255, 255, 255, 0.07);
+        --row-active: rgba(251, 92, 116, 0.18);
+        --field: rgba(120, 120, 128, 0.26);
+        --card: rgba(28, 28, 34, 0.72);
+        --slider-track: rgba(120, 120, 128, 0.34);
+        --slider-fill: #f5f5f7;
+        --option-color: #f5f5f7;
+        --option-bg: #2c2c30;
+        --shadow-card: 0 24px 60px -20px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.3);
+        --blob-opacity: 0.28;
+    }
+}
+
+/* --- ambient background --- */
+
+.bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.blob {
+    position: absolute;
+    width: 46vmax;
+    height: 46vmax;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: var(--blob-opacity);
+    animation: blob-float 26s ease-in-out infinite alternate;
+}
+
+.blob-1 {
+    top: -20vmax;
+    left: -14vmax;
+    background: radial-gradient(circle at 35% 35%, #ffb3c1, #fa233b 65%);
+}
+
+.blob-2 {
+    top: -16vmax;
+    right: -16vmax;
+    background: radial-gradient(circle at 60% 40%, #a8d8ff, #0a84ff 65%);
+    animation-delay: -7s;
+}
+
+.blob-3 {
+    bottom: -24vmax;
+    left: 10vmax;
+    background: radial-gradient(circle at 40% 60%, #d5b3ff, #5e5ce6 65%);
+    animation-delay: -13s;
+}
+
+@keyframes blob-float {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate3d(4vmax, -3vmax, 0) scale(1.12);
+    }
+
+    100% {
+        transform: translate3d(-3vmax, 4vmax, 0) scale(0.94);
+    }
+}
+
+/* --- phone-width app column --- */
+
+.app {
+    position: relative;
+    z-index: 1;
+    width: 480px;
+    max-width: 100%;
+    min-height: 100vh;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* --- tab page transitions --- */
+
+.view {
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Applied to whichever view is shown — remounting the class replays the
+   fade-rise on every tab switch (both views stay mounted for scroll memory). */
+.view-in {
+    animation: view-in 0.3s cubic-bezier(0.32, 0.72, 0.2, 1) both;
+}
+
+@keyframes view-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- toast --- */
+
+.toast {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+    max-width: min(86vw, 460px);
+    padding: 10px 18px;
+    border-radius: 16px;
+    background: var(--glass-strong);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-card);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+    backdrop-filter: blur(24px) saturate(1.8);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.toast-error {
+    color: #ff3b30;
+    border-color: rgba(255, 59, 48, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .blob,
+    .view-in {
+        animation: none;
+    }
+}
