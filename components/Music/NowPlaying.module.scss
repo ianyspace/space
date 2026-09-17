@@ -104,6 +104,7 @@
     box-sizing: border-box;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     padding: 14px 18px 0;
 }
@@ -132,12 +133,6 @@
     &:active {
         transform: scale(0.92);
     }
-}
-
-/* The right-hand twin of the button keeps the centre line truly centred. */
-.top-spacer {
-    margin-left: auto;
-    pointer-events: none;
 }
 
 .np-marquee {

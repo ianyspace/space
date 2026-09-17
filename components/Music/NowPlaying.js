@@ -11,6 +11,7 @@ import {
     IconRepeatOne,
     IconQueue,
     IconChevronDown,
+    IconMoreVertical,
 } from './icons';
 import { parseTrackName, trackGradient, formatTime } from './shared';
 import Marquee from './Marquee';
@@ -158,14 +159,18 @@ const NowPlaying = function ({
                         scrolling like the mini bar's label when it is too long. */}
                     {lyricsShown && (
                         <Marquee
-                            text={`${meta.title} · ${meta.artist}`}
+                            text={`${meta.title} - ${meta.artist}`}
                             className={styles['np-marquee']}
                         >
                             <span className={styles['np-line-title']}>{meta.title}</span>
-                            <span className={styles['np-line-artist']}> · {meta.artist}</span>
+                            <span className={styles['np-line-artist']}> - {meta.artist}</span>
                         </Marquee>
                     )}
-                    <span className={`${styles['top-btn']} ${styles['top-spacer']}`} aria-hidden="true" />
+                    {/* Placeholder until its function is decided; the equal-width
+                        twin of the collapse button keeps the line centred. */}
+                    <button type="button" className={styles['top-btn']} title="更多" aria-label="更多">
+                        <IconMoreVertical />
+                    </button>
                 </div>
 
                 <div className={styles.body}>

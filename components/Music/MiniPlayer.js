@@ -41,7 +41,7 @@ const MiniPlayer = function ({
     const labelNode = (
         <>
             {meta.title}
-            <span className={styles['label-artist']}> · {meta.artist}</span>
+            <span className={styles['label-artist']}> - {meta.artist}</span>
         </>
     );
 
@@ -77,7 +77,7 @@ const MiniPlayer = function ({
                         <IconNote />
                     </span>
                 </span>
-                <Marquee text={`${meta.title} · ${meta.artist}`} className={styles['mini-label']}>
+                <Marquee text={`${meta.title} - ${meta.artist}`} className={styles['mini-label']}>
                     {labelNode}
                 </Marquee>
                 <span className={styles['play-wrap']}>

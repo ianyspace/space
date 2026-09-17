@@ -29,7 +29,7 @@
 
 .run {
     display: inline-flex;
-    align-items: baseline;
+    align-items: center;
 }
 
 @keyframes marquee-slide {
@@ -41,7 +41,7 @@
 /* Two copies of the text sit side by side; the gap is the wrap point. */
 .item {
     display: inline-flex;
-    align-items: baseline;
+    align-items: center;
     padding-right: 40px;
 }
 
