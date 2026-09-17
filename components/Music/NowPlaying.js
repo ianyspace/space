@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
     IconNote,
@@ -28,8 +28,9 @@ const MODES = {
 /**
  * Decorative tonearm, drawn in the record rig's own coordinate space
  * (100 × 122 — the rig's aspect ratio) so it scales with the record instead of
- * drifting off it: pivot near the top, arm reaching the record's upper-right
- * rim. `playing` swings the arm a few degrees down so it reads as tracking.
+ * drifting off it: pivot near the top, the curved tube bending down onto the
+ * record's upper-right rim, like the reference. `playing` swings the arm a few
+ * degrees down so it reads as tracking.
  */
 const Tonearm = function ({ playing }) {
     return (
@@ -40,19 +41,24 @@ const Tonearm = function ({ playing }) {
             focusable="false"
         >
             <g className={styles['arm-swing']}>
+                {/* curved tube: drops from the pivot, then bends onto the rim */}
                 <path
-                    d="M52.5 7.7 L79 24.9"
+                    d="M52.5 7.7 C 53.4 14, 56.8 19.6, 63 23.8 C 68.8 27.6, 74 29.2, 78 30.4"
                     fill="none"
                     stroke="#f2f3f7"
-                    strokeWidth="2.4"
+                    strokeWidth="3"
                     strokeLinecap="round"
                 />
-                <g transform="rotate(33 79 24.9)">
-                    <rect x="76.5" y="22.2" width="10.4" height="5.4" rx="1.9" fill="#f2f3f7" />
-                    <rect x="84.4" y="23.9" width="2.6" height="2.2" rx="0.9" fill="#26272e" />
+                {/* headshell resting on the record's upper-right rim */}
+                <g transform="rotate(28 78 30.4)">
+                    <rect x="75.8" y="27.6" width="11.6" height="5.6" rx="2.1" fill="#f2f3f7" />
+                    <rect x="84.6" y="28.9" width="3.6" height="3" rx="1.2" fill="#dfe2ea" />
+                    <rect x="78.6" y="29.3" width="1.7" height="2.2" rx="0.7" fill="#26272e" />
                 </g>
-                <circle cx="52.5" cy="7.7" r="4.4" fill="#191a20" stroke="#f2f3f7" strokeWidth="1.7" />
-                <circle cx="52.5" cy="7.7" r="1.4" fill="#f2f3f7" />
+                {/* pivot: soft backing, white ring, white hub */}
+                <circle cx="52.5" cy="7.7" r="7.8" fill="rgba(255, 255, 255, 0.10)" />
+                <circle cx="52.5" cy="7.7" r="4.6" fill="#191a20" stroke="#f2f3f7" strokeWidth="2" />
+                <circle cx="52.5" cy="7.7" r="1.5" fill="#f2f3f7" />
             </g>
         </svg>
     );
@@ -104,6 +110,22 @@ const NowPlaying = function ({
     // Tap position, so a finger that was really scrolling the lyrics does not
     // also count as "back to the record".
     const pressYRef = useRef(0);
+
+    // Every mode tap names the mode it just switched into, centred on the
+    // stage for a moment. The first render is the page opening, not a tap, so
+    // the initial mode is remembered and never announced.
+    const [modeToast, setModeToast] = useState('');
+    const lastModeRef = useRef(mode);
+    const modeTimerRef = useRef(0);
+
+    useEffect(() => {
+        if (lastModeRef.current === mode) return undefined;
+        lastModeRef.current = mode;
+        setModeToast((MODES[mode] || MODES.off).title);
+        window.clearTimeout(modeTimerRef.current);
+        modeTimerRef.current = window.setTimeout(() => setModeToast(''), 1400);
+        return () => window.clearTimeout(modeTimerRef.current);
+    }, [mode]);
 
     useEffect(() => {
         if (activeLyricRef.current) {
@@ -165,6 +187,12 @@ const NowPlaying = function ({
                                 </span>
                             </button>
                         </div>
+
+                        {modeToast && (
+                            <span className={styles['mode-toast']} role="status">
+                                {modeToast}
+                            </span>
+                        )}
 
                         {lyricsShown && (
                             <div

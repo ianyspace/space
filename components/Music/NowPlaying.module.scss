@@ -244,17 +244,19 @@
     inset: 0;
     border-radius: 50%;
     background: repeating-radial-gradient(circle at 50% 50%,
-            rgba(255, 255, 255, 0.05) 0 1px,
-            rgba(0, 0, 0, 0) 1px 4px);
-    opacity: 0.9;
+            rgba(255, 255, 255, 0.045) 0 0.5px,
+            rgba(0, 0, 0, 0) 0.5px 2.5px);
+    opacity: 0.95;
 }
 
-/* Label = the track's gradient (same one tinting the page backdrop). */
+/* Label = the track's gradient (same one tinting the page backdrop). The
+   reference cover sits large in the disc, so the band of grooves around it
+   stays thin. */
 .disc-label {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 42%;
+    width: 56%;
     aspect-ratio: 1;
     display: flex;
     align-items: center;
@@ -262,12 +264,13 @@
     border-radius: 50%;
     transform: translate(-50%, -50%);
     color: rgba(255, 255, 255, 0.94);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-        inset 0 -6px 18px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.55),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+        inset 0 -6px 18px rgba(0, 0, 0, 0.22);
 
     svg {
-        width: 46%;
-        height: 46%;
+        width: 40%;
+        height: 40%;
     }
 }
 
@@ -366,6 +369,42 @@
 @keyframes disc-spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+/* Mode switch hint: floats dead centre of the stage (above the record and
+   the lyrics alike), fades itself out from the component's timer. */
+.mode-toast {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 5;
+    transform: translate(-50%, -50%);
+    padding: 10px 22px;
+    border-radius: 999px;
+    background: rgba(10, 11, 18, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.6);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    color: var(--np-text);
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    pointer-events: none;
+    animation: mode-toast-in 0.22s cubic-bezier(0.32, 0.72, 0.2, 1) both;
+}
+
+@keyframes mode-toast-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.86);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
     }
 }
 
@@ -698,7 +737,8 @@
 
 @media (prefers-reduced-motion: reduce) {
     .page,
-    .lyrics {
+    .lyrics,
+    .mode-toast {
         animation: none;
     }
 
