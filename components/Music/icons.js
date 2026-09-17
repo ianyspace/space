@@ -200,23 +200,25 @@ export const IconClose = ({ size = 18 }) => (
     </SvgStroke>
 );
 
-// anyMusic wordmark badge: the app's red→pink gradient tile with two beamed
-// notes, so the header reads as a brand rather than a section title.
-export const IconAnyMusic = ({ size = 26 }) => (
+// Music Space wordmark badge: the app's red→pink gradient tile with a clean
+// beamed double note, so the header reads as a brand rather than a section
+// title. Stems sit on the noteheads' right edge and the beam joins their tops,
+// so nothing overlaps the wrong side.
+export const IconMusicSpace = ({ size = 26 }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
         <defs>
-            <linearGradient id="anymusic-tile" x1="0" y1="0" x2="1" y2="1">
+            <linearGradient id="music-space-tile" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0" stopColor="#fb5c74" />
                 <stop offset="1" stopColor="#fa233b" />
             </linearGradient>
         </defs>
-        <rect x="1" y="1" width="22" height="22" rx="6.5" fill="url(#anymusic-tile)" />
+        <rect x="1" y="1" width="22" height="22" rx="6.5" fill="url(#music-space-tile)" />
         <g fill="#fff">
-            <rect x="9.4" y="5.2" width="1.9" height="9.6" rx="0.95" />
-            <rect x="15" y="4.2" width="1.9" height="9.6" rx="0.95" />
-            <path d="M9.4 5.2 16.9 4.2v2.5L9.4 7.7z" />
-            <ellipse cx="7.4" cy="15.1" rx="2.7" ry="2.3" transform="rotate(-18 7.4 15.1)" />
-            <ellipse cx="13" cy="14.1" rx="2.7" ry="2.3" transform="rotate(-18 13 14.1)" />
+            <ellipse cx="8.2" cy="16.2" rx="3" ry="2.3" transform="rotate(-18 8.2 16.2)" />
+            <ellipse cx="14.6" cy="15" rx="3" ry="2.3" transform="rotate(-18 14.6 15)" />
+            <rect x="10.2" y="6.5" width="1.7" height="9.8" rx="0.85" />
+            <rect x="16.6" y="5" width="1.7" height="10.1" rx="0.85" />
+            <path d="M10.2 6.5 18.3 5v2.4L10.2 8.9z" />
         </g>
     </svg>
 );
