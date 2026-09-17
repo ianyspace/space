@@ -966,6 +966,7 @@ const MusicApp = function ({ variant = 'h5' }) {
                         >
                             <TrackList
                                 connected={hasLibrary}
+                                source={librarySource}
                                 listLoading={listLoading}
                                 visibleTracks={visibleTracks}
                                 search={search}
