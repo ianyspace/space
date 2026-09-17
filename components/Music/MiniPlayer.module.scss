@@ -1,4 +1,9 @@
 // Mini play bar docked at the bottom edge (both tab pages).
+// Layout mirrors the reference: a spinning vinyl whose inner 60% shows the
+// cover, a "title · artist" label that scrolls horizontally (with a fade at
+// both ends while text is cut off) when it does not fit, a play/pause button
+// wearing the seek progress as a ring, and a next button at the far end.
+// Tapping the bar itself opens the now-playing sheet.
 
 .wrap {
     position: fixed;
@@ -24,19 +29,13 @@
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .wrap {
-        animation: none;
-    }
-}
-
 .mini {
     position: relative;
     display: flex;
     align-items: center;
     gap: 11px;
     height: 58px;
-    padding: 7px 14px 7px 7px;
+    padding: 7px 10px 7px 7px;
     border-radius: 18px;
     background: var(--glass-strong);
     border: 1px solid var(--glass-border);
@@ -51,68 +50,169 @@
     }
 }
 
-.progress {
-    position: absolute;
-    right: 14px;
-    bottom: 2px;
-    left: 14px;
-    height: 2px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--text-2) 28%, transparent);
-    pointer-events: none;
+/* --- spinning vinyl (cover in its inner 60%) --- */
 
-    &::after {
-        display: block;
-        width: var(--progress, 0%);
-        height: 100%;
-        border-radius: 999px;
-        background: var(--text);
-        content: '';
-        transition: width 0.18s linear;
-    }
-}
-
-.thumb {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+.disc {
+    position: relative;
     width: 44px;
     height: 44px;
     flex-shrink: 0;
-    border-radius: 12px;
-    color: rgba(255, 255, 255, 0.92);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    background:
+        repeating-radial-gradient(circle at 50% 50%,
+            rgba(255, 255, 255, 0.06) 0 1px,
+            rgba(0, 0, 0, 0) 1px 3.5px),
+        radial-gradient(circle at 50% 50%, #26272d 0%, #141519 45%, #0a0b0e 80%, #17181d 100%);
+    box-shadow:
+        0 6px 14px -6px rgba(0, 0, 0, 0.55),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    animation: disc-spin 12s linear infinite;
+    animation-play-state: running;
+}
 
-    svg {
-        width: 18px;
-        height: 18px;
+.disc-paused {
+    animation-play-state: paused;
+}
+
+@keyframes disc-spin {
+    to {
+        transform: rotate(360deg);
     }
 }
+
+.disc-cover {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 60%;
+    height: 60%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+        inset 0 -4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.disc-hole {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 12%;
+    height: 12%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.4);
+}
+
+/* --- scrolling "title · artist" label --- */
 
 .text {
     flex: 1;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.title {
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 15px;
-    font-weight: 700;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.35;
     color: var(--text);
 }
 
-.artist {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 12px;
-    color: var(--text-2);
+/* Light fades at both ends say "there is more text that way". */
+.text-marquee {
+    -webkit-mask-image: linear-gradient(90deg,
+            transparent 0,
+            #000 16px,
+            #000 calc(100% - 16px),
+            transparent 100%);
+    mask-image: linear-gradient(90deg,
+            transparent 0,
+            #000 16px,
+            #000 calc(100% - 16px),
+            transparent 100%);
+
+    .text-run {
+        animation: mini-marquee linear infinite;
+    }
+}
+
+.text-run {
+    display: inline-flex;
+    align-items: baseline;
+}
+
+@keyframes mini-marquee {
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+.label {
+    display: inline-flex;
+    align-items: baseline;
+    padding-right: 40px; /* breathing room at the seamless wrap point */
+}
+
+.label-artist {
+    font-weight: 500;
+    color: var(--text);
+}
+
+/* --- play/pause with the seek progress as its ring --- */
+
+.play-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from -90deg,
+            var(--text) 0deg var(--deg, 0deg),
+            color-mix(in srgb, var(--text-2) 34%, transparent) var(--deg, 0deg) 360deg);
+    -webkit-mask: radial-gradient(closest-side,
+            transparent calc(100% - 2.5px),
+            #000 calc(100% - 2.5px));
+    mask: radial-gradient(closest-side,
+            transparent calc(100% - 2.5px),
+            #000 calc(100% - 2.5px));
+    pointer-events: none;
+}
+
+.play-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: transform 0.15s;
+
+    svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    @media (hover: hover) {
+        &:hover {
+            transform: scale(1.08);
+        }
+    }
+
+    &:active {
+        transform: scale(0.92);
+    }
 }
 
 .btn {
@@ -122,7 +222,9 @@
     width: 36px;
     height: 36px;
     flex-shrink: 0;
+    border: 0;
     border-radius: 50%;
+    background: transparent;
     color: var(--text);
     cursor: pointer;
     transition: transform 0.15s, background-color 0.2s;
@@ -141,5 +243,19 @@
     svg {
         width: 20px;
         height: 20px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wrap {
+        animation: none;
+    }
+
+    .disc {
+        animation: none;
+    }
+
+    .text-marquee .text-run {
+        animation: none;
     }
 }
