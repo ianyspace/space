@@ -161,6 +161,7 @@ const NowPlaying = function ({
                         <Marquee
                             text={`${meta.title} - ${meta.artist}`}
                             className={styles['np-marquee']}
+                            center
                         >
                             <span className={styles['np-line-title']}>{meta.title}</span>
                             <span className={styles['np-line-artist']}> - {meta.artist}</span>

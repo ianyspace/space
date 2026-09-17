@@ -13,7 +13,7 @@ const MARQUEE_SPEED = 26;
  * `text` is the plain string used for overflow measuring (and as the effect
  * dependency); `children` is the rendered rich label.
  */
-const Marquee = function ({ text, children, className = '' }) {
+const Marquee = function ({ text, children, className = '', center = false }) {
     const viewRef = useRef(null);
     const innerRef = useRef(null);
     const [state, setState] = useState({ on: false, duration: 8 });
@@ -38,7 +38,10 @@ const Marquee = function ({ text, children, className = '' }) {
     }, [text]);
 
     return (
-        <span ref={viewRef} className={`${styles.text}${state.on ? ` ${styles['text-marquee']}` : ''}${className ? ` ${className}` : ''}`}>
+        <span
+            ref={viewRef}
+            className={`${styles.text}${state.on ? ` ${styles['text-marquee']}` : ''}${center ? ` ${styles.center}` : ''}${className ? ` ${className}` : ''}`}
+        >
             <span
                 className={styles.run}
                 style={state.on ? { animationDuration: `${state.duration}s` } : undefined}

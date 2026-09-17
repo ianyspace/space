@@ -106,7 +106,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 14px 18px 0;
+    padding: 6px 18px 0;
 }
 
 .top-btn {
@@ -524,10 +524,10 @@
     transition: opacity 0.32s ease;
 }
 
-/* Lyrics mode moves the song line to the top bar; keep the row's space so the
-   stage above does not jump. */
+/* Lyrics mode moves the song line to the top bar; fold the row away so the
+   stage (flex:1) takes the freed height and the lyrics get more room. */
 .stage-lyrics ~ .np-head {
-    opacity: 0;
+    display: none;
 }
 
 .np-meta {
