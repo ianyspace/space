@@ -198,7 +198,7 @@ const MusicApp = function ({ variant = 'h5' }) {
     // edges don't flash the blog background.
     useEffect(() => {
         const previous = document.body.style.background;
-        document.body.style.background = theme === 'dark' ? '#08080d' : '#eef0f7';
+        document.body.style.background = theme === 'dark' ? '#08080d' : '#f6f6f7';
         return () => { document.body.style.background = previous; };
     }, [theme]);
 

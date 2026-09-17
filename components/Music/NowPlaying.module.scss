@@ -226,14 +226,17 @@
         outline-offset: 8px;
     }
 
-    /* The reference's halo: part of the record itself, so it turns with the
-       vinyl and keeps its angle while paused. */
+    /* The reference's halo: a light translucent white track the record sits
+       in — a filled band (not a stroked line), part of the record itself, so
+       it turns with the vinyl and keeps its angle while paused. The rotor
+       paints over its inner side, leaving the ring band visible. */
     &::after {
         content: '';
         position: absolute;
         inset: -5%;
+        z-index: -1;
         border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.16);
         animation: disc-spin 18s linear infinite;
         animation-play-state: paused;
         pointer-events: none;
