@@ -13,6 +13,11 @@ import styles from './MiniPlayer.module.scss';
 // Marquee speed in px/s — slow enough to read while it scrolls.
 const MARQUEE_SPEED = 26;
 
+// Progress ring geometry (viewBox units): r on a 36×36 canvas, so the dash
+// maths below is exact and `stroke-linecap: round` gives the smooth caps.
+const RING_R = 16;
+const RING_C = 2 * Math.PI * RING_R;
+
 /**
  * The mini play bar docked above the bottom tab bar. Owned by the page
  * shell — not the list screen — so it stays visible while something is
@@ -106,10 +111,20 @@ const MiniPlayer = function ({
                     </span>
                 </span>
                 <span className={styles['play-wrap']}>
-                    <span
-                        className={styles.ring}
-                        style={{ '--deg': `${(percent * 3.6).toFixed(2)}deg` }}
-                    />
+                    <svg className={styles.ring} viewBox="0 0 36 36" aria-hidden="true">
+                        <circle className={styles['ring-track']} cx="18" cy="18" r={RING_R} />
+                        <circle
+                            className={styles['ring-fill']}
+                            cx="18"
+                            cy="18"
+                            r={RING_R}
+                            style={{
+                                strokeDasharray: RING_C.toFixed(2),
+                                strokeDashoffset: (RING_C * (1 - percent / 100)).toFixed(2),
+                                opacity: percent > 0.5 ? 1 : 0,
+                            }}
+                        />
+                    </svg>
                     <button
                         type="button"
                         className={styles['play-btn']}
