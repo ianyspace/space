@@ -247,7 +247,8 @@
 /* --- track rows --- */
 
 .tracks {
-    margin: 0;
+    /* room between the floating header's shadow and the first row */
+    margin: 10px 0 0;
     padding: 0;
     list-style: none;
 }
