@@ -966,9 +966,7 @@ const MusicApp = function ({ variant = 'h5' }) {
                         >
                             <TrackList
                                 connected={hasLibrary}
-                                folderName={folderName}
                                 listLoading={listLoading}
-                                tracks={tracks}
                                 visibleTracks={visibleTracks}
                                 search={search}
                                 onSearch={setSearch}
@@ -977,7 +975,6 @@ const MusicApp = function ({ variant = 'h5' }) {
                                 isPlaying={isPlaying}
                                 onToggleTrack={toggleTrack}
                                 onGoProfile={() => setTab('profile')}
-                                onRefresh={refreshTracks}
                             />
                         </div>
                         <div

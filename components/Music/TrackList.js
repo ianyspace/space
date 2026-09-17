@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
     IconNote,
@@ -8,23 +8,21 @@ import {
     IconPlay,
     IconPause,
     IconSearch,
-    IconChevronRight,
 } from './icons';
 import { parseTrackName, trackGradient } from './shared';
 
 import styles from './TrackList.module.scss';
 
 /**
- * The "歌曲" screen. The sticky top bar holds the title, the refresh and
- * "我的" actions and the search field — everything else (folder link,
- * count, track rows) scrolls under it. Rows cover every audio file, sorted
- * by name; the folder chosen on the profile page filters the whole list.
+ * The "歌曲" screen. The sticky top bar holds the title and the search /
+ * "我的" actions; tapping search unfolds the field below the row and focuses
+ * it. The rest — the track rows — scrolls underneath. Rows cover every audio
+ * file, sorted by name; the folder chosen on the profile page filters the
+ * whole list.
  */
 const TrackList = function ({
     connected,
-    folderName,
     listLoading,
-    tracks,
     visibleTracks,
     search,
     onSearch,
@@ -33,11 +31,30 @@ const TrackList = function ({
     isPlaying,
     onToggleTrack,
     onGoProfile,
-    onRefresh,
 }) {
     const keyword = search.trim();
     const currentId = current ? current.track.id : '';
     const eqClass = `${styles.eq}${isPlaying ? '' : ` ${styles['eq-paused']}`}`;
+    // The search field only exists while unfolded; a tap on the search button
+    // reveals it and puts the caret straight inside.
+    const [searchOpen, setSearchOpen] = useState(false);
+    const searchInputRef = useRef(null);
+
+    useEffect(() => {
+        if (!searchOpen) return undefined;
+        const input = searchInputRef.current;
+        if (input) input.focus();
+        return undefined;
+    }, [searchOpen]);
+
+    const openSearch = function () {
+        setSearchOpen(true);
+    };
+
+    const closeSearch = function () {
+        setSearchOpen(false);
+        onSearch('');
+    };
 
     return (
         <div className={styles.page}>
@@ -48,13 +65,12 @@ const TrackList = function ({
                         {connected && (
                             <button
                                 type="button"
-                                className={`${styles['refresh-btn']}${listLoading ? ` ${styles.spinning}` : ''}`}
-                                title="刷新列表"
-                                aria-label="刷新列表"
-                                disabled={listLoading}
-                                onClick={onRefresh}
+                                className={styles['nav-btn']}
+                                title="搜索"
+                                aria-label="搜索"
+                                onClick={openSearch}
                             >
-                                <IconRefresh />
+                                <IconSearch />
                             </button>
                         )}
                         <button
@@ -68,17 +84,30 @@ const TrackList = function ({
                         </button>
                     </div>
                 </div>
-                {connected && (
+                {connected && searchOpen && (
                     <label className={styles['search-box']}>
                         <span className={styles['search-icon']}><IconSearch /></span>
                         <input
+                            ref={searchInputRef}
                             className={styles['search-input']}
                             type="search"
                             placeholder="歌曲"
                             value={search}
                             onChange={(event) => onSearch(event.target.value)}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Escape') closeSearch();
+                            }}
                             aria-label="搜索歌曲"
                         />
+                        <button
+                            type="button"
+                            className={styles['search-close']}
+                            title="关闭搜索"
+                            aria-label="关闭搜索"
+                            onClick={closeSearch}
+                        >
+                            ×
+                        </button>
                     </label>
                 )}
             </header>
@@ -97,20 +126,10 @@ const TrackList = function ({
                 </section>
             ) : (
                 <>
-                    <div className={styles['list-meta']}>
-                        <button type="button" className={styles['folder-link']} onClick={onGoProfile}>
-                            {folderName}
-                            <IconChevronRight />
-                        </button>
-                        <span className={styles.count}>
-                            {listLoading
-                                ? '加载中…'
-                                : keyword
-                                    ? `${visibleTracks.length} / ${tracks.length}`
-                                    : `${tracks.length} 首`}
-                        </span>
-                    </div>
                     <ul className={styles.tracks}>
+                        {listLoading && (
+                            <p className={styles['lib-loading']}>加载中…</p>
+                        )}
                         {!listLoading && visibleTracks.length === 0 && (
                             <p className={styles['lib-empty']}>
                                 {keyword
