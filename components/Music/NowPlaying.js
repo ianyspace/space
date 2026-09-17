@@ -42,9 +42,9 @@ const Tonearm = function ({ playing }) {
             focusable="false"
         >
             <g className={styles['arm-swing']}>
-                {/* curved tube: drops from the pivot, then bends onto the rim */}
+                {/* curved tube: one gentle sweep from the pivot onto the rim */}
                 <path
-                    d="M52.5 4.6 C 53.6 11.5, 56.5 19.5, 62.5 24.5 C 68.5 29.2, 74.5 30.2, 78.8 30.3"
+                    d="M52.5 4.6 C 56 13, 62 21, 68.5 26 C 73 29.4, 76.5 30.2, 78.8 30.3"
                     fill="none"
                     stroke="#f2f3f7"
                     strokeWidth="3"
@@ -56,10 +56,10 @@ const Tonearm = function ({ playing }) {
                     <rect x="85.4" y="28.8" width="3.6" height="3" rx="1.2" fill="#dfe2ea" />
                     <rect x="79.4" y="29.2" width="1.7" height="2.2" rx="0.7" fill="#26272e" />
                 </g>
-                {/* pivot: shrunk and lifted, so the tube reads longer */}
-                <circle cx="52.5" cy="4.6" r="4.4" fill="rgba(255, 255, 255, 0.10)" />
-                <circle cx="52.5" cy="4.6" r="3.6" fill="#191a20" stroke="#f2f3f7" strokeWidth="1.8" />
-                <circle cx="52.5" cy="4.6" r="1.2" fill="#f2f3f7" />
+                {/* pivot: halo ring back and clearly wider, body shrunk */}
+                <circle cx="52.5" cy="4.6" r="5" fill="rgba(255, 255, 255, 0.12)" />
+                <circle cx="52.5" cy="4.6" r="3" fill="#191a20" stroke="#f2f3f7" strokeWidth="1.6" />
+                <circle cx="52.5" cy="4.6" r="1" fill="#f2f3f7" />
             </g>
         </svg>
     );
