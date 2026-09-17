@@ -61,8 +61,36 @@ const TrackList = function ({
             <header className={styles.head}>
                 <div className={styles['head-row']}>
                     <h1 className={styles.title}>歌曲</h1>
+                    {/* Unfolds between the title and the actions; its own
+                        toggle hides while it is open. */}
+                    {connected && searchOpen && (
+                        <label className={styles['search-box']}>
+                            <span className={styles['search-icon']}><IconSearch /></span>
+                            <input
+                                ref={searchInputRef}
+                                className={styles['search-input']}
+                                type="search"
+                                placeholder="搜索歌曲"
+                                value={search}
+                                onChange={(event) => onSearch(event.target.value)}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'Escape') closeSearch();
+                                }}
+                                aria-label="搜索歌曲"
+                            />
+                            <button
+                                type="button"
+                                className={styles['search-close']}
+                                title="关闭搜索"
+                                aria-label="关闭搜索"
+                                onClick={closeSearch}
+                            >
+                                ×
+                            </button>
+                        </label>
+                    )}
                     <div className={styles['head-actions']}>
-                        {connected && (
+                        {connected && !searchOpen && (
                             <button
                                 type="button"
                                 className={styles['nav-btn']}
@@ -84,32 +112,6 @@ const TrackList = function ({
                         </button>
                     </div>
                 </div>
-                {connected && searchOpen && (
-                    <label className={styles['search-box']}>
-                        <span className={styles['search-icon']}><IconSearch /></span>
-                        <input
-                            ref={searchInputRef}
-                            className={styles['search-input']}
-                            type="search"
-                            placeholder="歌曲"
-                            value={search}
-                            onChange={(event) => onSearch(event.target.value)}
-                            onKeyDown={(event) => {
-                                if (event.key === 'Escape') closeSearch();
-                            }}
-                            aria-label="搜索歌曲"
-                        />
-                        <button
-                            type="button"
-                            className={styles['search-close']}
-                            title="关闭搜索"
-                            aria-label="关闭搜索"
-                            onClick={closeSearch}
-                        >
-                            ×
-                        </button>
-                    </label>
-                )}
             </header>
 
             {!connected ? (

@@ -1,5 +1,5 @@
-// "歌曲" screen: sticky top bar (title + refresh/我的 + search); folder
-// link, count and track rows scroll underneath.
+// "歌曲" screen: a sticky floating top bar (title + in-row search + icon
+// actions); the track rows scroll underneath it.
 
 .page {
     box-sizing: border-box;
@@ -13,9 +13,12 @@
     top: 0;
     z-index: 10;
     margin: 0 -18px;
-    padding: 10px 18px 10px;
+    padding: 10px 18px;
     background: var(--glass);
-    border-bottom: 1px solid var(--hairline);
+    /* No hairline: the rounded bottom corners plus a soft drop shadow read as
+       a floating card over the list instead of one continuous surface. */
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 10px 18px -12px rgba(31, 38, 79, 0.3), 0 2px 6px -2px rgba(31, 38, 79, 0.08);
     -webkit-backdrop-filter: blur(24px) saturate(1.8);
     backdrop-filter: blur(24px) saturate(1.8);
 }
@@ -42,7 +45,7 @@
     flex-shrink: 0;
 }
 
-/* round entry to the profile tab (three stacked dots) */
+/* bare icon buttons (search / profile tab) — no circle frame */
 .nav-btn {
     display: inline-flex;
     align-items: center;
@@ -50,42 +53,43 @@
     width: 34px;
     height: 34px;
     padding: 0;
-    border: 1px solid var(--glass-border);
+    border: 0;
     border-radius: 50%;
-    background: var(--glass-strong);
+    background: transparent;
     color: var(--text);
     font-family: inherit;
     cursor: pointer;
     flex-shrink: 0;
-    box-shadow: 0 4px 12px -6px rgba(31, 38, 79, 0.35);
-    transition: transform 0.15s, background-color 0.2s;
+    transition: transform 0.15s, background-color 0.2s, color 0.2s;
 
     svg {
-        width: 18px;
-        height: 18px;
+        width: 19px;
+        height: 19px;
     }
 
     @media (hover: hover) {
         &:hover {
+            background: var(--row-hover);
             transform: scale(1.08);
         }
     }
 
     &:active {
-        transform: scale(0.95);
+        transform: scale(0.92);
     }
 }
 
-/* --- search field (unfolds under the title row) --- */
+/* --- in-row search pill (between the title and the icon buttons) --- */
 
 .search-box {
+    flex: 1;
+    min-width: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
-    height: 40px;
-    margin-top: 8px;
-    padding: 0 8px 0 16px;
-    border-radius: 20px;
+    gap: 8px;
+    height: 34px;
+    padding: 0 4px 0 12px;
+    border-radius: 17px;
     background: var(--field);
     transition: box-shadow 0.2s;
     animation: search-open 0.22s cubic-bezier(0.32, 0.72, 0.2, 1) both;
@@ -98,13 +102,17 @@
 @keyframes search-open {
     from {
         opacity: 0;
-        transform: translateY(-8px);
+        transform: scaleX(0.6);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: scaleX(1);
     }
+}
+
+.search-box {
+    transform-origin: 100% 50%;
 }
 
 .search-icon {
@@ -120,7 +128,7 @@
     border: 0;
     background: transparent;
     color: var(--text);
-    font-size: 16px;
+    font-size: 15px;
     font-family: inherit;
 
     &:focus {
@@ -417,6 +425,7 @@
 @media (prefers-reduced-motion: reduce) {
 
     .spinning,
+    .search-box,
     .eq i {
         animation: none;
     }
