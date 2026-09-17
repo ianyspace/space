@@ -23,6 +23,26 @@
     backdrop-filter: blur(24px) saturate(1.8);
 }
 
+/* --- sticky colour wash under the header --- */
+
+.head-glow {
+    position: sticky;
+    top: 0;
+    /* Just under the floating glass header (which paints over its top half);
+       the visible bottom half fades into the page. */
+    z-index: 5;
+    display: block;
+    height: 150px;
+    margin: 0 -18px -150px;
+    pointer-events: none;
+    background:
+        radial-gradient(120% 90% at 18% 0%, rgba(250, 35, 59, 0.22), transparent 60%),
+        radial-gradient(120% 90% at 82% 0%, rgba(10, 132, 255, 0.2), transparent 60%),
+        radial-gradient(140% 100% at 50% 0%, rgba(191, 90, 242, 0.14), transparent 65%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 30%, transparent 100%);
+}
+
 .head-row {
     display: flex;
     align-items: center;
@@ -416,6 +436,10 @@
         margin: 0 -12px;
         padding-left: 12px;
         padding-right: 12px;
+    }
+
+    .head-glow {
+        margin: 0 -12px -150px;
     }
 
     .title {
