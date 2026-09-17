@@ -95,15 +95,16 @@
     }
 }
 
-/* --- top bar: collapse only --- */
+/* --- top bar: collapse button + (lyrics mode) the song line --- */
 
 .topbar {
     position: relative;
-    z-index: 1;
+    z-index: 4;
     width: min(480px, 100%);
     box-sizing: border-box;
     display: flex;
     align-items: center;
+    gap: 8px;
     padding: 14px 18px 0;
 }
 
@@ -111,6 +112,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     width: 40px;
     height: 40px;
     padding: 0;
@@ -130,6 +132,30 @@
     &:active {
         transform: scale(0.92);
     }
+}
+
+/* The right-hand twin of the button keeps the centre line truly centred. */
+.top-spacer {
+    margin-left: auto;
+    pointer-events: none;
+}
+
+.np-marquee {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 40px; /* match the button height so the bar keeps its size */
+    color: var(--np-text);
+}
+
+.np-line-title {
+    font-weight: 700;
+    color: var(--np-text);
+}
+
+.np-line-artist {
+    font-weight: 500;
+    color: var(--np-text-2);
 }
 
 /* --- body --- */
@@ -500,6 +526,13 @@
     gap: 12px;
     padding: 6px 2px 0;
     min-width: 0;
+    transition: opacity 0.32s ease;
+}
+
+/* Lyrics mode moves the song line to the top bar; keep the row's space so the
+   stage above does not jump. */
+.stage-lyrics ~ .np-head {
+    opacity: 0;
 }
 
 .np-meta {

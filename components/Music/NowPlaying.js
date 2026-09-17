@@ -13,6 +13,7 @@ import {
     IconChevronDown,
 } from './icons';
 import { parseTrackName, trackGradient, formatTime } from './shared';
+import Marquee from './Marquee';
 
 import styles from './NowPlaying.module.scss';
 
@@ -153,6 +154,18 @@ const NowPlaying = function ({
                     <button type="button" className={styles['top-btn']} title="收起" aria-label="收起" onClick={onClose}>
                         <IconChevronDown />
                     </button>
+                    {/* Lyrics mode moves the song line up here, centre-aligned,
+                        scrolling like the mini bar's label when it is too long. */}
+                    {lyricsShown && (
+                        <Marquee
+                            text={`${meta.title} · ${meta.artist}`}
+                            className={styles['np-marquee']}
+                        >
+                            <span className={styles['np-line-title']}>{meta.title}</span>
+                            <span className={styles['np-line-artist']}> · {meta.artist}</span>
+                        </Marquee>
+                    )}
+                    <span className={`${styles['top-btn']} ${styles['top-spacer']}`} aria-hidden="true" />
                 </div>
 
                 <div className={styles.body}>

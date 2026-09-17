@@ -102,52 +102,13 @@
     }
 }
 
-/* --- scrolling "title · artist" label --- */
+/* --- scrolling "title · artist" label (mechanics live in Marquee) --- */
 
-.text {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
+.mini-label {
     font-size: 14.5px;
     font-weight: 600;
     line-height: 1.35;
     color: var(--text);
-}
-
-/* Light fades at both ends say "there is more text that way". */
-.text-marquee {
-    -webkit-mask-image: linear-gradient(90deg,
-            transparent 0,
-            #000 16px,
-            #000 calc(100% - 16px),
-            transparent 100%);
-    mask-image: linear-gradient(90deg,
-            transparent 0,
-            #000 16px,
-            #000 calc(100% - 16px),
-            transparent 100%);
-
-    .text-run {
-        animation: mini-marquee linear infinite;
-    }
-}
-
-.text-run {
-    display: inline-flex;
-    align-items: baseline;
-}
-
-@keyframes mini-marquee {
-    to {
-        transform: translateX(-50%);
-    }
-}
-
-.label {
-    display: inline-flex;
-    align-items: baseline;
-    padding-right: 40px; /* breathing room at the seamless wrap point */
 }
 
 .label-artist {
@@ -260,10 +221,6 @@
     }
 
     .disc {
-        animation: none;
-    }
-
-    .text-marquee .text-run {
         animation: none;
     }
 }
