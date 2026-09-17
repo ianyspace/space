@@ -226,16 +226,14 @@
         outline-offset: 8px;
     }
 
-    /* The reference's halo: part of the record itself — it lives in the
-       spinning layer, so it turns with the vinyl (the travelling highlight
-       makes that visible) and keeps its angle while paused. */
+    /* The reference's halo: part of the record itself, so it turns with the
+       vinyl and keeps its angle while paused. */
     &::after {
         content: '';
         position: absolute;
         inset: -5%;
         border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        box-shadow: -8px -8px 12px -11px rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.3);
         animation: disc-spin 18s linear infinite;
         animation-play-state: paused;
         pointer-events: none;
