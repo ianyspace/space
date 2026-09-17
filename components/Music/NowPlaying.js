@@ -28,9 +28,10 @@ const MODES = {
 /**
  * Decorative tonearm, drawn in the record rig's own coordinate space
  * (100 × 122 — the rig's aspect ratio) so it scales with the record instead of
- * drifting off it: pivot near the top, the curved tube bending down onto the
- * record's upper-right rim, like the reference. `playing` swings the arm a few
- * degrees down so it reads as tracking.
+ * drifting off it: a small pivot high above the disc, the longer curved tube
+ * bending down onto the record's upper-right rim, like the reference. The rest
+ * pose is solved backwards from the 15° tracking swing, so the stylus lands on
+ * exactly the same spot as before. `playing` swings the arm down to track.
  */
 const Tonearm = function ({ playing }) {
     return (
@@ -43,22 +44,22 @@ const Tonearm = function ({ playing }) {
             <g className={styles['arm-swing']}>
                 {/* curved tube: drops from the pivot, then bends onto the rim */}
                 <path
-                    d="M52.5 7.7 C 53.4 14, 56.8 19.6, 63 23.8 C 68.8 27.6, 74 29.2, 78 30.4"
+                    d="M52.5 4.6 C 53.6 11.5, 56.5 19.5, 62.5 24.5 C 68.5 29.2, 74.5 30.2, 78.8 30.3"
                     fill="none"
                     stroke="#f2f3f7"
                     strokeWidth="3"
                     strokeLinecap="round"
                 />
                 {/* headshell resting on the record's upper-right rim */}
-                <g transform="rotate(28 78 30.4)">
-                    <rect x="75.8" y="27.6" width="11.6" height="5.6" rx="2.1" fill="#f2f3f7" />
-                    <rect x="84.6" y="28.9" width="3.6" height="3" rx="1.2" fill="#dfe2ea" />
-                    <rect x="78.6" y="29.3" width="1.7" height="2.2" rx="0.7" fill="#26272e" />
+                <g transform="rotate(28 78.8 30.3)">
+                    <rect x="76.6" y="27.5" width="11.6" height="5.6" rx="2.1" fill="#f2f3f7" />
+                    <rect x="85.4" y="28.8" width="3.6" height="3" rx="1.2" fill="#dfe2ea" />
+                    <rect x="79.4" y="29.2" width="1.7" height="2.2" rx="0.7" fill="#26272e" />
                 </g>
-                {/* pivot: soft backing, white ring, white hub */}
-                <circle cx="52.5" cy="7.7" r="7.8" fill="rgba(255, 255, 255, 0.10)" />
-                <circle cx="52.5" cy="7.7" r="4.6" fill="#191a20" stroke="#f2f3f7" strokeWidth="2" />
-                <circle cx="52.5" cy="7.7" r="1.5" fill="#f2f3f7" />
+                {/* pivot: shrunk and lifted, so the tube reads longer */}
+                <circle cx="52.5" cy="4.6" r="4.4" fill="rgba(255, 255, 255, 0.10)" />
+                <circle cx="52.5" cy="4.6" r="3.6" fill="#191a20" stroke="#f2f3f7" strokeWidth="1.8" />
+                <circle cx="52.5" cy="4.6" r="1.2" fill="#f2f3f7" />
             </g>
         </svg>
     );
