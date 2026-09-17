@@ -35,7 +35,7 @@
     align-items: center;
     gap: 11px;
     height: 58px;
-    padding: 0 8px 0 0;
+    padding: 3px 8px 3px 3px;
     border-radius: 29px; /* pill */
     background: var(--glass-strong);
     border: 1px solid var(--glass-border);
@@ -55,8 +55,8 @@
 
 .disc {
     position: relative;
-    width: 58px;
-    height: 58px;
+    width: 50px;
+    height: 50px;
     flex-shrink: 0;
     border-radius: 50%;
     background:
