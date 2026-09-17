@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import {
+    IconNote,
     IconPlay,
     IconPause,
     IconNext,
@@ -84,8 +85,9 @@ const MiniPlayer = function ({
                     <span
                         className={styles['disc-cover']}
                         style={{ background: trackGradient(current.track.name) }}
-                    />
-                    <span className={styles['disc-hole']} />
+                    >
+                        <IconNote />
+                    </span>
                 </span>
                 <span
                     ref={viewRef}
