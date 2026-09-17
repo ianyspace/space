@@ -8,20 +8,25 @@ import {
     IconPlay,
     IconPause,
     IconSearch,
+    IconAnyMusic,
+    IconGoogleDrive,
 } from './icons';
 import { parseTrackName, trackGradient } from './shared';
+import { DRIVE_SOURCE } from './librarySource';
 
 import styles from './TrackList.module.scss';
 
 /**
- * The "歌曲" screen. The sticky top bar holds the title and the search /
- * "我的" actions; tapping search unfolds the field below the row and focuses
- * it. The rest — the track rows — scrolls underneath. Rows cover every audio
- * file, sorted by name; the folder chosen on the profile page filters the
- * whole list.
+ * The song list. The sticky top bar holds the library's brand mark (anyMusic
+ * for the public library, Google Drive once the visitor's own drive is
+ * connected) and the search / "我的" actions; tapping search unfolds the
+ * field into the title row and focuses it. The track rows scroll underneath.
+ * Rows cover every audio file, sorted by name; the folder chosen on the
+ * profile page filters the whole list.
  */
 const TrackList = function ({
     connected,
+    source,
     listLoading,
     visibleTracks,
     search,
@@ -64,7 +69,14 @@ const TrackList = function ({
             <span className={styles['head-glow']} aria-hidden="true" />
             <header className={styles.head}>
                 <div className={styles['head-row']}>
-                    <h1 className={styles.title}>歌曲</h1>
+                    <h1 className={styles.title}>
+                        {source === DRIVE_SOURCE
+                            ? <IconGoogleDrive size={21} />
+                            : <IconAnyMusic size={23} />}
+                        <span className={styles['title-word']}>
+                            {source === DRIVE_SOURCE ? 'Google Drive' : 'anyMusic'}
+                        </span>
+                    </h1>
                     {/* Unfolds between the title and the actions; its own
                         toggle hides while it is open. */}
                     {connected && searchOpen && (

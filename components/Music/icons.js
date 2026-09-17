@@ -199,3 +199,34 @@ export const IconClose = ({ size = 18 }) => (
         <path d="M6 6l12 12M18 6L6 18" />
     </SvgStroke>
 );
+
+// anyMusic wordmark badge: the app's red→pink gradient tile with two beamed
+// notes, so the header reads as a brand rather than a section title.
+export const IconAnyMusic = ({ size = 26 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+            <linearGradient id="anymusic-tile" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#fb5c74" />
+                <stop offset="1" stopColor="#fa233b" />
+            </linearGradient>
+        </defs>
+        <rect x="1" y="1" width="22" height="22" rx="6.5" fill="url(#anymusic-tile)" />
+        <g fill="#fff">
+            <rect x="9.4" y="5.2" width="1.9" height="9.6" rx="0.95" />
+            <rect x="15" y="4.2" width="1.9" height="9.6" rx="0.95" />
+            <path d="M9.4 5.2 16.9 4.2v2.5L9.4 7.7z" />
+            <ellipse cx="7.4" cy="15.1" rx="2.7" ry="2.3" transform="rotate(-18 7.4 15.1)" />
+            <ellipse cx="13" cy="14.1" rx="2.7" ry="2.3" transform="rotate(-18 13 14.1)" />
+        </g>
+    </svg>
+);
+
+// Google Drive: the triangle folded from its three brand colours, drawn flat
+// so it sits inside the app's own icon language.
+export const IconGoogleDrive = ({ size = 22 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 4 2.5 20 12 15z" fill="#4285f4" />
+        <path d="M12 4 21.5 20 12 15z" fill="#34a853" />
+        <path d="M2.5 20h19L12 15z" fill="#fbbc05" />
+    </svg>
+);
