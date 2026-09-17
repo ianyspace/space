@@ -226,16 +226,24 @@
         outline-offset: 8px;
     }
 
-    /* The reference's halo: a thin translucent ring floating just outside the
-       record, static while the disc under it spins. */
+    /* The reference's halo: part of the record itself — it lives in the
+       spinning layer, so it turns with the vinyl (the travelling highlight
+       makes that visible) and keeps its angle while paused. */
     &::after {
         content: '';
         position: absolute;
         inset: -5%;
         border-radius: 50%;
-        border: 1.5px solid rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: -8px -8px 12px -11px rgba(255, 255, 255, 0.55);
+        animation: disc-spin 18s linear infinite;
+        animation-play-state: paused;
         pointer-events: none;
     }
+}
+
+.disc-playing::after {
+    animation-play-state: running;
 }
 
 .rotor {
@@ -285,10 +293,10 @@
     }
 }
 
-/* Ripples leaving the record: each ring starts at the rim and expands into the
-   space around it, so they read as waves pushed out by the music. They sit
-   under the record, which hides the inside half of every ring, and the whole
-   travel stays well inside the page's padding. */
+/* Ripples leaving the record: each ring starts at the halo track's outer
+   edge and expands outwards, so they read as waves pushed out by the music.
+   They sit under the record, and the whole travel stays well inside the
+   page's padding. */
 .ripples {
     position: absolute;
     inset: 0;
@@ -298,12 +306,13 @@
 
 .ripple {
     position: absolute;
-    inset: 0;
+    /* matches the ::after halo ring, so waves emerge from its outer edge */
+    inset: -5%;
     box-sizing: border-box;
     border-radius: 50%;
     border: 1.5px solid rgba(255, 255, 255, 0.4);
     opacity: 0;
-    transform: scale(0.98);
+    transform: scale(1);
     animation: disc-ripple 3.6s ease-out infinite;
     animation-play-state: paused;
 
@@ -319,7 +328,7 @@
 @keyframes disc-ripple {
     0% {
         opacity: 0;
-        transform: scale(0.98);
+        transform: scale(1);
     }
 
     14% {
@@ -755,6 +764,10 @@
 
     .rotor,
     .ripple {
+        animation: none;
+    }
+
+    .disc::after {
         animation: none;
     }
 
