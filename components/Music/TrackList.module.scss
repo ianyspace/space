@@ -42,33 +42,32 @@
     flex-shrink: 0;
 }
 
-/* capsule entry to the other tab page */
+/* round entry to the profile tab (three stacked dots) */
 .nav-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    width: 34px;
     height: 34px;
-    padding: 0 13px;
+    padding: 0;
     border: 1px solid var(--glass-border);
-    border-radius: 17px;
+    border-radius: 50%;
     background: var(--glass-strong);
     color: var(--text);
-    font-size: 13px;
-    font-weight: 700;
     font-family: inherit;
     cursor: pointer;
+    flex-shrink: 0;
     box-shadow: 0 4px 12px -6px rgba(31, 38, 79, 0.35);
     transition: transform 0.15s, background-color 0.2s;
 
     svg {
-        width: 16px;
-        height: 16px;
+        width: 18px;
+        height: 18px;
     }
 
     @media (hover: hover) {
         &:hover {
-            transform: scale(1.04);
-            background: var(--glass-strong);
+            transform: scale(1.08);
         }
     }
 
@@ -276,11 +275,6 @@
     margin: 0;
     padding: 0;
     list-style: none;
-
-    li:last-child .track,
-    li:last-child .track-active {
-        border-bottom: none;
-    }
 }
 
 .track,
@@ -288,8 +282,8 @@
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 11px;
-    padding: 7px 6px;
+    gap: 12px;
+    padding: 9px 6px;
     border: 0;
     border-radius: 16px;
     background: transparent;
@@ -297,16 +291,11 @@
     font-family: inherit;
     text-align: left;
     cursor: pointer;
-    border-bottom: 1px solid var(--hairline);
     transition: background-color 0.18s, transform 0.12s;
 
     @media (hover: hover) {
         &:hover:not(:disabled) {
             background: var(--row-hover);
-
-            .track-play {
-                opacity: 1;
-            }
         }
     }
 
@@ -321,27 +310,43 @@
 }
 
 .track-active {
-    background: var(--row-active);
-
     .track-title {
         color: var(--accent);
     }
 }
 
 .track-thumb {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 46px;
-    height: 46px;
+    width: 48px;
+    height: 48px;
     flex-shrink: 0;
-    border-radius: 10px;
+    border-radius: 12px;
     color: rgba(255, 255, 255, 0.92);
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 
-    svg {
+    > svg {
         width: 18px;
         height: 18px;
+    }
+}
+
+/* playing state rides on top of the cover, like the reference layout */
+.thumb-overlay {
+    position: absolute;
+    inset: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: inherit;
+    background: rgba(0, 0, 0, 0.38);
+    color: #fff;
+
+    svg {
+        width: 20px;
+        height: 20px;
     }
 }
 
@@ -350,7 +355,7 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
 }
 
 .track-title {
@@ -361,57 +366,12 @@
     font-weight: 600;
 }
 
-.track-meta {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-}
-
 .track-artist {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 12.5px;
     color: var(--text-2);
-}
-
-.track-size {
-    flex-shrink: 0;
-    font-size: 11px;
-    color: var(--text-2);
-    opacity: 0.8;
-    font-variant-numeric: tabular-nums;
-}
-
-.badge {
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    padding: 1px 6px;
-    border-radius: 5px;
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-}
-
-.badge-ext {
-    border: 1px solid var(--text-2);
-    color: var(--text-2);
-    background: transparent;
-}
-
-.track-play {
-    display: inline-flex;
-    color: var(--text-2);
-    opacity: 0;
-    transition: opacity 0.18s;
-    flex-shrink: 0;
-
-    svg {
-        width: 16px;
-        height: 16px;
-    }
 }
 
 .track-dot {

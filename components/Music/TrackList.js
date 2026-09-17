@@ -4,12 +4,13 @@ import {
     IconNote,
     IconNoteList,
     IconRefresh,
-    IconPerson,
+    IconMoreVertical,
     IconPlay,
+    IconPause,
     IconSearch,
     IconChevronRight,
 } from './icons';
-import { parseTrackName, trackGradient, formatSize } from './shared';
+import { parseTrackName, trackGradient } from './shared';
 
 import styles from './TrackList.module.scss';
 
@@ -56,9 +57,14 @@ const TrackList = function ({
                                 <IconRefresh />
                             </button>
                         )}
-                        <button type="button" className={styles['nav-btn']} onClick={onGoProfile} title="我的">
-                            <IconPerson />
-                            <span>我的</span>
+                        <button
+                            type="button"
+                            className={styles['nav-btn']}
+                            title="我的"
+                            aria-label="我的"
+                            onClick={onGoProfile}
+                        >
+                            <IconMoreVertical />
                         </button>
                     </div>
                 </div>
@@ -114,13 +120,14 @@ const TrackList = function ({
                         )}
                         {visibleTracks.map((track) => {
                             const active = track.id === currentId;
+                            const loading = loadingId === track.id;
                             const meta = parseTrackName(track.name);
                             return (
                                 <li key={track.id}>
                                     <button
                                         type="button"
                                         className={active ? styles['track-active'] : styles.track}
-                                        disabled={loadingId === track.id}
+                                        disabled={loading}
                                         onClick={() => onToggleTrack(track)}
                                     >
                                         <span
@@ -128,33 +135,25 @@ const TrackList = function ({
                                             style={{ background: trackGradient(track.name) }}
                                             aria-hidden="true"
                                         >
-                                            <IconNote />
+                                            {active && !loading ? (
+                                                <span className={styles['thumb-overlay']}>
+                                                    {isPlaying ? <IconPause /> : <IconPlay />}
+                                                </span>
+                                            ) : (
+                                                <IconNote />
+                                            )}
                                         </span>
                                         <span className={styles['track-text']}>
                                             <span className={styles['track-title']}>{meta.title}</span>
-                                            <span className={styles['track-meta']}>
-                                                <span className={styles['track-artist']}>
-                                                    {meta.artist}
-                                                </span>
-                                                {meta.ext && (
-                                                    <span className={`${styles.badge} ${styles['badge-ext']}`}>
-                                                        {meta.ext}
-                                                    </span>
-                                                )}
-                                                {track.size && (
-                                                    <span className={styles['track-size']}>{formatSize(track.size)}</span>
-                                                )}
-                                            </span>
+                                            <span className={styles['track-artist']}>{meta.artist}</span>
                                         </span>
-                                        {loadingId === track.id ? (
+                                        {loading ? (
                                             <span className={`${styles['track-dot']} ${styles.spinning}`} aria-hidden="true">
                                                 <IconRefresh />
                                             </span>
                                         ) : active ? (
                                             <span className={eqClass} aria-hidden="true"><i /><i /><i /></span>
-                                        ) : (
-                                            <span className={styles['track-play']} aria-hidden="true"><IconPlay /></span>
-                                        )}
+                                        ) : null}
                                     </button>
                                 </li>
                             );
