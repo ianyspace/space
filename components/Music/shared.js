@@ -148,6 +148,61 @@ export const pruneCachedAudio = async function () {
     }
 };
 
+// Every cached entry with its metadata, expired ones included — the cache
+// manager lists what is actually stored, so a still-listed-but-expired blob is
+// shown (and can be cleared) rather than hidden. The blob itself is left out of
+// the result so a large library never gets copied into JS memory just to be
+// rendered.
+export const listCachedAudio = async function () {
+    let db;
+    try {
+        db = await openAudioDb();
+        return await new Promise((resolve, reject) => {
+            const entries = [];
+            const request = db.transaction(AUDIO_STORE_NAME, 'readonly').objectStore(AUDIO_STORE_NAME).openCursor();
+            request.onsuccess = () => {
+                const cursor = request.result;
+                if (!cursor) { resolve(entries); return; }
+                const { id, blob, expiresAt } = cursor.value;
+                entries.push({ id, size: blob ? blob.size : 0, expiresAt: Number(expiresAt) || 0 });
+                cursor.continue();
+            };
+            request.onerror = () => reject(request.error);
+        });
+    } catch (err) {
+        return null;
+    } finally {
+        if (db) db.close();
+    }
+};
+
+// Clears records by key, or the whole store when called with no keys — the
+// cache manager's "全部删除".
+export const deleteCachedAudioMany = async function (keys) {
+    let db;
+    try {
+        db = await openAudioDb();
+        await new Promise((resolve, reject) => {
+            const store = db.transaction(AUDIO_STORE_NAME, 'readwrite').objectStore(AUDIO_STORE_NAME);
+            if (Array.isArray(keys) && keys.length > 0) {
+                keys.forEach((key) => store.delete(key));
+            } else {
+                store.clear();
+            }
+            // A store with no pending requests fires no success event, so
+            // settle on the transaction itself.
+            store.transaction.oncomplete = resolve;
+            store.transaction.onerror = () => reject(store.transaction.error);
+            store.transaction.onabort = () => reject(store.transaction.error);
+        });
+        return true;
+    } catch (err) {
+        return false;
+    } finally {
+        if (db) db.close();
+    }
+};
+
 // iOS (and iOS-only browsers like Alook — they are all WKWebView) needs the
 // audio element to have played once inside a real user gesture before later
 // async `play()` calls (after a Drive blob download) are allowed.

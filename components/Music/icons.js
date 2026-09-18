@@ -134,6 +134,15 @@ export const IconPerson = () => (
     </SvgStroke>
 );
 
+// Download-into-a-box — the cache manager's mark.
+export const IconArchive = ({ size = 20 }) => (
+    <SvgStroke size={size}>
+        <path d="M3.5 7.5h17A1.5 1.5 0 0 1 22 9v1.5a1.5 1.5 0 0 1-1.5 1.5h-17A1.5 1.5 0 0 1 2 10.5V9a1.5 1.5 0 0 1 1.5-1.5Z" />
+        <path d="M4.5 12v7A2 2 0 0 0 6.5 21h11a2 2 0 0 0 2-2v-7" />
+        <path d="M9.5 16h5" />
+    </SvgStroke>
+);
+
 export const IconChevronDown = ({ size = 22 }) => (
     <SvgStroke size={size}>
         <path d="M6 9l6 6 6-6" />

@@ -26,6 +26,8 @@ import {
     getCachedAudio,
     cacheAudio,
     pruneCachedAudio,
+    listCachedAudio,
+    deleteCachedAudioMany,
 } from 'components/Music/shared';
 import {
     CLOUD_SOURCE,
@@ -43,10 +45,11 @@ import {
 } from 'components/Music/librarySource';
 import TrackList from 'components/Music/TrackList';
 import NowPlaying from 'components/Music/NowPlaying';
+import CacheManager from 'components/Music/CacheManager';
 import Profile from 'components/Music/Profile';
 import MiniPlayer from 'components/Music/MiniPlayer';
 import DesktopMusic from 'components/Music/DesktopMusic';
-import { IconGoogleDrive } from 'components/Music/icons';
+import { IconArchive, IconGoogleDrive } from 'components/Music/icons';
 
 import styles from './MusicApp.module.scss';
 
@@ -68,6 +71,15 @@ import styles from './MusicApp.module.scss';
  * deliberately no volume control. The OAuth client ID is the only setup:
  * entered once, kept in localStorage, nothing secret committed.
  */
+
+// How many audio downloads "全部缓存" keeps in flight. Three is the sweet spot
+// for this app: enough that a long list finishes in a third of the serial time,
+// low enough that a track the visitor taps mid-run still starts quickly, and
+// safely under the browser's ~6-per-host connection cap — so the seed pass
+// never starves playback or lyrics fetching. Raising it gains little: the
+// bottleneck is bandwidth and IndexedDB writes, not the request count.
+const CACHE_ALL_CONCURRENCY = 3;
+
 const MusicApp = function ({ variant = 'h5' }) {
     const [theme, setTheme] = useState('light');
     // 'list' | 'profile' — which tab page is showing; the full-screen
@@ -112,6 +124,16 @@ const MusicApp = function ({ variant = 'h5' }) {
     // animation first (the sheet-unmount-via-animation-end trick).
     const [menuOpen, setMenuOpen] = useState(false);
     const [menuClosing, setMenuClosing] = useState(false);
+    // Cache manager sheet: `open` mounts it, `closing` plays its exit first.
+    // `entries` comes from IndexedDB and is re-read after every action, so the
+    // list always reflects the store rather than a locally patched guess.
+    const [cacheOpen, setCacheOpen] = useState(false);
+    const [cacheClosing, setCacheClosing] = useState(false);
+    const [cacheEntries, setCacheEntries] = useState([]);
+    const [cacheLoading, setCacheLoading] = useState(false);
+    const [cacheBusyId, setCacheBusyId] = useState('');
+    const [cacheAllRunning, setCacheAllRunning] = useState(false);
+    const [cacheProgress, setCacheProgress] = useState({ done: 0, total: 0 });
 
     const audioRef = useRef(null);
     const tokenRestoreRef = useRef(false);
@@ -248,6 +270,103 @@ const MusicApp = function ({ variant = 'h5' }) {
         closeMenu();
         setTab('profile');
     }, [closeMenu]);
+
+    /* --- cache manager --- */
+
+    const readCache = useCallback(async function () {
+        setCacheLoading(true);
+        const entries = await listCachedAudio();
+        // `null` means IndexedDB is unavailable (private mode, old browser) —
+        // the sheet then reads as "nothing cached" instead of crashing.
+        setCacheEntries(entries || []);
+        setCacheLoading(false);
+    }, []);
+
+    const openCacheManager = useCallback(function () {
+        closeMenu();
+        setCacheClosing(false);
+        setCacheOpen(true);
+        readCache();
+    }, [closeMenu, readCache]);
+
+    const closeCacheManager = useCallback(function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            setCacheOpen(false);
+            setCacheClosing(false);
+            return;
+        }
+        setCacheClosing(true);
+    }, []);
+
+    useEffect(() => {
+        if (!cacheOpen) return undefined;
+        const onKeyDown = (event) => { if (event.key === 'Escape') closeCacheManager(); };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [cacheOpen, closeCacheManager]);
+
+    // 全部缓存: download every track that is not stored yet, `CACHE_ALL_CONCURRENCY`
+    // at a time. A small pool rather than one at a time — a serial pass over a
+    // long list takes minutes — but kept low so the audio the visitor may start
+    // playing still gets its share of the pipe, and so the browser's per-host
+    // connection cap is not saturated. Each task is a plain "download and let
+    // `fetchTrackUrl` store it" unit: the object URL it returns is revoked
+    // immediately, since this pass fills the cache rather than plays anything.
+    const cacheAllTracks = useCallback(async function () {
+        setCacheAllRunning(true);
+        setCacheProgress({ done: 0, total: 0 });
+        try {
+            const stored = await listCachedAudio();
+            const storedKeys = new Set((stored || []).map((entry) => entry.id));
+            const pending = tracks.filter((track) => !storedKeys.has(audioCacheKey(track)));
+            setCacheProgress({ done: 0, total: pending.length });
+
+            let nextIndex = 0;
+            let done = 0;
+            const worker = async function () {
+                while (nextIndex < pending.length) {
+                    const track = pending[nextIndex];
+                    nextIndex += 1;
+                    const url = await fetchTrackUrl(track, token).catch(() => '');
+                    if (url) URL.revokeObjectURL(url);
+                    done += 1;
+                    setCacheProgress({ done, total: pending.length });
+                }
+            };
+            const pool = [];
+            for (let i = 0; i < Math.min(CACHE_ALL_CONCURRENCY, pending.length); i += 1) {
+                pool.push(worker());
+            }
+            await Promise.all(pool);
+        } finally {
+            setCacheAllRunning(false);
+            await readCache();
+        }
+    }, [tracks, token, fetchTrackUrl, readCache]);
+
+    // Removal is per-key, or the whole store when handed an empty list. The
+    // playing track's blob may go too — the audio element already holds its
+    // own decoded data, and the next play re-downloads it.
+    const deleteCacheEntries = useCallback(async function (keys) {
+        if (!Array.isArray(keys) || keys.length === 0) {
+            setCacheBusyId('*');
+            await deleteCachedAudioMany([]);
+            setCacheBusyId('');
+            await readCache();
+            return;
+        }
+        setCacheBusyId(keys[0]);
+        await deleteCachedAudioMany(keys);
+        setCacheBusyId('');
+        await readCache();
+    }, [readCache]);
+
+    // 缓存管理 — opens the sheet that lists every cached blob and lets the
+    // visitor drop individual entries, clear the store, or fill it from the
+    // whole list.
+    const goCacheManager = useCallback(function () {
+        openCacheManager();
+    }, [openCacheManager]);
 
     /* --- toasts --- */
 
@@ -1135,8 +1254,39 @@ const MusicApp = function ({ variant = 'h5' }) {
                                 <span className={styles['menu-sub']}>连接或切换自己的云盘曲库</span>
                             </span>
                         </button>
+                        <button
+                            type="button"
+                            className={styles['menu-item']}
+                            role="menuitem"
+                            onClick={goCacheManager}
+                        >                            <span className={styles['menu-icon']} aria-hidden="true">
+                                <IconArchive size={20} />
+                            </span>
+                            <span className={styles['menu-text']}>
+                                <span className={styles['menu-title']}>缓存管理</span>
+                                <span className={styles['menu-sub']}>查看已缓存的歌曲，可单独或全部删除</span>
+                            </span>
+                        </button>
                     </div>
                 </div>
+            )}
+
+            {cacheOpen && (
+                <CacheManager
+                    entries={cacheEntries}
+                    tracks={tracks}
+                    loading={cacheLoading}
+                    busyId={cacheBusyId}
+                    caching={cacheAllRunning}
+                    cacheProgress={cacheProgress}
+                    closing={cacheClosing}
+                    onClosed={() => { setCacheOpen(false); setCacheClosing(false); }}
+                    onCancelClose={() => setCacheClosing(false)}
+                    onClose={closeCacheManager}
+                    onRefresh={readCache}
+                    onDelete={deleteCacheEntries}
+                    onCacheAll={cacheAllTracks}
+                />
             )}
 
             {(error || notice) && (
