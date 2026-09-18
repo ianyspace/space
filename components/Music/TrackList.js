@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
     IconNote,
@@ -21,8 +21,9 @@ import styles from './TrackList.module.scss';
  * for the public library, Google Drive once the visitor's own drive is
  * connected) and the search / three-dots actions; tapping search unfolds the
  * field into the title row and focuses it. The three-dots button opens the
- * bottom drawer — the entry point to 「我的」, where the Google Drive connection
- * lives. The track rows scroll underneath.
+ * bottom drawer owned by the shell (see `MusicApp`), which reports whether the
+ * drawer is open through `menuOpen` — the button only shows its expanded state.
+ * The track rows scroll underneath.
  * Rows cover every audio file, sorted by name; the folder chosen on the
  * profile page filters the whole list.
  */
@@ -38,6 +39,8 @@ const TrackList = function ({
     isPlaying,
     onToggleTrack,
     onGoProfile,
+    menuOpen,
+    onOpenMenu,
 }) {
     const keyword = search.trim();
     const currentId = current ? current.track.id : '';
@@ -46,10 +49,6 @@ const TrackList = function ({
     // reveals it and puts the caret straight inside.
     const [searchOpen, setSearchOpen] = useState(false);
     const searchInputRef = useRef(null);
-    // The three-dots drawer: `open` mounts it, `closing` plays its exit
-    // animation first (the sheet-unmount-via-animation-end trick).
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [menuClosing, setMenuClosing] = useState(false);
 
     useEffect(() => {
         if (!searchOpen) return undefined;
@@ -65,31 +64,6 @@ const TrackList = function ({
     const closeSearch = function () {
         setSearchOpen(false);
         onSearch('');
-    };
-
-    /* --- three-dots drawer --- */
-
-    const closeMenu = useCallback(function () {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            setMenuOpen(false);
-            setMenuClosing(false);
-            return;
-        }
-        setMenuClosing(true);
-    }, []);
-
-    // Escape closes the drawer while it is open.
-    useEffect(() => {
-        if (!menuOpen) return undefined;
-        const onKeyDown = (event) => { if (event.key === 'Escape') closeMenu(); };
-        window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
-    }, [menuOpen, closeMenu]);
-
-    // Opens the profile tab, where the Google Drive connection lives.
-    const goProfile = function () {
-        closeMenu();
-        onGoProfile();
     };
 
     return (
@@ -148,14 +122,16 @@ const TrackList = function ({
                                 <IconSearch />
                             </button>
                         )}
+                        {/* Opens the shell's bottom drawer, which carries the
+                            entry to 「我的」 and the Google Drive connection. */}
                         <button
                             type="button"
                             className={styles['nav-btn']}
                             title="更多"
                             aria-label="更多"
                             aria-haspopup="menu"
-                            aria-expanded={menuOpen && !menuClosing}
-                            onClick={() => { setMenuClosing(false); setMenuOpen(true); }}
+                            aria-expanded={Boolean(menuOpen)}
+                            onClick={onOpenMenu}
                         >
                             <IconMoreVertical />
                         </button>
@@ -230,52 +206,6 @@ const TrackList = function ({
                         })}
                     </ul>
                 </>
-            )}
-
-            {/* Bottom drawer opened by the three-dots button. It slides up from
-                the bottom of the phone column, so on a wide screen it reads as
-                part of the list rather than as a full-window dialog. */}
-            {menuOpen && (
-                <div
-                    className={menuClosing
-                        ? `${styles['menu-scrim']} ${styles['menu-scrim-out']}`
-                        : styles['menu-scrim']}
-                    role="presentation"
-                    onClick={closeMenu}
-                    onAnimationEnd={(event) => {
-                        // Only the scrim's own fade ends the drawer; the sheet
-                        // and its children animate independently.
-                        if (menuClosing && event.target === event.currentTarget) {
-                            setMenuOpen(false);
-                            setMenuClosing(false);
-                        }
-                    }}
-                >
-                    <div
-                        className={menuClosing
-                            ? `${styles.menu} ${styles['menu-out']}`
-                            : styles.menu}
-                        role="menu"
-                        aria-label="更多功能"
-                        onClick={(event) => event.stopPropagation()}
-                    >
-                        <span className={styles['menu-grip']} aria-hidden="true" />
-                        <button
-                            type="button"
-                            className={styles['menu-item']}
-                            role="menuitem"
-                            onClick={goProfile}
-                        >
-                            <span className={styles['menu-icon']} aria-hidden="true">
-                                <IconGoogleDrive size={20} />
-                            </span>
-                            <span className={styles['menu-text']}>
-                                <span className={styles['menu-title']}>谷歌云盘链接</span>
-                                <span className={styles['menu-sub']}>连接或切换自己的云盘曲库</span>
-                            </span>
-                        </button>
-                    </div>
-                </div>
             )}
         </div>
     );

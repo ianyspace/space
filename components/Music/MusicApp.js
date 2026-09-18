@@ -46,6 +46,7 @@ import NowPlaying from 'components/Music/NowPlaying';
 import Profile from 'components/Music/Profile';
 import MiniPlayer from 'components/Music/MiniPlayer';
 import DesktopMusic from 'components/Music/DesktopMusic';
+import { IconGoogleDrive } from 'components/Music/icons';
 
 import styles from './MusicApp.module.scss';
 
@@ -104,6 +105,13 @@ const MusicApp = function ({ variant = 'h5' }) {
     const [lyrics, setLyrics] = useState(null);
     const [lyricsLoading, setLyricsLoading] = useState(false);
     const [lyricsVisible, setLyricsVisible] = useState(false);
+    // The song list's three-dots drawer. It is owned by this shell — not by
+    // `TrackList` — because the list column sits under a `transform`ed
+    // ancestor, which would break `position: fixed` inside it (see the drawer
+    // note in MusicApp.module.scss). `open` mounts it, `closing` plays the exit
+    // animation first (the sheet-unmount-via-animation-end trick).
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [menuClosing, setMenuClosing] = useState(false);
 
     const audioRef = useRef(null);
     const tokenRestoreRef = useRef(false);
@@ -209,6 +217,37 @@ const MusicApp = function ({ variant = 'h5' }) {
             return next;
         });
     }, []);
+
+    /* --- three-dots drawer --- */
+
+    const closeMenu = useCallback(function () {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            setMenuOpen(false);
+            setMenuClosing(false);
+            return;
+        }
+        setMenuClosing(true);
+    }, []);
+
+    const openMenu = useCallback(function () {
+        setMenuClosing(false);
+        setMenuOpen(true);
+    }, []);
+
+    // Escape closes the drawer while it is open.
+    useEffect(() => {
+        if (!menuOpen) return undefined;
+        const onKeyDown = (event) => { if (event.key === 'Escape') closeMenu(); };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [menuOpen, closeMenu]);
+
+    // 谷歌云盘链接 — leaves the list for 「我的」, where the Google Drive
+    // connection lives.
+    const goDrive = useCallback(function () {
+        closeMenu();
+        setTab('profile');
+    }, [closeMenu]);
 
     /* --- toasts --- */
 
@@ -976,6 +1015,8 @@ const MusicApp = function ({ variant = 'h5' }) {
                                 isPlaying={isPlaying}
                                 onToggleTrack={toggleTrack}
                                 onGoProfile={() => setTab('profile')}
+                                menuOpen={menuOpen && !menuClosing}
+                                onOpenMenu={openMenu}
                             />
                         </div>
                         <div
@@ -1050,6 +1091,52 @@ const MusicApp = function ({ variant = 'h5' }) {
                         />
                     )}
                 </>
+            )}
+
+            {/* Bottom drawer opened by the song list's three-dots button. It
+                belongs to the shell, so on a wide screen it stays centred over
+                the phone column instead of hanging off the list. */}
+            {menuOpen && (
+                <div
+                    className={menuClosing
+                        ? `${styles['menu-scrim']} ${styles['menu-scrim-out']}`
+                        : styles['menu-scrim']}
+                    role="presentation"
+                    onClick={closeMenu}
+                    onAnimationEnd={(event) => {
+                        // Only the scrim's own fade ends the drawer; the sheet
+                        // and its children animate independently.
+                        if (menuClosing && event.target === event.currentTarget) {
+                            setMenuOpen(false);
+                            setMenuClosing(false);
+                        }
+                    }}
+                >
+                    <div
+                        className={menuClosing
+                            ? `${styles.menu} ${styles['menu-out']}`
+                            : styles.menu}
+                        role="menu"
+                        aria-label="更多功能"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <span className={styles['menu-grip']} aria-hidden="true" />
+                        <button
+                            type="button"
+                            className={styles['menu-item']}
+                            role="menuitem"
+                            onClick={goDrive}
+                        >
+                            <span className={styles['menu-icon']} aria-hidden="true">
+                                <IconGoogleDrive size={20} />
+                            </span>
+                            <span className={styles['menu-text']}>
+                                <span className={styles['menu-title']}>谷歌云盘链接</span>
+                                <span className={styles['menu-sub']}>连接或切换自己的云盘曲库</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
             )}
 
             {(error || notice) && (
