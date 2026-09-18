@@ -1043,6 +1043,7 @@ const MusicApp = function ({ variant = 'h5' }) {
                             }}
                             onClose={() => closePlayer()}
                             onOpenList={() => closePlayer('list')}
+                            onOpenProfile={() => closePlayer('profile')}
                             lyrics={lyrics && lyrics.trackId === current.track.id ? lyrics : null}
                             lyricsLoading={lyricsLoading}
                             lyricsVisible={lyricsVisible}
