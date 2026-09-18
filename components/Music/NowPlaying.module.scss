@@ -95,7 +95,8 @@
     }
 }
 
-/* --- top bar: collapse button + (lyrics mode) the song line --- */
+/* --- top bar: collapse button + (lyrics mode) the song line + the
+   placeholder three-dots action on the right --- */
 
 .topbar {
     position: relative;
@@ -104,8 +105,8 @@
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    /* The song line is the middle item; with the collapse button on the left it
-       reads as a centred header without needing a matching twin on the right. */
+    /* The song line is the middle item; the equal-width buttons on either
+       side keep it centred. */
     justify-content: space-between;
     gap: 8px;
     padding: 6px 18px 0;

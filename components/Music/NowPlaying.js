@@ -11,6 +11,7 @@ import {
     IconRepeatOne,
     IconQueue,
     IconChevronDown,
+    IconMoreVertical,
 } from './icons';
 import { parseTrackName, trackGradient, formatTime } from './shared';
 import Marquee from './Marquee';
@@ -168,6 +169,18 @@ const NowPlaying = function ({
                             <span className={styles['np-line-artist']}> - {meta.artist}</span>
                         </Marquee>
                     )}
+                    {/* Placeholder action, kept for future use: it is the
+                        equal-width twin of the collapse button, which also
+                        keeps the song line centred when lyrics are shown.
+                        Deliberately inert for now — no menu attached yet. */}
+                    <button
+                        type="button"
+                        className={styles['top-btn']}
+                        title="更多"
+                        aria-label="更多"
+                    >
+                        <IconMoreVertical />
+                    </button>
                 </div>
 
                 <div className={styles.body}>
