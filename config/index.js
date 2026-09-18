@@ -29,28 +29,7 @@ const supportedLanguages = {
     'zh-hans': '简体中文',
 };
 
-/**
- * Music module data sources.
- *
- * The default library lives in a public Cloudflare R2 bucket and is listed by
- * the Worker in `worker/` (see `worker/README.md`), so the player works with
- * no Google authorization at all. Connecting Google Drive swaps the list for
- * the visitor's own Drive folder; disconnecting falls back to R2 again.
- *
- * Both values can be overridden at build time with
- * `NEXT_PUBLIC_MUSIC_WORKER_URL` / `NEXT_PUBLIC_MUSIC_R2_BASE` (the repo keeps
- * `.env` out of git, so configured values belong in the deploy environment).
- */
-const music = {
-    // Base URL of the space-music Worker exposing `GET /tracks`.
-    workerUrl: process.env.NEXT_PUBLIC_MUSIC_WORKER_URL || 'https://space-music.ianyscript.workers.dev',
-    // Public R2 domain. Only needed when the Worker answers with bare object
-    // keys instead of absolute URLs; empty means "trust `track.url`".
-    r2BaseUrl: process.env.NEXT_PUBLIC_MUSIC_R2_BASE || '',
-};
-
 module.exports = {
     site,
     supportedLanguages,
-    music,
 };
