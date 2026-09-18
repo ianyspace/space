@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
     IconNote,
@@ -11,8 +11,6 @@ import {
     IconRepeatOne,
     IconQueue,
     IconChevronDown,
-    IconGoogleDrive,
-    IconMoreVertical,
 } from './icons';
 import { parseTrackName, trackGradient, formatTime } from './shared';
 import Marquee from './Marquee';
@@ -93,7 +91,6 @@ const NowPlaying = function ({
     onSeek,
     onClose,
     onOpenList,
-    onOpenProfile,
     lyrics,
     lyricsLoading,
     lyricsVisible,
@@ -115,10 +112,6 @@ const NowPlaying = function ({
     // Tap position, so a finger that was really scrolling the lyrics does not
     // also count as "back to the record".
     const pressYRef = useRef(0);
-    // The three-dots drawer: `open` mounts it, `closing` plays its exit
-    // animation first (the sheet-unmount-via-animation-end trick).
-    const [menuOpen, setMenuOpen] = useState(false);
-    const [menuClosing, setMenuClosing] = useState(false);
 
     // Every mode tap names the mode it just switched into, centred on the
     // stage for a moment. The first render is the page opening, not a tap, so
@@ -142,37 +135,11 @@ const NowPlaying = function ({
         }
     }, [activeLyric, lyricsShown]);
 
+    /* --- lyrics --- */
+
     const handleLyricsClick = function (event) {
         if (Math.abs(event.clientY - pressYRef.current) > 8) return;
         onToggleLyrics();
-    };
-
-    /* --- three-dots drawer --- */
-
-    const closeMenu = useCallback(function () {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            setMenuOpen(false);
-            setMenuClosing(false);
-            return;
-        }
-        setMenuClosing(true);
-    }, []);
-
-    // Escape closes the drawer — the player sheet's own dismissal stays on
-    // its collapse button, so the drawer gets the key while it is open.
-    useEffect(() => {
-        if (!menuOpen) return undefined;
-        const onKeyDown = (event) => { if (event.key === 'Escape') closeMenu(); };
-        window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
-    }, [menuOpen, closeMenu]);
-
-    // 谷歌云盘链接 — same destination as the song list's top-right three-dots
-    // button: it leaves the player and lands on the "我的" page, where the
-    // Google Drive connection lives.
-    const goDrive = function () {
-        closeMenu();
-        onOpenProfile();
     };
 
     return (
@@ -201,19 +168,6 @@ const NowPlaying = function ({
                             <span className={styles['np-line-artist']}> - {meta.artist}</span>
                         </Marquee>
                     )}
-                    {/* Opens the bottom drawer; the equal-width twin of the
-                        collapse button keeps the line centred. */}
-                    <button
-                        type="button"
-                        className={styles['top-btn']}
-                        title="更多"
-                        aria-label="更多"
-                        aria-haspopup="menu"
-                        aria-expanded={menuOpen && !menuClosing}
-                        onClick={() => { setMenuClosing(false); setMenuOpen(true); }}
-                    >
-                        <IconMoreVertical />
-                    </button>
                 </div>
 
                 <div className={styles.body}>
@@ -361,53 +315,6 @@ const NowPlaying = function ({
                         </button>
                     </div>
                 </div>
-
-                {/* Bottom drawer opened by the three-dots button. It slides up
-                    from the sheet's own bottom edge and stays inside the phone
-                    column, so on a wide screen it reads as part of the player
-                    rather than as a full-window dialog. */}
-                {menuOpen && (
-                    <div
-                        className={menuClosing
-                            ? `${styles['menu-scrim']} ${styles['menu-scrim-out']}`
-                            : styles['menu-scrim']}
-                        role="presentation"
-                        onClick={closeMenu}
-                        onAnimationEnd={(event) => {
-                            // Only the scrim's own fade ends the drawer; the
-                            // sheet and its children animate independently.
-                            if (menuClosing && event.target === event.currentTarget) {
-                                setMenuOpen(false);
-                                setMenuClosing(false);
-                            }
-                        }}
-                    >
-                        <div
-                            className={menuClosing
-                                ? `${styles.menu} ${styles['menu-out']}`
-                                : styles.menu}
-                            role="menu"
-                            aria-label="更多功能"
-                            onClick={(event) => event.stopPropagation()}
-                        >
-                            <span className={styles['menu-grip']} aria-hidden="true" />
-                            <button
-                                type="button"
-                                className={styles['menu-item']}
-                                role="menuitem"
-                                onClick={goDrive}
-                            >
-                                <span className={styles['menu-icon']} aria-hidden="true">
-                                    <IconGoogleDrive size={20} />
-                                </span>
-                                <span className={styles['menu-text']}>
-                                    <span className={styles['menu-title']}>谷歌云盘链接</span>
-                                    <span className={styles['menu-sub']}>连接或切换自己的云盘曲库</span>
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );

@@ -104,6 +104,8 @@
     box-sizing: border-box;
     display: flex;
     align-items: center;
+    /* The song line is the middle item; with the collapse button on the left it
+       reads as a centred header without needing a matching twin on the right. */
     justify-content: space-between;
     gap: 8px;
     padding: 6px 18px 0;
@@ -663,147 +665,6 @@
     color: var(--np-text-2);
 }
 
-/* --- three-dots bottom drawer --- */
-
-/* Scrim covers the sheet's own area only (the sheet is already an overlay),
-   so the drawer never spills past the phone column on a wide screen. */
-.menu-scrim {
-    position: absolute;
-    inset: 0;
-    z-index: 20;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    background: rgba(4, 5, 10, 0.5);
-    animation: menu-scrim-in 0.22s ease-out both;
-}
-
-.menu-scrim-out {
-    animation: menu-scrim-out 0.24s ease-in forwards;
-}
-
-@keyframes menu-scrim-in {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes menu-scrim-out {
-    from {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0;
-    }
-}
-
-.menu {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 8px 12px calc(14px + env(safe-area-inset-bottom, 0px));
-    border-radius: 22px 22px 0 0;
-    background: rgba(28, 29, 38, 0.92);
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 -18px 48px -14px rgba(0, 0, 0, 0.7);
-    -webkit-backdrop-filter: blur(24px) saturate(1.8);
-    backdrop-filter: blur(24px) saturate(1.8);
-    animation: menu-in 0.28s cubic-bezier(0.32, 0.72, 0.2, 1) both;
-}
-
-.menu-out {
-    animation: menu-out 0.24s cubic-bezier(0.4, 0, 1, 1) forwards;
-}
-
-@keyframes menu-in {
-    from {
-        transform: translateY(100%);
-    }
-
-    to {
-        transform: translateY(0);
-    }
-}
-
-@keyframes menu-out {
-    from {
-        transform: translateY(0);
-    }
-
-    to {
-        transform: translateY(100%);
-    }
-}
-
-/* Grab handle — the standard "this sheet can be dismissed" affordance. */
-.menu-grip {
-    display: block;
-    width: 38px;
-    height: 4px;
-    margin: 2px auto 10px;
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.24);
-}
-
-.menu-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 12px 12px;
-    border: 0;
-    border-radius: 14px;
-    background: transparent;
-    color: var(--np-text);
-    font-family: inherit;
-    text-align: left;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.15s;
-
-    @media (hover: hover) {
-        &:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
-    }
-
-    &:active {
-        transform: scale(0.985);
-    }
-}
-
-.menu-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.menu-text {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    min-width: 0;
-}
-
-.menu-title {
-    font-size: 15px;
-    font-weight: 700;
-}
-
-.menu-sub {
-    font-size: 12.5px;
-    color: var(--np-text-2);
-}
-
 /* --- transport --- */
 
 .np-controls {
@@ -929,9 +790,7 @@
 @media (prefers-reduced-motion: reduce) {
     .page,
     .lyrics,
-    .mode-toast,
-    .menu-scrim,
-    .menu {
+    .mode-toast {
         animation: none;
     }
 
