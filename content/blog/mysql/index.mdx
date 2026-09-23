@@ -18,41 +18,17 @@ MySQL 是一个关系型数据库管理系统，采用分层架构设计，将�
 
 #### MySQL 整体架构
 
-```text
-客户端连接
-    │
-    ▼
-┌─────────────────────────────────────────────┐
-│  连接层                                       │
-│  ├── 连接池（缓存线程）                        │
-│  └── 认证鉴权                                 │
-├─────────────────────────────────────────────┤
-│  服务层（Server 层）                           │
-│  ├── 查询缓存（MySQL 8.0 已移除）              │
-│  ├── 解析器（词法分析 → 语法分析 → AST）        │
-│  ├── 预处理器（检查表/列是否存在、权限验证）      │
-│  ├── 优化器（选择索引、决定表连接顺序、生成执行计划）│
-│  └── 执行器（调用存储引擎接口执行）              │
-├─────────────────────────────────────────────┤
-│  存储引擎层                                    │
-│  ├── InnoDB（默认）                            │
-│  ├── MyISAM                                   │
-│  ├── Memory                                   │
-│  └── Archive / CSV / ...                      │
-└─────────────────────────────────────────────┘
-```
+<arch-figure caption="MySQL 的三层架构，以及一条 SELECT 依次走过的七个步骤"></arch-figure>
 
 #### 一条 SELECT 的执行流程
 
-```text
-1. 客户端发送 SQL
-2. 连接器验证权限，建立连接
-3. 解析器：词法分析（识别关键字、表名、列名）→ 语法分析（构建语法树 AST）
-4. 预处理器：检查表和列是否存在，展开 SELECT *，权限验证
-5. 优化器：选择使用哪个索引、多表关联时决定连接顺序、生成执行计划
-6. 执行器：校验权限 → 调用存储引擎接口逐行获取数据 → 返回结果集
-7. 存储引擎：从磁盘/缓存读取数据页，返回给执行器
-```
+1. **客户端** 发送 SQL
+2. **连接器** 验证权限、建立连接
+3. **解析器** 词法分析（识别关键字、表名、列名）→ 语法分析（构建语法树 AST）
+4. **预处理器** 检查表和列是否存在、展开 `SELECT *`、权限验证
+5. **优化器** 选择使用哪个索引、多表关联时决定连接顺序、生成执行计划
+6. **执行器** 校验权限 → 调用存储引擎接口逐行获取数据 → 返回结果集
+7. **存储引擎** 从磁盘/缓存读取数据页，返回给执行器
 
 #### InnoDB vs MyISAM
 
@@ -177,13 +153,7 @@ InnoDB 的索引基于 **B+ 树**实现：
 - 叶子节点存储的是**主键值**（不是行数据）
 - 也叫二级索引
 
-```text
-聚簇索引（主键索引）：
-  B+ 树叶子节点 → 完整行数据
-
-非聚簇索引（如 name 索引）：
-  B+ 树叶子节点 → 主键值 → 拿着主键回聚簇索引查完整数据
-```
+<index-figure caption="聚簇索引的叶子是整行，二级索引的叶子是主键 —— 中间那一步就是回表"></index-figure>
 
 **回表查询**：通过二级索引查到主键值后，需要再到聚簇索引中查完整行数据，这个过程叫回表，多一次 B+ 树查询。
 
@@ -214,17 +184,7 @@ SELECT name FROM user WHERE name = '张三';
 
 所以联合索引只有从最左列开始匹配才能生效：
 
-```sql
--- 联合索引 (a, b, c)
-WHERE a = 1                        ✅ 用到 a
-WHERE a = 1 AND b = 2              ✅ 用到 a, b
-WHERE a = 1 AND b = 2 AND c = 3    ✅ 用到 a, b, c（全部命中）
-WHERE b = 2                        ❌ 没用到（缺最左列 a）
-WHERE b = 2 AND c = 3              ❌ 没用到
-WHERE a = 1 AND c = 3              ✅ 用到 a（b 断了，c 接不上）
-                                    ⚠️ MySQL 8.0+ 优化器可能用索引跳跃扫描(Index Skip Scan)
-WHERE a = 1 ORDER BY b             ✅ 用到 a, b（排序也走索引，避免 filesort）
-```
+<leftmost-lab caption="联合索引 (a, b, c)：点一条 WHERE，看索引用上了哪几列"></leftmost-lab>
 
 **范围查询的影响**：
 ```sql
@@ -414,22 +374,7 @@ WHERE b = 2 AND c = 3                  ❌ 索引 (a,b,c) 缺最左列
 
 **三个并发问题**：
 
-```text
-脏读：事务 A 读到了事务 B 未提交的数据
-  B: UPDATE account SET balance = 200 WHERE id = 1  (未提交)
-  A: SELECT balance FROM account WHERE id = 1       → 读到 200
-  B: ROLLBACK                                       → 200 是脏数据
-
-不可重复读：事务 A 两次读同一行，结果不同（被其他事务修改）
-  A: SELECT balance FROM account WHERE id = 1       → 100
-  B: UPDATE account SET balance = 200 WHERE id = 1; COMMIT
-  A: SELECT balance FROM account WHERE id = 1       → 200（不可重复读）
-
-幻读：事务 A 两次范围查询，结果行数不同（被其他事务插入/删除）
-  A: SELECT * FROM orders WHERE status = 'paid'     → 10 行
-  B: INSERT INTO orders ...; COMMIT
-  A: SELECT * FROM orders WHERE status = 'paid'     → 11 行（幻读）
-```
+<isolation-figure caption="脏读、不可重复读、幻读：同样是读到了不该读的，差别在箭头插在哪一步"></isolation-figure>
 
 #### MySQL 默认隔离级别：可重复读（RR）
 
@@ -536,28 +481,11 @@ InnoDB 为每行数据自动添加三个隐藏字段：
 | DB_ROLL_PTR | 7 字节 | 回滚指针，指向 undo log 中的旧版本 |
 | DB_ROW_ID | 6 字节 | 隐藏自增 rowid（没有主键时使用） |
 
-```text
-行数据：
-┌─────────┬─────────────┬──────────────┬──────────────┐
-│ 业务字段  │ DB_TRX_ID   │ DB_ROLL_PTR  │ DB_ROW_ID    │
-│ name,age │ 修改事务 ID  │ 指向旧版本    │ 隐藏主键      │
-└─────────┴─────────────┴──────────────┴──────────────┘
-```
-
 #### Undo Log 版本链
 
 每次 UPDATE 操作会把旧版本写入 undo log，并通过 DB_ROLL_PTR 形成版本链：
 
-```text
-当前行（最新版本）
-DB_TRX_ID = 100, DB_ROLL_PTR → undo log 版本
-                                 │
-                           trx_id = 80
-                           DB_ROLL_PTR → undo log 版本
-                                           │
-                                     trx_id = 50
-                                     DB_ROLL_PTR → NULL（最早版本）
-```
+<mvcc-figure caption="一条版本链加一张 Read View：从最新版本往回走，第一个可见的版本就是答案"></mvcc-figure>
 
 版本链从新到旧排列，每个节点记录了对应的事务 ID。MVCC 的 Read View 就是在这条链上找到"对当前事务可见"的版本。
 
@@ -576,21 +504,12 @@ Read View 在事务进行快照读时生成，包含四个核心字段：
 
 对于版本链中某个版本的 trx_id：
 
-```text
-1. trx_id == creator_trx_id
-   → 自己修改的，可见 ✅
-
-2. trx_id < min_trx_id
-   → 在 Read View 创建前已提交，可见 ✅
-
-3. trx_id >= max_trx_id
-   → 在 Read View 创建后才开始的事务，不可见 ❌
-
-4. min_trx_id <= trx_id < max_trx_id
-   → 判断 trx_id 是否在 m_ids 列表中：
-   - 在列表中 → 说明该事务在 Read View 创建时还未提交，不可见 ❌
-   - 不在列表中 → 说明该事务在 Read View 创建前已提交，可见 ✅
-```
+1. `trx_id == creator_trx_id` → 自己改的，可见 ✅
+2. `trx_id < min_trx_id` → Read View 创建之前就提交了，可见 ✅
+3. `trx_id >= max_trx_id` → Read View 创建之后才开始的事务，不可见 ❌
+4. `min_trx_id <= trx_id < max_trx_id` → 看 `trx_id` 在不在 `m_ids` 里：
+   - 在列表里 → 生成 Read View 时它还没提交，不可见 ❌
+   - 不在列表里 → 生成 Read View 时它已经提交了，可见 ✅
 
 如果当前版本不可见，就顺着 DB_ROLL_PTR 找更早的版本，直到找到可见的版本或版本链结束。
 
@@ -773,26 +692,26 @@ SELECT * FROM user WHERE id = 5 FOR UPDATE;
 
 #### 行锁加锁规则总结（RR 隔离级别）
 
-```text
-1. 原则1：加锁的基本单位是 Next-Key Lock（左开右闭）
-2. 原则2：查找过程中访问的对象不能释放锁
-3. 优化1：索引上的等值查询，命中唯一索引 → Next-Key Lock 退化为 Record Lock
-4. 优化2：索引上的等值查询，未命中 → Next-Key Lock 退化为 Gap Lock
-5. 优化3：索引上的范围查询 → 不优化，正常 Next-Key Lock
-```
+1. **原则一**：加锁的基本单位是 Next-Key Lock（左开右闭）。
+2. **原则二**：查找过程中访问到的对象，锁不能提前释放。
+3. **优化一**：索引上的等值查询，命中唯一索引 → Next-Key Lock 退化为 Record Lock。
+4. **优化二**：索引上的等值查询，未命中 → Next-Key Lock 退化为 Gap Lock。
+5. **优化三**：索引上的范围查询 → 不优化，正常加 Next-Key Lock。
 
 ```sql
 -- 示例：id 是唯一索引，现有值 5, 10, 15
 
--- 等值查询命中唯一索引 → 记录锁（只锁 id=10 这一行）
+-- 等值查询命中唯一索引 → 记录锁（只锁 id=10 这一条）
 SELECT * FROM t WHERE id = 10 FOR UPDATE;
 
--- 等值查询未命中 → 间隙锁（锁住 (5, 10) 和 (10, 15) 两个间隙）
+-- 等值查询未命中 → 间隙锁（锁住 12 会落进去的那个间隙 (10, 15)）
 SELECT * FROM t WHERE id = 12 FOR UPDATE;
 
--- 范围查询 → Next-Key Lock（锁住 (5, 10] 区间）
+-- 范围查询 → Next-Key Lock（(5, 10] 和 (10, 15]：扫描会锁到第一个不满足条件的记录 15 为止）
 SELECT * FROM t WHERE id > 5 AND id <= 10 FOR UPDATE;
 ```
+
+<lock-lab caption="同样几条语句，换成数轴看锁住了哪一段"></lock-lab>
 
 #### 共享锁（S）vs 排他锁（X）
 
@@ -800,12 +719,6 @@ SELECT * FROM t WHERE id > 5 AND id <= 10 FOR UPDATE;
 |--------|---------|---------|
 | 共享锁（S） | SELECT ... LOCK IN SHARE MODE | S-S 兼容，S-X 不兼容 |
 | 排他锁（X） | SELECT ... FOR UPDATE / INSERT / UPDATE / DELETE | X-S 不兼容，X-X 不兼容 |
-
-```text
-       S    X
-S     兼容  不兼容
-X     不兼容 不兼容
-```
 
 #### 意向锁（IS / IX）
 
@@ -816,13 +729,12 @@ X     不兼容 不兼容
 
 **作用**：快速判断表中是否有行锁。如果要对表加表级 X 锁，只需检查有没有 IS/IX 锁，不需要逐行检查。
 
-```text
-       IS   IX   S    X
-IS    兼容  兼容  兼容  不兼容
-IX    兼容  兼容  不兼容 不兼容
-S     兼容  不兼容 兼容  不兼容
-X     不兼容 不兼容 不兼容 不兼容
-```
+|      | IS   | IX   | S    | X    |
+| ---- | ---- | ---- | ---- | ---- |
+| IS   | 兼容 | 兼容 | 兼容 | 不兼容 |
+| IX   | 兼容 | 兼容 | 不兼容 | 不兼容 |
+| S    | 兼容 | 不兼容 | 兼容 | 不兼容 |
+| X    | 不兼容 | 不兼容 | 不兼容 | 不兼容 |
 
 #### 死锁的产生与排查
 
@@ -951,18 +863,7 @@ InnoDB 有三种关键日志，各司其职：
 
 **WAL（Write-Ahead Logging）**：修改数据时，先写 redo log 到磁盘，再慢慢把脏页刷盘。这样即使 MySQL 进程崩溃，重启后也能通过 redo log 重做已提交事务的修改。
 
-```text
-redo log 结构（环形缓冲区，固定大小）：
-
-  ┌─────────────────────────────────────────┐
-  │  已写入磁盘  │  正在写入  │  空闲可用  │
-  └─────────────────────────────────────────┘
-  ↑ write pos      ↑ checkpoint
-  （写入点，顺时针推进）  （擦除点，前面的可覆盖）
-
-  write pos 到 checkpoint 之间的空间 = 可用空间
-  如果写满，需要等 checkpoint 推进（刷脏页腾出空间）
-```
+<redo-ring-figure caption="redo log 是一圈固定大小的环，write pos 追着 checkpoint 跑"></redo-ring-figure>
 
 **redo log 文件状态**：
 - `exists`：文件存在且有效
@@ -1008,17 +909,7 @@ innodb_flush_log_at_trx_commit 参数：
 
 当同时开启 redo log 和 binlog 时，MySQL 用两阶段提交保证两者的一致性：
 
-```text
-事务提交流程：
-1. Prepare 阶段：redo log 写入，标记为 prepare 状态
-2. binlog 写入磁盘
-3. Commit 阶段：redo log 标记为 commit 状态
-
-崩溃恢复时：
-- redo log 是 commit → 直接提交 ✅
-- redo log 是 prepare + binlog 完整 → 提交 ✅
-- redo log 是 prepare + binlog 不完整 → 回滚 ❌
-```
+<commit-figure caption="两阶段提交：两个崩溃点，三条恢复判定"></commit-figure>
 
 **为什么需要两阶段提交？**
 
