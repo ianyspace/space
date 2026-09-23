@@ -100,7 +100,7 @@ const STEPS = [
     a: { text: '执行完毕，释放锁', acting: true },
     b: { text: '被唤醒，重新竞争' },
     monitor: { owner: '空闲', entry: [], wait: [] },
-    msg: 'A 退出同步块释放锁，JVM 唤醒 EntryList 里的 B 去重新竞争 —— 又回到第一章那个 BLOCKED → RUNNABLE 的故事。',
+    msg: 'A 退出同步块释放锁，JVM 唤醒 EntryList 里的 B 去重新竞争 —— 又回到「线程基础」那个 BLOCKED → RUNNABLE 的故事。',
   },
   {
     mw: 'heavy',
@@ -295,7 +295,7 @@ const LockUpgradeFigure = function ({ caption = '' }) {
       <figcaption className={cx('luf-hint')}>
         对比记忆：偏向锁 = 无竞争时零开销；轻量级锁 = 低竞争时自旋（费 CPU 但不挂起）；
         重量级锁 = 高竞争时阻塞（内核态切换但不耗 CPU）。JDK 15+ 已默认禁用偏向锁，
-        JDK 18+ 彻底移除 —— 面试被追问时这是加分项。
+        JDK 18+ 彻底移除 —— 被追问时这是加分项。
       </figcaption>
     </figure>
   );

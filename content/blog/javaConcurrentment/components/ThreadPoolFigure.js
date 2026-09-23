@@ -13,7 +13,7 @@ const CORE = 2;
 const QUEUE_CAP = 2;
 const EXTRA = 2; // maximumPoolSize = CORE + EXTRA = 4
 
-const IDLE_MSG = '连点「提交任务」：前 2 个建核心线程，第 3、4 个入队，第 5、6 个才会建非核心线程，第 7 个被拒绝 —— 这就是面试必考的顺序。';
+const IDLE_MSG = '连点「提交任务」：前 2 个建核心线程，第 3、4 个入队，第 5、6 个才会建非核心线程，第 7 个被拒绝 —— 这就是问答必考的顺序。';
 
 /**
  * Submission-decision simulator. The counterintuitive part of the workflow is

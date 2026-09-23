@@ -8,9 +8,9 @@ relative: false
 # cover: /blog/template/cover.svg   # 需要封面时取消注释，并把 cover.svg 放进本目录，路径里的目录名要和文章目录一致
 ---
 
-## 第一章：数据类型与变量
+## 数据类型与变量
 
-### 1.1 基础概念
+### 基础概念
 
 Java 的数据类型分为两大类：**基本类型（Primitive）** 和 **引用类型（Reference）**。
 
@@ -27,9 +27,9 @@ Java 的数据类型分为两大类：**基本类型（Primitive）** 和 **引�
 | boolean | JVM 未明确规定 | false | true / false |
 | char | 2 字节 | '\u0000' | 0 ~ 65535（Unicode） |
 
-> **面试加分点**：boolean 在 JVM 中用 int 代替（4 字节），在数组中用 byte 代替（1 字节）。HotSpot 没有专门为 boolean 设计的字节码指令。
+> **问答加分点**：boolean 在 JVM 中用 int 代替（4 字节），在数组中用 byte 代替（1 字节）。HotSpot 没有专门为 boolean 设计的字节码指令。
 
-### 1.2 包装类与自动装箱/拆箱
+### 包装类与自动装箱/拆箱
 
 Java 为每个基本类型提供了对应的包装类：
 
@@ -62,7 +62,7 @@ System.out.println(c == d);      // false（超出缓存，新建对象）
 
 **原理**：`IntegerCache` 内部维护一个 `Integer[] cache`，默认范围 -128 ~ 127，可通过 JVM 参数 `-XX:AutoBoxCacheMax=<size>` 调整上限。
 
-### 1.3 String 深入
+### String 深入
 
 #### 不可变性
 
@@ -97,11 +97,11 @@ System.out.println(s1 == s4);  // true
 
 **原理**：编译器会把 `"a" + "b" + "c"` 优化为 `new StringBuilder().append("a").append("b").append("c").toString()`。但**循环内拼接**不会自动优化，应手动使用 StringBuilder。
 
-### 1.4 面试实战（精讲及回答）
+### 问答实战（精讲及回答）
 
-#### 题目 1 ⭐⭐：`Integer a = 127; Integer b = 127; a == b 结果是什么？如果是 128 呢？`
+#### ⭐⭐ `Integer a = 127; Integer b = 127; a == b 结果是什么？如果是 128 呢？`
 
-**面试官意图**：考察对 Integer 缓存池机制和自动装箱的理解深度。
+**提问意图**：考察对 Integer 缓存池机制和自动装箱的理解深度。
 
 **推荐回答**：
 
@@ -117,9 +117,9 @@ System.out.println(s1 == s4);  // true
 
 ---
 
-#### 题目 2 ⭐⭐：`String s = new String("abc")` 创建了几个对象？
+#### ⭐⭐ `String s = new String("abc")` 创建了几个对象？
 
-**面试官意图**：考察对字符串常量池和堆内存分配的理解。
+**提问意图**：考察对字符串常量池和堆内存分配的理解。
 
 **推荐回答**：
 
@@ -134,9 +134,9 @@ System.out.println(s1 == s4);  // true
 
 ---
 
-#### 题目 3 ⭐：String、StringBuilder、StringBuffer 的区别？
+#### ⭐ String、StringBuilder、StringBuffer 的区别？
 
-**面试官意图**：基础功底 + 线程安全意识。
+**提问意图**：基础功底 + 线程安全意识。
 
 **推荐回答**：
 
@@ -148,7 +148,7 @@ System.out.println(s1 == s4);  // true
 >
 > 实际开发中，绝大多数场景用 StringBuilder 就够了，因为字符串拼接通常在单线程方法内完成。
 
-### 1.5 面试速查表
+### 问答速查表
 
 | 考点 | 一句话答案 |
 |------|-----------|
@@ -163,9 +163,9 @@ System.out.println(s1 == s4);  // true
 
 ---
 
-## 第二章：面向对象
+## 面向对象
 
-### 2.1 基础概念
+### 基础概念
 
 面向对象三大特征：**封装、继承、多态**。
 
@@ -173,7 +173,7 @@ System.out.println(s1 == s4);  // true
 - **继承**：子类继承父类属性和方法，Java 单继承
 - **多态**：同一方法调用，运行时根据实际类型执行不同逻辑（核心是方法重写 + 向上转型）
 
-### 2.2 原理深入
+### 原理深入
 
 #### 抽象类 vs 接口
 
@@ -228,11 +228,11 @@ public native int hashCode();
 // 深拷贝方式：手动递归克隆、序列化反序列化、拷贝构造函数
 ```
 
-### 2.3 面试实战（精讲及回答）
+### 问答实战（精讲及回答）
 
-#### 题目 1 ⭐⭐：抽象类和接口的区别？什么时候用哪个？
+#### ⭐⭐ 抽象类和接口的区别？什么时候用哪个？
 
-**面试官意图**：考察 OOP 设计能力和 Java 8+ 接口变化的了解程度。
+**提问意图**：考察 OOP 设计能力和 Java 8+ 接口变化的了解程度。
 
 **推荐回答**：
 
@@ -244,9 +244,9 @@ public native int hashCode();
 
 ---
 
-#### 题目 2 ⭐⭐：重写 equals 为什么要重写 hashCode？
+#### ⭐⭐ 重写 equals 为什么要重写 hashCode？
 
-**面试官意图**：考察对哈希表底层原理的理解。
+**提问意图**：考察对哈希表底层原理的理解。
 
 **推荐回答**：
 
@@ -256,7 +256,7 @@ public native int hashCode();
 >
 > 反过来，hashCode 相同的对象 equals 不一定相同，这叫哈希冲突，是正常的，HashMap 通过链表或红黑树来处理冲突。
 
-### 2.4 面试速查表
+### 问答速查表
 
 | 考点 | 一句话答案 |
 |------|-----------|
@@ -271,9 +271,9 @@ public native int hashCode();
 
 ---
 
-## 第三章：集合框架（核心重点）
+## 集合框架（核心重点）
 
-### 3.1 基础概念
+### 基础概念
 
 Java 集合框架的两大体系：
 
@@ -298,7 +298,7 @@ Map（存储键值对）
 └── Hashtable（线程安全，已过时）
 ```
 
-### 3.2 原理深入
+### 原理深入
 
 #### ArrayList vs LinkedList
 
@@ -316,7 +316,7 @@ Map（存储键值对）
 2. 扩容时新容量 = 旧容量的 1.5 倍（`oldCapacity + (oldCapacity >> 1)`）
 3. 通过 `Arrays.copyOf()` 将旧数组元素复制到新数组
 
-#### ⭐⭐ HashMap 深度剖析（面试最高频）
+#### ⭐⭐ HashMap 深度剖析（问答最高频）
 
 **JDK 1.8 实现：数组 + 链表 + 红黑树**
 
@@ -383,11 +383,11 @@ Node 结构：
 
 HashSet 内部维护一个 HashMap，元素作为 key 存入，value 统一用一个叫 PRESENT 的 Object 常量。所以 HashSet 的底层就是 HashMap。
 
-### 3.3 面试实战（精讲及回答）
+### 问答实战（精讲及回答）
 
-#### 题目 1 ⭐⭐⭐：说一下 HashMap 的 put 流程
+#### ⭐⭐⭐ 说一下 HashMap 的 put 流程
 
-**面试官意图**：这是 Java 基础中最高频的题，考察对 HashMap 底层实现的掌握深度。
+**提问意图**：这是 Java 基础中最高频的题，考察对 HashMap 底层实现的掌握深度。
 
 **推荐回答**：
 
@@ -410,9 +410,9 @@ HashSet 内部维护一个 HashMap，元素作为 key 存入，value 统一用�
 
 ---
 
-#### 题目 2 ⭐⭐：ConcurrentHashMap 如何实现线程安全？
+#### ⭐⭐ ConcurrentHashMap 如何实现线程安全？
 
-**面试官意图**：考察对并发容器的理解，以及对 JDK 版本演进的了解。
+**提问意图**：考察对并发容器的理解，以及对 JDK 版本演进的了解。
 
 **推荐回答**：
 
@@ -424,7 +424,7 @@ HashSet 内部维护一个 HashMap，元素作为 key 存入，value 统一用�
 >
 > 另外 1.8 的 size 计算也有意思，借鉴了 LongAdder 的思想，用一个 baseCount 加一个 CounterCell 数组来分段计数，最后汇总，避免了全局锁。
 
-### 3.4 面试速查表
+### 问答速查表
 
 | 考点 | 一句话答案 |
 |------|-----------|
@@ -444,9 +444,9 @@ HashSet 内部维护一个 HashMap，元素作为 key 存入，value 统一用�
 
 ---
 
-## 第四章：异常体系
+## 异常体系
 
-### 4.1 基础概念
+### 基础概念
 
 ```
 Throwable
@@ -467,7 +467,7 @@ Throwable
         └── ConcurrentModificationException
 ```
 
-### 4.2 原理深入
+### 原理深入
 
 #### 受检异常 vs 非受检异常
 
@@ -521,11 +521,11 @@ public class BusinessException extends RuntimeException {
 - 带错误码，方便上层区分和国际化
 - 不要吞异常（空 catch 块），至少记录日志
 
-### 4.3 面试实战（精讲及回答）
+### 问答实战（精讲及回答）
 
-#### 题目 1 ⭐：Error 和 Exception 的区别？
+#### ⭐ Error 和 Exception 的区别？
 
-**面试官意图**：考察异常体系的基本理解。
+**提问意图**：考察异常体系的基本理解。
 
 **推荐回答**：
 
@@ -539,9 +539,9 @@ public class BusinessException extends RuntimeException {
 
 ---
 
-#### 题目 2 ⭐：try-catch-finally 中 finally 一定执行吗？
+#### ⭐ try-catch-finally 中 finally 一定执行吗？
 
-**面试官意图**：考察对 finally 语义的精确理解。
+**提问意图**：考察对 finally 语义的精确理解。
 
 **推荐回答**：
 
@@ -551,7 +551,7 @@ public class BusinessException extends RuntimeException {
 >
 > 不执行的情况有两种：一是 try 或 catch 中调用了 System.exit()，JVM 直接退出了；二是执行到 try 块时线程被杀死或 JVM 崩溃。另外如果 try 块本身就没进入（比如方法提前 return），finally 也不会执行。
 
-### 4.4 面试速查表
+### 问答速查表
 
 | 考点 | 一句话答案 |
 |------|-----------|
@@ -565,9 +565,9 @@ public class BusinessException extends RuntimeException {
 
 ---
 
-## 第五章：泛型
+## 泛型
 
-### 5.1 基础概念
+### 基础概念
 
 泛型是 Java 5 引入的类型参数化机制，让类、接口、方法可以操作任意类型，同时保持编译期的类型安全。
 
@@ -585,7 +585,7 @@ public <T> T getFirst(List<T> list) {
 }
 ```
 
-### 5.2 原理深入
+### 原理深入
 
 #### 类型擦除
 
@@ -634,11 +634,11 @@ public static <T> void copy(List<? extends T> src, List<? super T> dest) {
 - `? extends T`：只知道是 T 的子类，读出来可以当 T 用，但不知道具体是哪个子类所以不能写入
 - `? super T`：只知道是 T 的父类，可以安全写入 T 或 T 的子类，但读出来只能当 Object 用
 
-### 5.3 面试实战（精讲及回答）
+### 问答实战（精讲及回答）
 
-#### 题目 1 ⭐⭐：什么是类型擦除？有什么影响？
+#### ⭐⭐ 什么是类型擦除？有什么影响？
 
-**面试官意图**：考察对泛型底层实现的理解，而不是停留在会用泛型。
+**提问意图**：考察对泛型底层实现的理解，而不是停留在会用泛型。
 
 **推荐回答**：
 
@@ -650,9 +650,9 @@ public static <T> void copy(List<? extends T> src, List<? super T> dest) {
 
 ---
 
-#### 题目 2 ⭐：`? extends T` 和 `? super T` 的区别？
+#### ⭐ `? extends T` 和 `? super T` 的区别？
 
-**面试官意图**：考察泛型通配符和 PECS 原则。
+**提问意图**：考察泛型通配符和 PECS 原则。
 
 **推荐回答**：
 
@@ -664,7 +664,7 @@ public static <T> void copy(List<? extends T> src, List<? super T> dest) {
 >
 > 记忆方式就是 PECS：Producer Extends, Consumer Super。Collections.copy 方法的签名就是这个原则的经典应用。
 
-### 5.4 面试速查表
+### 问答速查表
 
 | 考点 | 一句话答案 |
 |------|-----------|
@@ -678,9 +678,9 @@ public static <T> void copy(List<? extends T> src, List<? super T> dest) {
 
 ---
 
-## 第六章：IO 与 NIO
+## IO 与 NIO
 
-### 6.1 基础概念
+### 基础概念
 
 Java IO 按数据单位分为**字节流**和**字符流**，按方向分为**输入流**和**输出流**。
 
@@ -700,7 +700,7 @@ BufferedReader reader = new BufferedReader(
 );
 ```
 
-### 6.2 原理深入
+### 原理深入
 
 #### BIO vs NIO vs AIO
 
@@ -757,11 +757,11 @@ public class User implements Serializable {
 
 **serialVersionUID 的作用**：序列化时写入版本号，反序列化时校验。如果类结构变了但 serialVersionUID 相同，可以兼容反序列化（部分字段可能丢失）。如果不声明，JVM 会根据类结构自动生成，类一改就变了，导致旧数据反序列化失败。
 
-### 6.3 面试实战（精讲及回答）
+### 问答实战（精讲及回答）
 
-#### 题目 1 ⭐：BIO、NIO、AIO 的区别？
+#### ⭐ BIO、NIO、AIO 的区别？
 
-**面试官意图**：考察对 Java IO 模型演进的理解，也是 Netty 话题的引子。
+**提问意图**：考察对 Java IO 模型演进的理解，也是 Netty 话题的引子。
 
 **推荐回答**：
 
@@ -773,7 +773,7 @@ public class User implements Serializable {
 >
 > 实际项目中，Netty 框架基于 NIO 封装，解决了 NIO 原生 API 复杂、epoll 空轮询 bug 等问题，是目前主流的选择。
 
-### 6.4 面试速查表
+### 问答速查表
 
 | 考点 | 一句话答案 |
 |------|-----------|
@@ -789,15 +789,15 @@ public class User implements Serializable {
 
 ---
 
-## 第七章：反射与注解
+## 反射与注解
 
-### 7.1 基础概念
+### 基础概念
 
 **反射**：在运行时动态获取类的信息（字段、方法、构造器）并操作对象，无需在编译期知道类的具体类型。
 
 **注解（Annotation）**：代码的元数据标记，本身不影响程序逻辑，但可以被编译器或框架在编译期/运行时读取和处理。
 
-### 7.2 原理深入
+### 原理深入
 
 #### 获取 Class 对象的三种方式
 
@@ -881,11 +881,11 @@ if (method.isAnnotationPresent(MyAnnotation.class)) {
 - **Spring AOP**：扫描 @Aspect/@Before/@After 注解 → JDK 动态代理或 CGLIB 生成代理类
 - **MyBatis**：扫描 Mapper 接口的 @Select/@Insert 注解 → 反射调用方法 → 映射 SQL 结果
 
-### 7.3 面试实战（精讲及回答）
+### 问答实战（精讲及回答）
 
-#### 题目 1 ⭐⭐：反射的原理？有什么性能问题？
+#### ⭐⭐ 反射的原理？有什么性能问题？
 
-**面试官意图**：考察是否只停留在会用反射，还是理解底层机制和代价。
+**提问意图**：考察是否只停留在会用反射，还是理解底层机制和代价。
 
 **推荐回答**：
 
@@ -897,9 +897,9 @@ if (method.isAnnotationPresent(MyAnnotation.class)) {
 
 ---
 
-#### 题目 2 ⭐：反射在框架中的应用？
+#### ⭐ 反射在框架中的应用？
 
-**面试官意图**：考察理论联系实际的能力。
+**提问意图**：考察理论联系实际的能力。
 
 **推荐回答**：
 
@@ -911,7 +911,7 @@ if (method.isAnnotationPresent(MyAnnotation.class)) {
 >
 > 简单来说，注解告诉框架"做什么"，反射让框架"能做到"。没有反射和注解，就没有 Java 生态中这些声明式的编程体验。
 
-### 7.4 面试速查表
+### 问答速查表
 
 | 考点 | 一句话答案 |
 |------|-----------|
@@ -926,13 +926,13 @@ if (method.isAnnotationPresent(MyAnnotation.class)) {
 
 ---
 
-## 第八章：Java 8+ 新特性
+## Java 8+ 新特性
 
-### 8.1 基础概念
+### 基础概念
 
 Java 8 是 Java 历史上最重要的一次升级，引入了函数式编程、Stream API、新日期 API 等革命性特性。
 
-### 8.2 原理深入
+### 原理深入
 
 #### Lambda 表达式
 
@@ -1022,11 +1022,11 @@ CompletableFuture.supplyAsync(() -> fetchUser(id))        // 异步获取用户
     .thenAccept(count -> System.out.println("订单数：" + count)); // 消费结果
 ```
 
-### 8.3 面试实战（精讲及回答）
+### 问答实战（精讲及回答）
 
-#### 题目 1 ⭐：Lambda 表达式的本质是什么？
+#### ⭐ Lambda 表达式的本质是什么？
 
-**面试官意图**：区分会用 Lambda 和理解 Lambda 的候选人。
+**提问意图**：区分会用 Lambda 和理解 Lambda 的候选人。
 
 **推荐回答**：
 
@@ -1038,9 +1038,9 @@ CompletableFuture.supplyAsync(() -> fetchUser(id))        // 异步获取用户
 
 ---
 
-#### 题目 2 ⭐：Stream API 的中间操作和终端操作？
+#### ⭐ Stream API 的中间操作和终端操作？
 
-**面试官意图**：考察对 Stream 惰性求值模型的理解。
+**提问意图**：考察对 Stream 惰性求值模型的理解。
 
 **推荐回答**：
 
@@ -1052,7 +1052,7 @@ CompletableFuture.supplyAsync(() -> fetchUser(id))        // 异步获取用户
 >
 > 惰性求值的好处是可以做流水线优化。比如 filter 后接 limit(5)，一旦满足 5 个元素就提前终止，不需要处理全部数据。再比如 map 和 filter 可以合并，减少遍历次数。
 
-### 8.4 面试速查表
+### 问答速查表
 
 | 考点 | 一句话答案 |
 |------|-----------|
@@ -1068,13 +1068,13 @@ CompletableFuture.supplyAsync(() -> fetchUser(id))        // 异步获取用户
 
 ---
 
-## 第九章：关键字与语法细节
+## 关键字与语法细节
 
-### 9.1 基础概念
+### 基础概念
 
-Java 中有一些看似简单但面试高频考察的关键字和语法细节，需要精确理解。
+Java 中有一些看似简单但问答高频考察的关键字和语法细节，需要精确理解。
 
-### 9.2 原理深入
+### 原理深入
 
 #### final / finally / finalize
 
@@ -1105,7 +1105,7 @@ list = new ArrayList<>(); // ❌ 不能重新赋值引用
 
 #### Java 只有值传递
 
-这是面试中一个容易掉坑的点。**Java 的参数传递始终是值传递**：
+这是问答中一个容易掉坑的点。**Java 的参数传递始终是值传递**：
 
 ```java
 // 基本类型：传递值的副本，修改不影响原值
@@ -1126,11 +1126,11 @@ void change(List<String> list) {
 - **不保证原子性**（`i++` 仍然不安全，用 AtomicInteger）
 - 底层通过内存屏障（Memory Barrier）实现
 
-### 9.3 面试实战（精讲及回答）
+### 问答实战（精讲及回答）
 
-#### 题目 1 ⭐：Java 是值传递还是引用传递？
+#### ⭐ Java 是值传递还是引用传递？
 
-**面试官意图**：高频陷阱题，很多人直觉上觉得是引用传递。
+**提问意图**：高频陷阱题，很多人直觉上觉得是引用传递。
 
 **推荐回答**：
 
@@ -1144,9 +1144,9 @@ void change(List<String> list) {
 
 ---
 
-#### 题目 2 ⭐：volatile 的作用？和 synchronized 的区别？
+#### ⭐ volatile 的作用？和 synchronized 的区别？
 
-**面试官意图**：考察对并发编程基础概念的理解。
+**提问意图**：考察对并发编程基础概念的理解。
 
 **推荐回答**：
 
@@ -1158,7 +1158,7 @@ void change(List<String> list) {
 >
 > 和 synchronized 的区别：volatile 只能修饰变量，synchronized 可以修饰方法和代码块；volatile 不保证原子性，比如 volatile int 做 i++ 操作仍然不安全，synchronized 保证原子性；volatile 不会阻塞，synchronized 会阻塞。简单说 volatile 是轻量级的可见性保证，synchronized 是重量级的互斥锁。
 
-### 9.4 面试速查表
+### 问答速查表
 
 | 考点 | 一句话答案 |
 |------|-----------|
@@ -1175,13 +1175,13 @@ void change(List<String> list) {
 
 ---
 
-## 第十章：设计模式（Java 基础常考）
+## 设计模式（Java 基础常考）
 
-### 10.1 基础概念
+### 基础概念
 
-设计模式是前人总结的、经过反复验证的面向对象设计经验。初中级面试最常考的是**单例、工厂、代理、观察者、模板方法、策略**这六种。
+设计模式是前人总结的、经过反复验证的面向对象设计经验。初中级问答最常考的是**单例、工厂、代理、观察者、模板方法、策略**这六种。
 
-### 10.2 原理深入
+### 原理深入
 
 #### 单例模式（5 种写法对比）
 
@@ -1277,7 +1277,7 @@ public class CircleFactory implements ShapeFactory {
 
 **抽象工厂** — 创建一系列相关产品（产品族）
 
-#### 代理模式（面试高频）
+#### 代理模式（问答高频）
 
 **静态代理** — 编译时确定代理关系
 ```java
@@ -1356,11 +1356,11 @@ public class OrderService {
 ```
 应用：消除大量 if-else，Spring 中配合 Map 注入多种实现
 
-### 10.3 面试实战（精讲及回答）
+### 问答实战（精讲及回答）
 
-#### 题目 1 ⭐⭐：单例模式双重检查锁定为什么要用 volatile？
+#### ⭐⭐ 单例模式双重检查锁定为什么要用 volatile？
 
-**面试官意图**：考察对并发编程和指令重排的深度理解，区分"背过代码"和"理解原理"。
+**提问意图**：考察对并发编程和指令重排的深度理解，区分"背过代码"和"理解原理"。
 
 **推荐回答**：
 
@@ -1375,9 +1375,9 @@ public class OrderService {
 
 ---
 
-#### 题目 2 ⭐⭐：JDK 动态代理和 CGLIB 的区别？
+#### ⭐⭐ JDK 动态代理和 CGLIB 的区别？
 
-**面试官意图**：Spring AOP 的核心，面试高频。
+**提问意图**：Spring AOP 的核心，问答高频。
 
 **推荐回答**：
 
@@ -1389,7 +1389,7 @@ public class OrderService {
 >
 > Spring AOP 的策略是：如果目标类实现了接口，默认用 JDK 动态代理；如果没有接口，就用 CGLIB。Spring Boot 2.x 开始默认改为 CGLIB，因为很多类不一定都实现了接口。性能方面，CGLIB 生成代理类的时间稍长，但方法调用速度比 JDK 动态代理快。
 
-### 10.4 面试速查表
+### 问答速查表
 
 | 考点 | 一句话答案 |
 |------|-----------|
@@ -1408,7 +1408,7 @@ public class OrderService {
 
 ---
 
-## 全书面试速查总表
+## 全书问答速查总表
 
 | 章节 | 最高频考点 |
 |------|-----------|
