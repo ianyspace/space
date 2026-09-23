@@ -28,7 +28,6 @@ module.exports = {
     tfootContent: 'Welcome to anypace',
     desc: 'A mysterious little space to record knowledge and life',
     title: 'anyspace',
-    tRead: 'read amount',
     tResume: 'My Resume',
     tThemeSetting: 'Theme Settings',
     tListStyle: 'List style',

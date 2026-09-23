@@ -26,7 +26,6 @@ module.exports = {
     tfootContent: '欢迎来到anyspace',
     desc: '一个记录知识和生活的神秘小空间',
     title: 'anyspace',
-    tRead: '阅读量',
     tResume: '个人简历',
     tThemeSetting: '主题设置',
     tListStyle: '列表样式',

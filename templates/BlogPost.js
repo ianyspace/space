@@ -130,16 +130,6 @@ const BlogPostTemplate = function ({
             >
                 {formatDate(frontmatter.date)}
                 {` • ${formatReadingTime(post.timeToRead)}`}
-
-                <span
-                    style={{ marginLeft: '20px', color: 'var(--tag-bg)' }}
-                    id="leancloud-visitors"
-                    className="leancloud_visitors"
-                    data-flag-title={post.slug}
-                >
-                    <span>{`${formatMessage('tRead')} : `}</span>
-                    <span className="leancloud-visitors-count">•••</span>
-                </span>
             </p>
 
             {tags}
