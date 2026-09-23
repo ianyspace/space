@@ -285,18 +285,16 @@ pre[data-line] {
     border-left: 0.25em solid #ffa7c4;
 }
 
+// 代码块原本沿用 Gatsby 的「出血」版式：左右各 -1.3125rem，正好抵消卡片
+// 1.3125rem 的内边距，让深色底铺满卡片宽度。代价是正文里段落、标题的左边缘在 21px，
+// 代码块却顶到卡片边上（0），左边缘对不齐。这里取消出血，代码块与段落、标题共用
+// 同一条左边缘；深色块不再顶到卡片边，小屏也就没必要再把圆角抹平了。
 .gatsby-highlight {
     margin-bottom: 1.75rem;
-    margin-left: -1.3125rem;
-    margin-right: -1.3125rem;
     border-radius: 10px;
     background: $code-bg;
     -webkit-overflow-scrolling: touch;
     overflow: auto;
-
-    @media (max-width: 672px) {
-        border-radius: 0;
-    }
 
     pre[class*='language-'] {
         float: left;

@@ -35,6 +35,33 @@ h4 {
     font-family: var(--systemFont);
 }
 
+// Markdown 列表：WordPress 主题只给 ul/ol 设了 `margin-left: 0`，符号按
+// `list-style-position: outside` 挂在内容盒左侧 —— 于是圆点、序号都跑到正文左边缘
+// 之外（圆点约 5px、个位数序号约 13px），列表看上去比标题、段落更靠左。
+// 这里把符号自己的宽度让出来（padding-left），符号左缘就落在正文左边缘上，
+// 列表文字只比正文缩进一个符号的宽度：圆点约 0.4em，个位数序号约 0.9em。
+// 两个值不同是没办法的事 —— 要让两种符号的左缘都对齐，就得各自让出各自的宽度。
+.css-post ul,
+.css-post ol {
+    margin-left: 0;
+    list-style-position: outside;
+}
+
+.css-post ul {
+    padding-left: 0.4em;
+}
+
+.css-post ol {
+    padding-left: 0.9em;
+}
+
+// 嵌套列表保留缩进。主题用的是 `li > ul` / `li > ol`（特异性 0,0,2），比上面的
+// `.css-post ul`（0,1,1）低，会被 `margin-left: 0` 盖掉，所以在这里显式写回来。
+.css-post li > ul,
+.css-post li > ol {
+    margin-left: 1.75rem;
+}
+
 img {
     margin-bottom: 0;
 }
