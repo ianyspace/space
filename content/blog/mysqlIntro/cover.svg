@@ -81,6 +81,6 @@
     <rect x="338" y="486" width="122" height="34" rx="17" fill="#ffffff" opacity="0.85" stroke="#8fa5e8"/>
     <text x="399" y="508" text-anchor="middle">索引不失效</text>
     <rect x="480" y="486" width="122" height="34" rx="17" fill="#ffffff" opacity="0.85" stroke="#8fa5e8"/>
-    <text x="541" y="508" text-anchor="middle">面试追问链</text>
+    <text x="541" y="508" text-anchor="middle">问答追问链</text>
   </g>
 </svg>
