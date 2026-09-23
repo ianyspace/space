@@ -10,6 +10,8 @@ module.exports = {
     tArticleOutline: 'Contents',
     tOpenOutline: 'Open article outline',
     tCloseOutline: 'Close article outline',
+    tCollapseOutline: 'Collapse outline',
+    tExpandOutline: 'Expand outline',
     tCatalog: 'All Tags',
     tTagGraphAria: 'Tag relation graph',
     tfTagGraphSummary: (count) => `${count} tag${count === 1 ? '' : 's'}`,

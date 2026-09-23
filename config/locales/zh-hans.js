@@ -9,6 +9,8 @@ module.exports = {
     tArticleOutline: '文章目录',
     tOpenOutline: '展开文章目录',
     tCloseOutline: '关闭文章目录',
+    tCollapseOutline: '收起目录',
+    tExpandOutline: '展开目录',
     tCatalog: '所有标签',
     tTagGraphAria: '标签关系图',
     tfTagGraphSummary: (count) => `共 ${count} 个标签`,

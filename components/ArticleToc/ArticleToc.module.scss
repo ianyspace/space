@@ -1,7 +1,29 @@
+// The rail's geometry lives in `styles/catalog.scss` (the global `.css-toc`
+// hook, because the outline HTML is injected through it too). Only the fold
+// state is the component's business — folded, the rail shrinks to a pill that
+// holds nothing but its heading. Naming `toc-rail` here also keeps the aside
+// from rendering a literal `undefined` in its class list.
+.toc-rail.toc-rail-collapsed {
+    width: max-content;
+    padding: 0;
+    border: 1px solid var(--hr);
+    border-radius: 999px;
+    background: var(--bg-article);
+    box-shadow: var(--bg-article-shadow);
+    -webkit-backdrop-filter: var(--article-backdrop);
+    backdrop-filter: var(--article-backdrop);
+
+    .toc-rail-heading {
+        margin: 0;
+        padding: 4px 6px 4px 14px;
+    }
+}
+
 .toc-rail-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 10px;
     margin: 0 0 10px;
     padding: 0 5px;
     color: var(--breadcrumbsTextColorActive);
@@ -11,6 +33,47 @@
     text-transform: uppercase;
 }
 
+.toc-rail-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+// Own scroll container, so folding the outline never drags the heading (and
+// its buttons) off screen. The cap leaves room for that heading inside the
+// rail's own `max-height`.
+.toc-rail-body {
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--textNormal) 18%, transparent) transparent;
+    transition: max-height 0.34s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease;
+
+    &::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--textNormal) 18%, transparent);
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        background: color-mix(in srgb, var(--pink) 55%, transparent);
+    }
+}
+
+.toc-rail-collapsed .toc-rail-body {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+}
+
+.toc-collapse,
 .toc-expand,
 .toc-close {
     display: grid;
@@ -41,8 +104,25 @@
     }
 }
 
+.toc-collapse,
 .toc-expand {
     font-size: 0;
+}
+
+.toc-collapse-icon {
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-top: 1.5px solid currentColor;
+    border-right: 1.5px solid currentColor;
+    // Points right while the outline is open ("push it away") and left once
+    // folded ("pull it back out").
+    transform: rotate(45deg);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.toc-rail-collapsed .toc-collapse-icon {
+    transform: rotate(-135deg);
 }
 
 .toc-expand-icon {
