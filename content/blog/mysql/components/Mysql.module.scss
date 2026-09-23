@@ -114,12 +114,38 @@
     padding: 2px 0;
 }
 
+// 图示用的是固定坐标系（viewBox 宽 780），整张图连同里面的字号一起随显示宽度等比缩放。
+// 正文卡片的可用宽度是 784 - 21×2 = 742px，所以宽屏下缩放约 0.95，基本等于 1:1。
+// 小屏上原本压到 480px —— 整张图只剩六成，图里 10.5px 的标签实际只有 6.5px，
+// 手机上「放不下」和「字太小」同时发生，两头不讨好。
+// 这里改成窄屏按设计尺寸显示，由本容器的 overflow-x 横向滑动：
+// 该滑就滑，但字号一定和桌面端一致，不会再被压小。
 .my-fig svg,
 .lab-fig svg {
     display: block;
-    min-width: 480px;
-    max-width: 100%;
+    width: 100%;
     height: auto;
+}
+
+@media (max-width: 783px) {
+    .my-fig svg,
+    .lab-fig svg {
+        width: 780px;
+    }
+
+    // 图比屏幕宽，右侧被切掉；标一句提示，免得看着像坏了。
+    .my-fig-head::after,
+    .lab-head::after {
+        content: '↔ 左右滑动看全图';
+        margin-left: auto;
+        padding: 1px 8px;
+        border: 1px solid var(--my-panel-border);
+        border-radius: 999px;
+        background: var(--my-panel);
+        color: var(--my-muted);
+        font-size: 12px;
+        white-space: nowrap;
+    }
 }
 
 // ------------------------------------------------------------ 互动实验室 ----
