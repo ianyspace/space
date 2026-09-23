@@ -1,4 +1,5 @@
 import ArchFigure from './ArchFigure';
+import BTreeFigure from './BTreeFigure';
 import IndexFigure from './IndexFigure';
 import IsolationFigure from './IsolationFigure';
 import MvccFigure from './MvccFigure';
@@ -20,6 +21,7 @@ import LockLab from './LockLab';
  */
 export default {
     'arch-figure': ArchFigure,
+    'btree-figure': BTreeFigure,
     'index-figure': IndexFigure,
     'isolation-figure': IsolationFigure,
     'mvcc-figure': MvccFigure,
