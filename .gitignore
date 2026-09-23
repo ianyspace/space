@@ -47,3 +47,9 @@ yarn-error.log*
 /public/blog/*/
 /lib/generated/
 /public/search-index.json
+
+# ----------------------------------------------------------- agent scratch dir
+# Working notes and one-off tools an agent leaves behind. Not part of the site,
+# and without this rule they sit in `git status` as untracked and are one
+# `git add .` away from being published with the blog.
+.workbuddy-ai/
