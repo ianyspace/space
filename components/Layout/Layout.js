@@ -13,14 +13,17 @@ import ThemeBackground from './ThemeBackground';
 
 import styles from './Layout.module.scss';
 
-// The bar reacts to a gesture, not to a pixel: it only moves after the page has
-// travelled this far in one direction. Without the threshold a single jittered
-// scroll event flipped it, and a trackpad's momentum kept flipping it back —
-// the bar spent the whole article going up and down.
-const BAR_HIDE_AFTER_PX = 24; // downward travel before it steps aside
-const BAR_SHOW_AFTER_PX = 16; // upward travel before it comes back
+// The bar reacts to a gesture, not to a scroll event: it only moves once the page
+// has travelled this far in one direction. A single wheel notch scrolls about
+// 100px, so any threshold below that reads as "the bar flips on every notch" —
+// these are deliberately above one notch, so one notch never moves it. Showing it
+// again also asks for more travel than hiding it did, since the annoying case is
+// the bar popping back in over a small upward readjustment.
+const BAR_HIDE_AFTER_PX = 240; // downward travel before it steps aside
+const BAR_SHOW_AFTER_PX = 320; // upward travel before it comes back
 // Above this the reader is still at the top of the page, where the bar always
-// belongs on screen.
+// belongs on screen. Travel is only counted once past it, so the bar actually
+// leaves somewhere around 440px down.
 const BAR_ALWAYS_VISIBLE_PX = 200;
 // The bar's own title only appears once the reader is past the article header.
 // Two thresholds rather than one, so hovering on the line does not make it blink.
