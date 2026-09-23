@@ -35,24 +35,21 @@ h4 {
     font-family: var(--systemFont);
 }
 
-// Markdown 列表：WordPress 主题只给 ul/ol 设了 `margin-left: 0`，符号按
-// `list-style-position: outside` 挂在内容盒左侧 —— 于是圆点、序号都跑到正文左边缘
-// 之外（圆点约 5px、个位数序号约 13px），列表看上去比标题、段落更靠左。
-// 这里把符号自己的宽度让出来（padding-left），符号左缘就落在正文左边缘上，
-// 列表文字只比正文缩进一个符号的宽度：圆点约 0.4em，个位数序号约 0.9em。
-// 两个值不同是没办法的事 —— 要让两种符号的左缘都对齐，就得各自让出各自的宽度。
+// Markdown 列表：主题只给 ul/ol 设了 `margin-left: 0`，符号按
+// `list-style-position: outside` 挂在内容盒左侧之外。麻烦的是浏览器给这个位置留的**不是
+// 符号自身的宽度**（Chrome 的规则，`list_marker.cc`）：
+//   圆点：留 `字体 ascent * 2/3 + 8px` —— Segoe UI 16px 下 ascent 17.27px，即约 19.5px；
+//   序号：留标记文本的宽度 —— 「1. 」约 16.5px。
+// 所以 padding-left 必须给到这么多，符号左缘才会落在正文左边缘上。给 1.25em（20px）
+// 对这两种符号都够：圆点左缘落在 0 附近，序号落在 3px 左右（略进一点，不会冒到外面）。
+// 换成 ascent 更大的字体也只是让符号往正文里挪一两像素，方向是安全的。
+// 列表文字随之比正文缩进一个符号位的宽度 —— 这是列表本来就该有的样子。
+// 嵌套列表（li > ul / li > ol）保留主题给的 1.75rem 缩进，否则看不出层级。
 .css-post ul,
 .css-post ol {
     margin-left: 0;
+    padding-left: 1.25em;
     list-style-position: outside;
-}
-
-.css-post ul {
-    padding-left: 0.4em;
-}
-
-.css-post ol {
-    padding-left: 0.9em;
 }
 
 // 嵌套列表保留缩进。主题用的是 `li > ul` / `li > ol`（特异性 0,0,2），比上面的
