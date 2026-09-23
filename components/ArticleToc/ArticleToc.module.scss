@@ -1,22 +1,30 @@
 // The rail's geometry lives in `styles/catalog.scss` (the global `.css-toc`
-// hook, because the outline HTML is injected through it too). Only the fold
-// state is the component's business — folded, the rail shrinks to a pill that
-// holds nothing but its heading. Naming `toc-rail` here also keeps the aside
-// from rendering a literal `undefined` in its class list.
-.toc-rail.toc-rail-collapsed {
-    width: max-content;
-    padding: 0;
-    border: 1px solid var(--hr);
-    border-radius: 999px;
-    background: var(--bg-article);
-    box-shadow: var(--bg-article-shadow);
-    -webkit-backdrop-filter: var(--article-backdrop);
-    backdrop-filter: var(--article-backdrop);
+// hook, because the outline HTML is injected through it too); only the fold is
+// the component's business.
+.toc-rail {
+    // Clipped, so the folded panel can drift right without leaving the rail a
+    // horizontal scroll range. `catalog.scss` never sets `overflow-x`, so this
+    // does not fight it.
+    overflow-x: hidden;
+}
 
-    .toc-rail-heading {
-        margin: 0;
-        padding: 4px 6px 4px 14px;
-    }
+// Folding is a cross-fade rather than a resize: the outline drifts right and
+// dissolves, and the fold button — the only thing left standing — spins in
+// place. Nothing animates a box size, which is what keeps it smooth.
+//
+// The label and the full-screen button keep their boxes while hidden (hidden,
+// never removed), so the fold button's position is identical in both states and
+// it can never shift out from under the reader's cursor mid-click.
+.toc-rail-label,
+.toc-expand {
+    transition: opacity 0.3s ease 0.06s, visibility 0s 0.06s;
+}
+
+.toc-rail-collapsed .toc-rail-label,
+.toc-rail-collapsed .toc-expand {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.32s ease, visibility 0s 0.32s;
 }
 
 .toc-rail-heading {
@@ -39,15 +47,15 @@
     gap: 6px;
 }
 
-// Own scroll container, so folding the outline never drags the heading (and
-// its buttons) off screen. The cap leaves room for that heading inside the
-// rail's own `max-height`.
+// Own scroll container, so a long outline scrolls under a heading that stays
+// put. The cap leaves room for that heading inside the rail's own `max-height`.
 .toc-rail-body {
     max-height: calc(100vh - 250px);
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--textNormal) 18%, transparent) transparent;
-    transition: max-height 0.34s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.24s ease;
+    transition: opacity 0.3s ease 0.06s, visibility 0s 0.06s,
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.06s;
 
     &::-webkit-scrollbar {
         width: 3px;
@@ -68,9 +76,11 @@
 }
 
 .toc-rail-collapsed .toc-rail-body {
-    max-height: 0;
-    overflow: hidden;
+    transform: translateX(12px);
     opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.32s ease, visibility 0s 0.32s,
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .toc-collapse,
@@ -116,9 +126,10 @@
     border-top: 1.5px solid currentColor;
     border-right: 1.5px solid currentColor;
     // Points right while the outline is open ("push it away") and left once
-    // folded ("pull it back out").
+    // folded ("pull it back out"). Same easing and duration as the panel's
+    // drift, so the two read as one movement.
     transform: rotate(45deg);
-    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .toc-rail-collapsed .toc-collapse-icon {

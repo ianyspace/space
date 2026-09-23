@@ -5,8 +5,9 @@ import { formatMessage } from 'utils/i18n';
 
 import styles from './ArticleToc.module.scss';
 
-// The desktop rail can be folded down to its heading. The choice is remembered
-// so a reader who wants the article at full width folds it once, not per post.
+// The desktop rail can be folded away, leaving nothing behind but the fold
+// button itself. The choice is remembered so a reader who wants the article at
+// full width folds it once, not per post.
 const COLLAPSED_STORAGE_KEY = 'tocCollapsed';
 
 /**
@@ -64,8 +65,22 @@ const ArticleToc = function ({ tableOfContents }) {
                 aria-label={tOutline}
             >
                 <div className={styles['toc-rail-heading']}>
-                    <span>{tOutline}</span>
+                    <span className={styles['toc-rail-label']}>{tOutline}</span>
                     <div className={styles['toc-rail-actions']}>
+                        <button
+                            type="button"
+                            className={styles['toc-expand']}
+                            onClick={() => setOpen(true)}
+                            aria-label={tOpenOutline}
+                            title={tOpenOutline}
+                        >
+                            <span className={styles['toc-expand-icon']} aria-hidden="true">
+                                <span />
+                                <span />
+                                <span />
+                                <span />
+                            </span>
+                        </button>
                         <button
                             type="button"
                             className={styles['toc-collapse']}
@@ -77,22 +92,6 @@ const ArticleToc = function ({ tableOfContents }) {
                         >
                             <span className={styles['toc-collapse-icon']} aria-hidden="true" />
                         </button>
-                        {!collapsed && (
-                            <button
-                                type="button"
-                                className={styles['toc-expand']}
-                                onClick={() => setOpen(true)}
-                                aria-label={tOpenOutline}
-                                title={tOpenOutline}
-                            >
-                                <span className={styles['toc-expand-icon']} aria-hidden="true">
-                                    <span />
-                                    <span />
-                                    <span />
-                                    <span />
-                                </span>
-                            </button>
-                        )}
                     </div>
                 </div>
                 <div
