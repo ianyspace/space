@@ -634,12 +634,14 @@ LOCK TABLES t1 READ, t2 WRITE;
 UNLOCK TABLES;
 ```
 
-**元数据锁（MDL）的坑**：
-```sql
--- 场景：长事务持有 MDL 共享锁 → DDL 等待 MDL 排他锁 → 后续 DML 也排队等 DDL
--- 导致所有 DML 阻塞，连接数打满
--- 解决：先 kill 长事务，再执行 DDL
-```
+**元数据锁（MDL）的坑**：MDL 会造成「排队头阻塞」，一张表的 DDL 能把整张表的读写全堵死。
+
+1. 长事务持有一张表的 MDL 共享锁（普通的 `SELECT` 也会拿）。
+2. 这时有人执行 DDL，需要 MDL 排他锁 —— 被长事务挡住，开始等。
+3. **DDL 在等的时候，后面所有要拿这张表 MDL 共享锁的 DML 也会排在 DDL 后面**，整张表的读写一起堵住。
+4. 连接池很快被占满，业务全线超时。
+
+解决：先 `kill` 掉那个长事务，DDL 才能拿到锁，后面的 DML 跟着放行。
 
 #### InnoDB 行锁（核心重点）
 
@@ -656,32 +658,17 @@ SELECT * FROM user WHERE id = 5 FOR UPDATE;
 **2. 间隙锁（Gap Lock）**
 
 ```sql
--- 锁定索引中两个值之间的"间隙"，防止其他事务在间隙中插入新行
--- 解决幻读问题
-
+-- 锁住索引中两个值之间的"空隙"，防止其他事务往空隙里插新行，用来解决幻读
 -- 假设索引中有 id=3 和 id=7
--- 执行 WHERE id > 3 AND id < 7 FOR UPDATE
--- 锁住 (3, 7) 这个间隙，其他事务不能 INSERT id=4/5/6
+
+-- 5 不存在，等值查询没命中 → 加的是间隙锁
+SELECT * FROM t WHERE id = 5 FOR UPDATE;
+-- 3 和 7 之间的这段范围被锁住，其他事务 INSERT 不了 id=4/5/6
 ```
 
-**3. 临键锁（Next-Key Lock）**
+**3. 临键锁（Next-Key Lock）**：记录锁 + 间隙锁的组合，**左开右闭**，是 InnoDB 在 RR 级别下的默认行锁算法。锁住 `(3, 7]` 的意思是：id = 7 这一条记录改不了，id = 4/5/6 这些还不存在的值也插不进来。
 
-```sql
--- 记录锁 + 间隙锁，左开右闭区间
--- InnoDB 默认的行锁算法
-
--- 锁定 (3, 7]，即 id>3 且 id<=7 的范围
--- 既防止修改已有行，也防止插入新行
-```
-
-**4. 插入意向锁（Insert Intention Lock）**
-
-```sql
--- 特殊的间隙锁，允许多个事务向同一个间隙的不同位置插入
--- 事务 A 持有 (3, 7) 的间隙锁
--- 事务 B 想插入 id=5 → 需要插入意向锁 → 被阻塞（与间隙锁冲突）
--- 但如果两个事务分别插入 id=5 和 id=6 → 不互相冲突
-```
+**4. 插入意向锁（Insert Intention Lock）**：一种特殊的间隙锁，允许多个事务往同一个间隙的不同位置插入。事务 A 持有 `(3, 7)` 的间隙锁时，事务 B 想插 id = 5 得先拿插入意向锁，与间隙锁冲突，于是被阻塞；但两个事务分别插 id = 5 和 id = 6 时，两个插入意向锁之间并不冲突。
 
 #### 行锁加锁规则总结（RR 隔离级别）
 
@@ -869,12 +856,13 @@ InnoDB 有三种关键日志，各司其职：
 3. 后台线程每隔 1 秒刷一次
 4. 事务提交时（由 `innodb_flush_log_at_trx_commit` 控制）
 
-```text
-innodb_flush_log_at_trx_commit 参数：
-0 — 每秒刷盘，性能最好，崩溃最多丢 1 秒数据
-1 — 事务提交时刷盘（fsync），最安全，性能最差（默认）
-2 — 事务提交时写 OS page cache，每秒 fsync，折中
-```
+`innodb_flush_log_at_trx_commit` 的三个取值：
+
+| 取值 | 刷盘时机 | 安全性 / 性能 |
+| ---- | -------- | ------------- |
+| 0 | 每秒刷一次 | 性能最好，崩溃最多丢 1 秒数据 |
+| 1 | 事务提交时 fsync | 最安全，性能最差（默认） |
+| 2 | 事务提交时写 OS page cache，每秒 fsync | 折中 |
 
 #### binlog（归档日志）
 
@@ -918,11 +906,10 @@ innodb_flush_log_at_trx_commit 参数：
 1. **事务回滚**：记录修改前的旧值，回滚时用旧值还原
 2. **MVCC**：版本链的基础，每个旧版本都存在 undo log 中
 
-```text
-undo log 类型：
-- insert undo log：INSERT 操作产生，事务提交后可立即删除（因为 INSERT 不存在其他事务可见的历史版本问题）
-- update undo log：UPDATE/DELETE 操作产生，需要等所有依赖它的 Read View 结束后才能删除
-```
+undo log 分两种：
+
+- **insert undo log**：`INSERT` 产生。事务提交后就能立即删除 —— 它写出来的行别的事务本来就看不见，没有历史版本要留给谁。
+- **update undo log**：`UPDATE` / `DELETE` 产生。要等所有可能用到它的 Read View 都结束之后才能删 —— MVCC 的版本链就挂在这些旧版本上。
 
 undo log 是**逻辑日志**：记录的是反向操作（INSERT 的反向是 DELETE，UPDATE 的反向是反向 UPDATE）。
 
