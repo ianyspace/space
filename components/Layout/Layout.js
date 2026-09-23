@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { useRouter } from 'next/router';
 import { useLang } from 'context/LanguageContext';
@@ -13,10 +13,23 @@ import ThemeBackground from './ThemeBackground';
 
 import styles from './Layout.module.scss';
 
+// The bar reacts to a gesture, not to a pixel: it only moves after the page has
+// travelled this far in one direction. Without the threshold a single jittered
+// scroll event flipped it, and a trackpad's momentum kept flipping it back —
+// the bar spent the whole article going up and down.
+const BAR_HIDE_AFTER_PX = 24; // downward travel before it steps aside
+const BAR_SHOW_AFTER_PX = 16; // upward travel before it comes back
+// Above this the reader is still at the top of the page, where the bar always
+// belongs on screen.
+const BAR_ALWAYS_VISIBLE_PX = 200;
+// The bar's own title only appears once the reader is past the article header.
+// Two thresholds rather than one, so hovering on the line does not make it blink.
+const TITLE_SHOW_AFTER_PX = 200;
+const TITLE_HIDE_BELOW_PX = 160;
+
 const Layout = function ({ children = null, title = null, breadcrumbs = null }) {
     const { lang, homeLink, refresh } = useLang();
     const router = useRouter();
-    const scrollHeight = useRef(0);
 
     React.useEffect(() => {
         refresh(router.asPath);
@@ -28,24 +41,50 @@ const Layout = function ({ children = null, title = null, breadcrumbs = null }) 
         const topBar = document.getElementById('top-bar');
         if (!contain) return undefined;
 
+        const moveBar = (hidden) => {
+            if (topBar) topBar.style.transform = hidden ? 'translateY(-100%)' : 'translateY(0)';
+        };
+
+        let lastTop = contain.scrollTop;
+        let travel = 0; // net travel since the bar last moved
+        let barHidden = false;
+
         const onScroll = () => {
             const scrollTop = contain.scrollTop;
+            const step = scrollTop - lastTop;
+            lastTop = scrollTop;
 
-            if (topBar) {
-                if (scrollTop > scrollHeight.current && scrollTop > 200) {
-                    topBar.style.transform = 'translateY(-100%)';
-                } else {
-                    topBar.style.transform = 'translateY(0)';
-                }
-            }
             if (el) {
-                if (scrollTop < 200) {
-                    el.style.display = 'none';
-                } else {
-                    el.style.display = 'block';
+                if (scrollTop > TITLE_SHOW_AFTER_PX) el.style.display = 'block';
+                else if (scrollTop < TITLE_HIDE_BELOW_PX) el.style.display = 'none';
+            }
+
+            if (scrollTop <= BAR_ALWAYS_VISIBLE_PX) {
+                travel = 0;
+                if (barHidden) {
+                    barHidden = false;
+                    moveBar(false);
+                }
+                return;
+            }
+
+            // Only the direction that can still change something is accumulated,
+            // so jitter cancels itself out instead of tipping the bar over.
+            if (barHidden) {
+                travel = Math.min(0, travel + step);
+                if (travel <= -BAR_SHOW_AFTER_PX) {
+                    travel = 0;
+                    barHidden = false;
+                    moveBar(false);
+                }
+            } else {
+                travel = Math.max(0, travel + step);
+                if (travel >= BAR_HIDE_AFTER_PX) {
+                    travel = 0;
+                    barHidden = true;
+                    moveBar(true);
                 }
             }
-            scrollHeight.current = scrollTop;
         };
 
         contain.addEventListener('scroll', onScroll);
