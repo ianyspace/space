@@ -63,15 +63,21 @@ img {
     margin-bottom: 0;
 }
 
-// Markdown 表格：小屏下多列会被挤得极窄。让表格自身成为横向滚动容器，
-// 每个单元格设最小宽度；列宽总和超出容器时横向滚动，否则仍平分填满。
-// 写在 tricks（晚于 typography.generated.css 加载），并用 .css-post 前缀
-// 提高特异性、限定只作用于正文表格，避免被生成样式覆盖。滚动条隐藏，仅保留滑动。
-.css-post table {
-    display: block;
-    width: 100%;
+// Markdown 表格。生成样式只给了单元格一条 `border-bottom: 1px solid hsla(0,0%,0%,0.12)`，
+// 那是写死的浅色，深色模式下几乎看不见；再加上 `th:first-child, td:first-child { padding-left: 0 }`
+// 把首末列的外侧内边距清零，表格贴边、没有表头底色、也没有外框，整体就显得又糊又散。
+// 这里在 tricks（晚于 typography.generated.css 加载）里用 `.css-post` 前缀重做一遍，
+// 颜色一律走主题变量，浅色/深色共用同一套规则。
+//
+// 横向滚动交给 `lib/mdx.js` 里的 rehypeWrapTables 包出来的 `.table-wrap`，表格本身保持
+// `display: table`：列宽仍由表格算法统一分配，表头与数据列才对得齐，border-collapse 也不会失效。
+// 小屏下单元格的 `min-width` 把表格撑得比容器宽，于是由外层滚动，而不是把列挤成一条。
+.css-post .table-wrap {
+    margin-bottom: 1.75rem;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--hr);
+    border-radius: 10px;
     scrollbar-width: none; // Firefox
     -ms-overflow-style: none; // 旧版 Edge / IE
 
@@ -80,7 +86,47 @@ img {
     }
 }
 
+.css-post table {
+    width: 100%;
+    margin-bottom: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    border-collapse: collapse;
+}
+
 .css-post table th,
 .css-post table td {
     min-width: 6em;
+    padding: 0.6rem 0.9rem;
+    vertical-align: top;
+    border-bottom: 1px solid var(--hr);
+}
+
+// 生成样式把首/末列的外侧内边距清成 0，单元格直接贴着外框；补回来，四边留白一致。
+.css-post table th:first-child,
+.css-post table td:first-child {
+    padding-left: 1rem;
+}
+
+.css-post table th:last-child,
+.css-post table td:last-child {
+    padding-right: 1rem;
+}
+
+// 表头：加一层底色 + 主题标题色，和正文行分开。
+// color-mix 拿 --textNormal（浅色是 #222、深色是白色）兑出一点半透明底色，两种主题各自成立。
+.css-post table thead th {
+    background: color-mix(in srgb, var(--textNormal) 8%, transparent);
+    color: var(--textTitle);
+    font-weight: 700;
+}
+
+// 隔行浅底，长表格横向数行时不容易串行。
+.css-post table tbody tr:nth-child(even) td {
+    background: color-mix(in srgb, var(--textNormal) 4%, transparent);
+}
+
+// 最后一行的下边框会和外框叠成两条线，去掉。
+.css-post table tbody tr:last-child td {
+    border-bottom: 0;
 }
