@@ -40,7 +40,7 @@
     border-radius: 2px;
 }
 
-// 解释气泡。走原生 Popover，渲染在 top-layer —— 表格的横向滚动容器、`<details>`、
+// 解释气泡。优先走原生 Popover，渲染在 top-layer —— 表格的横向滚动容器、`<details>`、
 // 图示面板的 overflow 都裁不到它。位置由 JS 算好写进 `--term-x` / `--term-y`。
 .popover {
     --term-bg: #ffffff;
@@ -52,7 +52,12 @@
     inset: auto;
     left: var(--term-x, 0);
     top: var(--term-y, 0);
-    display: block;
+    // **这里必须是 `none`，别写成 `block`。**
+    // 作者样式优先于 UA 样式表，写 `display: block` 会盖掉 UA 给 popover 的
+    // `display: none` —— 结果是一进文章所有气泡全摊在正文里（2026-09-24 踩到）。
+    display: none;
+    // 没有原生 Popover 时气泡不在 top-layer，得靠 z-index 压过顶栏（`#top-bar` 是 99）。
+    z-index: 9999;
     box-sizing: border-box;
     width: max-content;
     max-width: min(340px, calc(100vw - 24px));
@@ -67,6 +72,18 @@
     color: var(--textNormal);
     font-size: 13px;
     line-height: 1.6;
+}
+
+// 显示与否由 JS 加的 `is-open` 说了算，不依赖 `:popover-open` —— 没有原生 Popover 的
+// 浏览器（Safari 16 及以前）遇到不认识的伪类会把**整条**规则丢掉，而 `.is-open` 那条
+// 必须留下，降级路径全靠它。同理这两条要分开写，不能合成逗号列表：列表里有一个无效
+// 选择器，整条规则一样作废。
+.popover:popover-open {
+    display: block;
+}
+
+.popover.is-open {
+    display: block;
 }
 
 // 深色主题：`--bg-article` 是半透明的，直接拿来当气泡底会透出正文，所以另给一组实色。

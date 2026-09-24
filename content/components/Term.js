@@ -10,7 +10,7 @@ import styles from './Term.module.scss';
  * 为什么是虚线：正文里已经有一条实线下划线表示链接，虚线是「有解释但不跳转」，
  * 形状不同，扫读时不会和链接混起来。`cursor: help` 是同一个意思的光标版本。
  *
- * 为什么用原生 Popover 而不是绝对定位的气泡：本站的表格在 `.table-wrap` 里横向
+ * 为什么优先用原生 Popover 而不是绝对定位的气泡：本站的表格在 `.table-wrap` 里横向
  * 滚动、问答回答在 `<details>` 里、图示和互动面板自带 overflow —— 绝对定位的气泡
  * 会被这些祖先裁掉。popover 渲染在 top-layer，不受任何 overflow 影响，还顺带拿到
  * 了点外部关闭、Esc 关闭、多个气泡互斥这些行为。代价是它不响应 hover，所以悬停
@@ -27,6 +27,18 @@ const HOVER_QUERY = '(hover: hover) and (pointer: fine)';
 const SHEET_WIDTH = 640;
 const GAP = 8;
 const MARGIN = 12;
+
+/**
+ * 有没有原生 Popover API（Safari 17 / Chrome 114 / Firefox 125 起）。
+ *
+ * 没有的话气泡拿不到 top-layer，只能退化成普通的 `position: fixed` —— 好在本站正文区
+ * 的祖先链上没有 `transform` / `filter` / `backdrop-filter`，fixed 相对视口是准的。
+ * 「点外部关闭 / Esc 关闭」也得自己补（见下面的 effect）。
+ */
+const nativePopover = () =>
+    typeof window !== 'undefined' &&
+    typeof window.HTMLElement !== 'undefined' &&
+    'showPopover' in window.HTMLElement.prototype;
 
 export default function Term({ children, k, def }) {
     const text = Children.toArray(children).join('').trim();
@@ -90,26 +102,37 @@ export default function Term({ children, k, def }) {
         pop.style.setProperty('--term-y', `${Math.round(top)}px`);
     }, []);
 
+    const isOpen = useCallback(() => {
+        const pop = popRef.current;
+        return Boolean(pop && pop.classList.contains(styles['is-open']));
+    }, []);
+
     const open = useCallback(() => {
         const pop = popRef.current;
-        if (!pop || typeof pop.showPopover !== 'function') return;
-        if (pop.matches(':popover-open')) return;
+        if (!pop || pop.classList.contains(styles['is-open'])) return;
 
-        try {
-            pop.showPopover();
-        } catch {
-            return;
+        if (nativePopover()) {
+            try {
+                pop.showPopover();
+            } catch {
+                return;
+            }
         }
-        // 必须先 show 再量尺寸 —— 关闭状态下 popover 是 `display: none`，量出来是 0。
+
+        // 显示统一由 `is-open` 决定，不依赖 `:popover-open`（原因见 Term.module.scss）。
+        pop.classList.add(styles['is-open']);
+        // 先让它显示出来再量尺寸 —— 隐藏状态下 `offsetWidth` 是 0。
         place();
     }, [place]);
 
     const close = useCallback(() => {
         const pop = popRef.current;
-        if (!pop || typeof pop.hidePopover !== 'function') return;
-        if (!pop.matches(':popover-open')) return;
+        if (!pop) return;
 
-        pop.hidePopover();
+        // `matches(':popover-open')` 在不认识这个伪类的浏览器上会直接抛错，所以必须先
+        // 过一遍 `nativePopover()`（短路保证后面那句不会执行）。
+        if (nativePopover() && pop.matches(':popover-open')) pop.hidePopover();
+        pop.classList.remove(styles['is-open']);
     }, []);
 
     useEffect(() => clearTimer, [clearTimer]);
@@ -118,7 +141,7 @@ export default function Term({ children, k, def }) {
     useEffect(() => {
         const follow = () => {
             const pop = popRef.current;
-            if (pop && pop.matches(':popover-open')) place();
+            if (pop && pop.classList.contains(styles['is-open'])) place();
         };
 
         window.addEventListener('resize', follow);
@@ -129,6 +152,44 @@ export default function Term({ children, k, def }) {
             window.removeEventListener('scroll', follow, true);
         };
     }, [place]);
+
+    // 原生 Popover 的点外部关闭 / Esc 关闭由浏览器负责，这里只把 `is-open` 同步掉，
+    // 免得气泡已经不在 top-layer 了却还挂着一个「显示」的类。
+    useEffect(() => {
+        const pop = popRef.current;
+        if (!pop || !nativePopover()) return undefined;
+
+        const onToggle = (event) => {
+            if (event.newState === 'closed') pop.classList.remove(styles['is-open']);
+        };
+
+        pop.addEventListener('toggle', onToggle);
+        return () => pop.removeEventListener('toggle', onToggle);
+    }, []);
+
+    // 没有原生 Popover 时，上面那套行为得自己补一份。
+    useEffect(() => {
+        if (nativePopover()) return undefined;
+
+        const onPointerDown = (event) => {
+            const pop = popRef.current;
+            const anchor = anchorRef.current;
+            if (!pop || !pop.classList.contains(styles['is-open'])) return;
+            if (pop.contains(event.target) || (anchor && anchor.contains(event.target))) return;
+            close();
+        };
+        const onKeyDown = (event) => {
+            if (event.key === 'Escape') close();
+        };
+
+        document.addEventListener('pointerdown', onPointerDown, true);
+        document.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            document.removeEventListener('pointerdown', onPointerDown, true);
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [close]);
 
     // 术语库里没有这个词：按普通文字渲染，不画虚线 —— 虚线意味着「这里能点」，
     // 点了没反应比不标更糟。开发时打条 warning，免得写错了没人发现。
@@ -151,8 +212,7 @@ export default function Term({ children, k, def }) {
                 aria-describedby={id}
                 onClick={() => {
                     clearTimer();
-                    const pop = popRef.current;
-                    if (pop && pop.matches(':popover-open')) close();
+                    if (isOpen()) close();
                     else open();
                 }}
                 onMouseEnter={() => {
