@@ -34,19 +34,17 @@ blockquote {
 // 强调文字（`**…**`）主题只给了 `font-weight: 700`。正文用的是系统无衬线字体
 // （`#main-contain` 上的 inline `font-family: var(--systemFont)`，压过主题给 body 设的
 // Merriweather/Georgia），粗体和常规的差别本来就有限 —— 一整屏扫下来「哪儿是重点」
-// 不够跳。这里补第二个信号：一层极淡的强调色底纹。
-//   · 不用彩色文字：正文里的链接是蓝色文字（`#007acc`），把强调也染上颜色容易让人以为能点；
-//   · 底纹和字重是正交的，扫读时先看到色块、再看到字重，两个信号叠起来才立得住；
-//   · 用量压得很轻（16%），一段里出现两三次也不会糊成一片；想更明显就调这一个数；
-//   · `box-decoration-break: clone` 让跨行时每一段都带圆角，而不是只有首尾有。
+// 不够跳。这里补第二个信号：换一个文字颜色。
+//   · 一开始试的是淡底纹（`--textLink` 16%），实测太扎眼：文章里加粗密度不低
+//     （每千汉字 10~16 处），色块一段接一段会连成片。只动字色就没这个问题；
+//   · 用 `--textLink` 而不新造变量：主题本来就把它当「需要强调」的颜色，
+//     浅色下深玫红（`#d23669`）、深色下亮粉，两种主题都不用额外覆盖；
+//   · 正文链接是主题硬编码的蓝 `#007acc`，和玫红差得够远，不会被误认成能点；
+//   · 想更重就把 `--textLink` 换成 `--textTitle`（那就只剩深浅的差别，不推荐）；
+//     嫌艳就套一层 `color-mix(in srgb, var(--textLink) 85%, var(--textNormal))`。
 .css-post strong,
 .css-post b {
-    padding: 0.05em 0.15em;
-    border-radius: 3px;
-    color: var(--textTitle);
-    background: color-mix(in srgb, var(--textLink) 16%, transparent);
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
+    color: var(--textLink);
 }
 
 h4 {
