@@ -130,3 +130,69 @@ img {
 .css-post table tbody tr:last-child td {
     border-bottom: 0;
 }
+
+// 「问答实战」的回答默认折叠（`lib/mdx.js` 的 rehypeCollapseQaAnswers 把回答包进
+// `details.qa-answer`）。题目留在外面，扫一眼题目就能自测，想对答案再点开。
+// 开关做成一颗小药丸：summary 自带的三角换成自绘箭头，展开时转 90°。
+// 颜色一律用 --textLink —— 浅色下是深玫红、深色下是亮粉，两种主题都够醒目。
+.css-post .qa-answer {
+    margin: 0 0 1.75rem;
+
+    > summary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        padding: 0.2rem 0.85rem 0.2rem 0.75rem;
+        border: 1px solid var(--hr);
+        border-radius: 999px;
+        color: var(--textLink);
+        font-size: 0.875rem;
+        line-height: 1.6;
+        cursor: pointer;
+        user-select: none;
+        list-style: none;
+        transition: background 0.15s ease, border-color 0.15s ease;
+
+        &::-webkit-details-marker {
+            display: none; // Chrome / Safari / 新版 Edge
+        }
+
+        // 自绘三角：折叠时指右，展开时指下。
+        &::before {
+            content: '';
+            width: 0;
+            height: 0;
+            border-left: 5px solid currentColor;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            transition: transform 0.15s ease;
+        }
+
+        &:hover {
+            border-color: var(--textLink);
+            background: color-mix(in srgb, var(--textNormal) 6%, transparent);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--textLink);
+            outline-offset: 2px;
+        }
+    }
+
+    &[open] > summary::before {
+        transform: rotate(90deg);
+    }
+}
+
+// 展开后的回答：左侧一条竖线 + 缩进，和上面的题目分开，一眼能看出「这是答案」。
+// 缩进只写在展开的内容上，折叠时 summary 不会莫名往右挪。
+.css-post .qa-answer-body {
+    margin-top: 1rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--textLink);
+
+    // 末个元素的下外边距会顶到 details 外面，和 .qa-answer 自己的间距叠起来，去掉。
+    > :last-child {
+        margin-bottom: 0;
+    }
+}
