@@ -5,11 +5,12 @@
  * `GCroots` 是同一个词条。正文里 `<term>GC Roots</term>` 和 `<term>gcRoots</term>`
  * 都能命中，不用作者记写法。
  *
- * 术语库按领域分文件（`./jvm.js`、以后要加别的领域就再开一个），但查找时不区分
+ * 术语库按领域分文件（`./jvm.js`、`./mysql.js`，以后要加别的领域就再开一个），但查找时不区分
  * 领域 —— 一篇文章里出现的词基本都在同一个领域，真撞名了再让作者用
  * `<term k="…">` 显式指定。撞名时这里会覆盖并打一条 warning。
  */
 import jvm from './jvm';
+import mysql from './mysql';
 
 /** `' GC  Roots '` -> `'gcroots'` */
 export function normalize(value) {
@@ -19,7 +20,7 @@ export function normalize(value) {
         .replace(/\s+/g, '');
 }
 
-const DOMAINS = { jvm };
+const DOMAINS = { jvm, mysql };
 
 const glossary = {};
 
