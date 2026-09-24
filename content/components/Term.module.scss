@@ -1,0 +1,107 @@
+/**
+ * 术语卡（`<term>…</term>`）的样式。
+ *
+ * 视觉只占用「线的形状」这一个维度：链接是实线下划线，术语是虚线下划线。
+ * 底纹已经被用掉两次（行内代码是淡黄底、强调文字是玫红淡底），术语再来一层底色
+ * 就会变成「满屏都是色块」；染色同样不行 —— 正文链接是蓝的，术语一旦有颜色就会
+ * 被当成能点。
+ */
+
+// 术语本体。`font: inherit` 是因为它渲染成 `<button>`（键盘和读屏都能操作，
+// 也顺带拿到 `:focus-visible`），得先把浏览器的按钮样式清干净。
+.term {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    cursor: help;
+    text-decoration: underline dotted;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.22em;
+    text-decoration-color: color-mix(in srgb, var(--textLink) 65%, transparent);
+}
+
+// 悬停时虚线变实线并加深：给一个「确实有东西」的即时反馈。
+// 包在 `@media (hover: hover)` 里，否则手机上点完会残留 hover 态。
+@media (hover: hover) {
+    .term:hover {
+        text-decoration-style: solid;
+        text-decoration-color: var(--textLink);
+    }
+}
+
+.term:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--textLink) 55%, transparent);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+// 解释气泡。走原生 Popover，渲染在 top-layer —— 表格的横向滚动容器、`<details>`、
+// 图示面板的 overflow 都裁不到它。位置由 JS 算好写进 `--term-x` / `--term-y`。
+.popover {
+    --term-bg: #ffffff;
+    --term-line: rgba(0, 0, 0, 0.12);
+    --term-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.35);
+
+    position: fixed;
+    // UA 给 popover 的是 `inset: 0` + `margin: auto`（居中），这里全部推翻。
+    inset: auto;
+    left: var(--term-x, 0);
+    top: var(--term-y, 0);
+    display: block;
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(340px, calc(100vw - 24px));
+    max-height: 60vh;
+    margin: 0;
+    padding: 10px 12px 11px;
+    overflow: auto;
+    border: 1px solid var(--term-line);
+    border-radius: 8px;
+    background: var(--term-bg);
+    box-shadow: var(--term-shadow);
+    color: var(--textNormal);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+// 深色主题：`--bg-article` 是半透明的，直接拿来当气泡底会透出正文，所以另给一组实色。
+:global(body.dark) .popover {
+    --term-bg: #282c35;
+    --term-line: rgba(255, 255, 255, 0.14);
+    --term-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.75);
+}
+
+// 窄屏：贴术语的气泡只剩一条缝，还挡住上下文，改成贴底的抽屉。
+// 这些声明要盖掉上面的 `left` / `top`，所以必须写成复合选择器（特异性更高）。
+.popover.is-sheet {
+    left: 12px;
+    right: 12px;
+    top: auto;
+    bottom: 12px;
+    width: auto;
+    max-width: none;
+    max-height: 45vh;
+    padding: 12px 14px 13px;
+}
+
+.popover-term {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--textTitle);
+    font-weight: 700;
+}
+
+.popover-def {
+    display: block;
+}
+
+.popover-more {
+    display: block;
+    margin-top: 5px;
+    opacity: 0.72;
+}

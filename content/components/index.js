@@ -1,3 +1,5 @@
+import Term from './Term';
+
 /**
  * MDX components shared by **every** article.
  *
@@ -39,6 +41,9 @@
  */
 
 /** @type {Record<string, React.ComponentType<any>>} */
-const sharedComponents = {};
+const sharedComponents = {
+    // 术语卡：正文里写 `<term>双亲委派</term>`，解释从 `content/glossary/` 查。
+    term: Term,
+};
 
 export default sharedComponents;
