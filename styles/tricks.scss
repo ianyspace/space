@@ -88,16 +88,20 @@ img {
 // 这里在 tricks（晚于 typography.generated.css 加载）里用 `.css-post` 前缀重做一遍，
 // 颜色一律走主题变量，浅色/深色共用同一套规则。
 //
+// 整体走「上下两条平直横线」：没有左右边框、没有圆角，表格左右两侧是敞开的，
+// 但上下有明确的起止，读起来是一个完整的块，不会飘在正文里。
 // 横向滚动交给 `lib/mdx.js` 里的 rehypeWrapTables 包出来的 `.table-wrap`，表格本身保持
 // `display: table`：列宽仍由表格算法统一分配，表头与数据列才对得齐，border-collapse 也不会失效。
-// 单元格设了 `white-space: nowrap`，表格常常比容器宽，于是由外层滚动，而不是把内容折成碎行。
-// 外层不滚动，只负责给「还能往右滑」的提示当定位上下文；视觉上不留边框、不留圆角。
-// 表格不再套外框：没有边框、没有圆角，直接躺在正文里，只有横线做区隔。
-// position 必须留着 —— 右侧「还能往右滑」的提示是绝对定位，靠它当定位上下文。
-// 没有圆角要裁，也就不需要 overflow: hidden 了。
+// .table-wrap 自己不滚动，只负责两条横线，以及给「还能往右滑」的提示当定位上下文
+// （position 必须留着 —— 那个提示是绝对定位）。
+// 只有当表格真的比容器宽时才由 .table-scroll 横滑；列有最小宽度，正常情况靠折行消化。
 .css-post .table-wrap {
     position: relative;
     margin-bottom: 1.75rem;
+
+    // 上下两条通栏横线。没有左右边、没有圆角 —— 这两条线就是表格全部的「框」。
+    border-top: 1px solid var(--hr);
+    border-bottom: 1px solid var(--hr);
 }
 
 // 「右边还有内容」的提示。只在表格真的比容器宽时出现，滑到最右端自动消失 —— class
@@ -150,43 +154,63 @@ img {
     border-collapse: collapse;
 }
 
-// 单元格不折行 + 去掉 min-width。原先的 `min-width: 6em` 本意是防止列被压太窄，结果
-// 窄屏（<500px）上五列表要占 6em×5 ≈ 480px，浏览器只能把每列压到极限再硬折行 ——
-// 「每 条 命 令 都 fsync」折成三行，比配色问题影响大多了。现在按内容自然排布，
-// 装不下就交给 .table-scroll 横滑，滚动比满屏碎行干净得多。
+// 单元格：列有最小宽度，装不下就折行 —— 不再靠横滑回避。
+// min-width 取 5em 是折中：比原先的 6em 小，五列表在窄屏上不至于整表溢出；
+// 又比完全不设强，列不会被压成「每 条 命 令」那种竖条。
 .css-post table th,
 .css-post table td {
+    min-width: 5em;
     padding: 0.6rem 0.9rem;
     vertical-align: top;
-    white-space: nowrap;
-    border-bottom: 1px solid var(--hr);
+    border-bottom: 1px solid color-mix(in srgb, var(--hr) 38%, transparent);
 }
 
-// 首列两条规则：① 允许折行 —— 它是维度名（策略 / 结构 / 问题 …），偶尔出现长词组，
-// 放它换行可以避免整张表被这一列撑得极宽；② 外侧内边距清回 0，和末列一样贴着正文边缘。
+// 首尾列外侧各留 1rem，文字不贴着上下两条横线，比段落缩进略宽一点，看着像个块。
 .css-post table th:first-child,
 .css-post table td:first-child {
-    white-space: normal;
-    padding-left: 0;
+    padding-left: 1rem;
 }
 
 .css-post table th:last-child,
 .css-post table td:last-child {
-    padding-right: 0;
+    padding-right: 1rem;
 }
 
-// 表头是整张表唯一保留的一层底色。走品牌粉（--pink 就是 header 用的那个粉），
-// 兑淡到 10% 只作背景暗示；真正把表头和数据区分开的是下面那条 1px 的粉线。
+// 表头：整张表唯一的一层底色，走中性灰（--hr 兑出来的，浅色是淡灰、深色是淡雾），
+// 不带品牌色 —— 粉底配无外框会像在正文上贴了条胶带。区分表头和数据靠的是下面那条
+// 1px 的正常色横线，底色只是辅助。
+// 表头单独设 nowrap：列名短，折行会把表头拉成两层高，跟数据行对不齐，也更难扫。
 .css-post table thead th {
-    background: color-mix(in srgb, var(--pink) 10%, transparent);
+    background: color-mix(in srgb, var(--hr) 42%, transparent);
     color: var(--textTitle);
     font-weight: 700;
-    border-bottom: 1px solid color-mix(in srgb, var(--pink) 50%, transparent);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--hr);
 }
 
-// 最后一行下面没内容了，那条横线留着会变成表格底部一条孤零零的边，去掉。
+// 最后一行下面没内容了，那条横线会和 .table-wrap 的下边框叠成两条，去掉。
 .css-post table tbody tr:last-child td {
     border-bottom: 0;
+}
+
+// 窄屏：把最小列宽和内边距一起收窄，让常见的四五列表能在手机宽度里靠折行放下，
+// 而不是动不动就要横滑。断点跟 `styles/catalog.scss` 保持一致。
+@media screen and (max-width: 600px) {
+    .css-post table th,
+    .css-post table td {
+        min-width: 3.2em;
+        padding: 0.5rem 0.6rem;
+    }
+
+    .css-post table th:first-child,
+    .css-post table td:first-child {
+        padding-left: 0.75rem;
+    }
+
+    .css-post table th:last-child,
+    .css-post table td:last-child {
+        padding-right: 0.75rem;
+    }
 }
 
 // 「问答实战」的回答默认折叠（`lib/mdx.js` 的 rehypeCollapseQaAnswers 把回答包进
