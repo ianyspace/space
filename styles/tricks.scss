@@ -91,12 +91,49 @@ img {
 // 横向滚动交给 `lib/mdx.js` 里的 rehypeWrapTables 包出来的 `.table-wrap`，表格本身保持
 // `display: table`：列宽仍由表格算法统一分配，表头与数据列才对得齐，border-collapse 也不会失效。
 // 小屏下单元格的 `min-width` 把表格撑得比容器宽，于是由外层滚动，而不是把列挤成一条。
+// 外层不滚动：负责边框圆角，以及给「还能往右滑」的提示当定位上下文。
+// overflow: hidden 顺便把表头底色和斑马纹的方角裁成圆角（它们自己没法带圆角）。
 .css-post .table-wrap {
+    position: relative;
     margin-bottom: 1.75rem;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
     border: 1px solid var(--hr);
     border-radius: 10px;
+    overflow: hidden;
+}
+
+// 「右边还有内容」的提示。只在表格真的比容器宽时出现，滑到最右端自动消失 —— class
+// 由 `templates/BlogPost.js` 的滚动检测加（is-scrollable / at-end）。
+// 滚动条是隐藏的，没有这层提示，窄屏上表格就像被凭空切掉一块。
+// 颜色跟着 --textNormal 走：浅色是一层淡影、深色是一层淡雾，两个主题都看得见。
+.css-post .table-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 44px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    background: linear-gradient(
+        to left,
+        color-mix(in srgb, var(--textNormal) 22%, transparent),
+        transparent
+    );
+}
+
+.css-post .table-wrap.is-scrollable::after {
+    opacity: 1;
+}
+
+.css-post .table-wrap.at-end::after {
+    opacity: 0;
+}
+
+.css-post .table-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: none; // Firefox
     -ms-overflow-style: none; // 旧版 Edge / IE
 
@@ -119,9 +156,13 @@ img {
     padding: 0.6rem 0.9rem;
     vertical-align: top;
     border-bottom: 1px solid var(--hr);
+    // 列分隔线：只有横线的话，四列以上的表横向读数容易串行。比横线再淡一点，
+    // 免得竖线抢戏、整张表变成格子纸。
+    border-right: 1px solid color-mix(in srgb, var(--hr) 70%, transparent);
 }
 
 // 生成样式把首/末列的外侧内边距清成 0，单元格直接贴着外框；补回来，四边留白一致。
+// 末列同时去掉竖线，右边框由外框负责。
 .css-post table th:first-child,
 .css-post table td:first-child {
     padding-left: 1rem;
@@ -130,14 +171,23 @@ img {
 .css-post table th:last-child,
 .css-post table td:last-child {
     padding-right: 1rem;
+    border-right: 0;
 }
 
-// 表头：加一层底色 + 主题标题色，和正文行分开。
+// 首列是这张表的「维度名」（策略 / 结构 / 问题 …），加粗并提亮成标题色 ——
+// 眼睛横着扫的时候有个锚点，不会从第二列读起。
+.css-post table tbody td:first-child {
+    font-weight: 600;
+    color: var(--textTitle);
+}
+
+// 表头：底色 + 主题标题色 + 一条更重的下边框，和数据区彻底分开。
 // color-mix 拿 --textNormal（浅色是 #222、深色是白色）兑出一点半透明底色，两种主题各自成立。
 .css-post table thead th {
-    background: color-mix(in srgb, var(--textNormal) 8%, transparent);
+    background: color-mix(in srgb, var(--textNormal) 12%, transparent);
     color: var(--textTitle);
     font-weight: 700;
+    border-bottom: 2px solid color-mix(in srgb, var(--textNormal) 28%, transparent);
 }
 
 // 隔行浅底，长表格横向数行时不容易串行。

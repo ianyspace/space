@@ -89,6 +89,38 @@ const BlogPostTemplate = function ({
         return () => handlers.forEach((handler) => anchorsContain.removeEventListener('scroll', handler));
     }, [update, mdxSource]);
 
+    /**
+     * 表格的「还能往右滑」提示。滚动条是隐藏的，不提示的话窄屏上表格右半截就像被凭空
+     * 切掉了。结构由 `lib/mdx.js` 的 rehypeWrapTables 生成：.table-wrap > .table-scroll > table
+     * —— 检测挂在内层（会滚的那个），class 打在外层（挂提示的那个）。
+     */
+    useEffect(() => {
+        const scrollers = document.querySelectorAll('.css-post .table-scroll');
+        if (!scrollers.length) return undefined;
+
+        const cleanups = [...scrollers].map((scroller) => {
+            const wrap = scroller.closest('.table-wrap');
+            if (!wrap) return () => {};
+
+            const sync = () => {
+                const max = scroller.scrollWidth - scroller.clientWidth;
+                wrap.classList.toggle('is-scrollable', max > 2);
+                wrap.classList.toggle('at-end', scroller.scrollLeft >= max - 2);
+            };
+
+            sync();
+            scroller.addEventListener('scroll', sync, { passive: true });
+            window.addEventListener('resize', sync);
+
+            return () => {
+                scroller.removeEventListener('scroll', sync);
+                window.removeEventListener('resize', sync);
+            };
+        });
+
+        return () => cleanups.forEach((fn) => fn());
+    }, [update, mdxSource]);
+
     let tags;
     if (frontmatter.tags) {
         tags = <TagList tags={frontmatter.tags} baseUrl={`${homeLink}tags`} />;
