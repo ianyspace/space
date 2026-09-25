@@ -117,7 +117,7 @@ img {
     transition: opacity 0.2s ease;
     background: linear-gradient(
         to left,
-        color-mix(in srgb, var(--textNormal) 22%, transparent),
+        color-mix(in srgb, var(--pink) 30%, transparent),
         transparent
     );
 }
@@ -156,9 +156,9 @@ img {
     padding: 0.6rem 0.9rem;
     vertical-align: top;
     border-bottom: 1px solid var(--hr);
-    // 列分隔线：只有横线的话，四列以上的表横向读数容易串行。比横线再淡一点，
-    // 免得竖线抢戏、整张表变成格子纸。
-    border-right: 1px solid color-mix(in srgb, var(--hr) 70%, transparent);
+    // 列分隔线：只有横线的话，四列以上的表横向读数容易串行。压到很淡，只当背景
+    // 里的引导线，别让整张表变成格子纸。
+    border-right: 1px solid color-mix(in srgb, var(--hr) 38%, transparent);
 }
 
 // 生成样式把首/末列的外侧内边距清成 0，单元格直接贴着外框；补回来，四边留白一致。
@@ -174,25 +174,25 @@ img {
     border-right: 0;
 }
 
-// 首列是这张表的「维度名」（策略 / 结构 / 问题 …），加粗并提亮成标题色 ——
-// 眼睛横着扫的时候有个锚点，不会从第二列读起。
+// 首列是这张表的「维度名」（策略 / 结构 / 问题 …），略微提重并提亮成标题色 ——
+// 眼睛横着扫的时候有个锚点，不会从第二列读起。只到 500，再重就压过正文了。
 .css-post table tbody td:first-child {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--textTitle);
 }
 
-// 表头：底色 + 主题标题色 + 一条更重的下边框，和数据区彻底分开。
-// color-mix 拿 --textNormal（浅色是 #222、深色是白色）兑出一点半透明底色，两种主题各自成立。
+// 表头：底色走品牌粉（--pink 就是 header 用的那个粉），跟着站点主题走，
+// 比灰底干净；下边框换成 1px 的粉，够把表头和数据区分开又不压手。
 .css-post table thead th {
-    background: color-mix(in srgb, var(--textNormal) 12%, transparent);
+    background: color-mix(in srgb, var(--pink) 16%, transparent);
     color: var(--textTitle);
     font-weight: 700;
-    border-bottom: 2px solid color-mix(in srgb, var(--textNormal) 28%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--pink) 50%, transparent);
 }
 
-// 隔行浅底，长表格横向数行时不容易串行。
+// 隔行浅底，长表格横向数行时不容易串行。同样走粉，只兑 6% —— 比表头更淡一个档。
 .css-post table tbody tr:nth-child(even) td {
-    background: color-mix(in srgb, var(--textNormal) 4%, transparent);
+    background: color-mix(in srgb, var(--pink) 6%, transparent);
 }
 
 // 最后一行的下边框会和外框叠成两条线，去掉。
