@@ -689,7 +689,7 @@ Java IO 按数据单位分为**字节流**和**字符流**，按方向分为**�
 字符流：Reader / Writer（处理文本数据，自动处理编码）
 ```
 
-IO 流的设计使用了**装饰者模式**：
+IO 流的设计使用了<term>装饰者模式</term>：
 
 ```java
 // 层层装饰，增强功能
@@ -725,7 +725,7 @@ BufferedReader reader = new BufferedReader(
 
 **3. Selector（选择器）** — 多路复用器
 - 一个线程通过 Selector 监控多个 Channel 的事件（连接、读、写）
-- 基于操作系统的 epoll（Linux）/ kqueue（Mac）/ select（Windows）
+- 基于操作系统的 <term>epoll</term>（Linux）/ kqueue（Mac）/ select（Windows）
 
 ```java
 // 简化的 NIO 服务端模型
@@ -1267,7 +1267,7 @@ public class ShapeFactory {
 }
 ```
 
-**工厂方法** — 每个产品对应一个工厂类，符合开闭原则
+**工厂方法** — 每个产品对应一个工厂类，符合<term>开闭原则</term>
 ```java
 public interface ShapeFactory { Shape create(); }
 public class CircleFactory implements ShapeFactory {
@@ -1385,7 +1385,7 @@ public class OrderService {
 >
 > JDK 动态代理基于 Java 标准库的 Proxy 类，要求目标类必须实现至少一个接口。它在运行时生成一个实现了相同接口的代理类，所有方法调用都转发到 InvocationHandler 的 invoke 方法。优点是 JDK 原生支持不需要额外依赖，缺点是只能代理接口方法。
 >
-> CGLIB 是一个第三方库，通过 ASM 字节码框架在运行时生成目标类的子类作为代理类，重写父类方法来实现增强。所以 CGLIB 不要求目标类有接口，但无法代理 final 类和 final 方法。
+> CGLIB 是一个第三方库，通过 <term>ASM</term> 字节码框架在运行时生成目标类的子类作为代理类，重写父类方法来实现增强。所以 CGLIB 不要求目标类有接口，但无法代理 final 类和 final 方法。
 >
 > Spring AOP 的策略是：如果目标类实现了接口，默认用 JDK 动态代理；如果没有接口，就用 CGLIB。Spring Boot 2.x 开始默认改为 CGLIB，因为很多类不一定都实现了接口。性能方面，CGLIB 生成代理类的时间稍长，但方法调用速度比 JDK 动态代理快。
 
