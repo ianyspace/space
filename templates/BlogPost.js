@@ -16,7 +16,6 @@ import ArticleToc from 'components/ArticleToc/ArticleToc';
 
 import articleComponents from 'lib/generated/articleComponents';
 import sharedComponents from 'content/components';
-import withBasePath from 'utils/basePath';
 import { formatReadingTime } from 'utils/helpers';
 import { formatDate, formatMessage } from 'utils/i18n';
 import { rhythm, scale } from 'utils/typography';
@@ -126,19 +125,8 @@ const BlogPostTemplate = function ({
         tags = <TagList tags={frontmatter.tags} baseUrl={`${homeLink}tags`} />;
     }
 
-    // Covers from frontmatter may be local (`/blog/<dir>/cover.svg`) and then
-    // need the deployment base path; remote covers are returned unchanged.
-    const coverSrc = withBasePath(frontmatter.cover);
-    // Only remote hosts expose the `th` thumbnail variant, so a local cover uses
-    // the same file for the low resolution layer — deriving `cover.th.svg` would
-    // only produce a 404 for an image nobody ever sees (it sits under the full
-    // size one). Same rule as `components/PostAbbrev`.
-    let lowCover = coverSrc;
-    if (/^https?:\/\//i.test(frontmatter.cover)) {
-        const arr = frontmatter.cover.split('.');
-        arr.splice(arr.length - 1, 0, 'th');
-        lowCover = withBasePath(arr.join('.'));
-    }
+    // 文章详情页不再展示封面横幅：`frontmatter.cover` 只在私密文章未解锁时给
+    // `Private` 当锁屏背景用（`components/Private/Private.js` 自己处理 base path）。
 
     const showUnreal =
         frontmatter.private && mySession?.getItem('password') !== frontmatter.password;
@@ -172,34 +160,6 @@ const BlogPostTemplate = function ({
                 style={{ margin: '-0.5rem 0 1.5rem' }}
             />
 
-            {frontmatter.cover && (
-                <div
-                    style={{
-                        width: '100%',
-                        height: '280px',
-                        position: 'relative',
-                    }}
-                >
-                    <img
-                        src={lowCover}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        alt=""
-                    />
-                    <img
-                        src={coverSrc}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            position: 'absolute',
-                            top: '0px',
-                            left: '0px',
-                        }}
-                        alt=""
-                    />
-                </div>
-            )}
-
             {showUnreal && (
                 <Private
                     cover={frontmatter.cover}
@@ -209,7 +169,10 @@ const BlogPostTemplate = function ({
                 />
             )}
 
-            <div className="css-post">
+            {/* 详情页不再放封面横幅，标题区（日期 / 标签）和正文之间少了一层 280px 的
+                间隔，这里补一个正文上间距，免得正文直接顶到标签上。相邻 margin 会
+                collapse，所以有翻译链接的文章不会被叠成双倍。 */}
+            <div className="css-post" style={{ marginTop: rhythm(1) }}>
                 {showUnreal ? (
                     '小机灵鬼，这是私密内容，老实回答正确问题才可以查看内容哦O(∩_∩)O'
                 ) : (
