@@ -90,21 +90,21 @@ img {
 //
 // 横向滚动交给 `lib/mdx.js` 里的 rehypeWrapTables 包出来的 `.table-wrap`，表格本身保持
 // `display: table`：列宽仍由表格算法统一分配，表头与数据列才对得齐，border-collapse 也不会失效。
-// 小屏下单元格的 `min-width` 把表格撑得比容器宽，于是由外层滚动，而不是把列挤成一条。
-// 外层不滚动：负责边框圆角，以及给「还能往右滑」的提示当定位上下文。
-// overflow: hidden 顺便把表头底色和斑马纹的方角裁成圆角（它们自己没法带圆角）。
+// 单元格设了 `white-space: nowrap`，表格常常比容器宽，于是由外层滚动，而不是把内容折成碎行。
+// 外层不滚动，只负责给「还能往右滑」的提示当定位上下文；视觉上不留边框、不留圆角。
+// 表格不再套外框：没有边框、没有圆角，直接躺在正文里，只有横线做区隔。
+// position 必须留着 —— 右侧「还能往右滑」的提示是绝对定位，靠它当定位上下文。
+// 没有圆角要裁，也就不需要 overflow: hidden 了。
 .css-post .table-wrap {
     position: relative;
     margin-bottom: 1.75rem;
-    border: 1px solid var(--hr);
-    border-radius: 10px;
-    overflow: hidden;
 }
 
 // 「右边还有内容」的提示。只在表格真的比容器宽时出现，滑到最右端自动消失 —— class
 // 由 `templates/BlogPost.js` 的滚动检测加（is-scrollable / at-end）。
 // 滚动条是隐藏的，没有这层提示，窄屏上表格就像被凭空切掉一块。
-// 颜色跟着 --textNormal 走：浅色是一层淡影、深色是一层淡雾，两个主题都看得见。
+// 颜色跟着 --hr 走（浅色是一层淡灰影、深色是一层淡白雾），不带品牌色，
+// 和页面里其它分隔元素是同一套语言，两种主题都看得见又不抢戏。
 .css-post .table-wrap::after {
     content: '';
     position: absolute;
@@ -117,7 +117,7 @@ img {
     transition: opacity 0.2s ease;
     background: linear-gradient(
         to left,
-        color-mix(in srgb, var(--pink) 30%, transparent),
+        color-mix(in srgb, var(--hr) 70%, transparent),
         transparent
     );
 }
@@ -150,52 +150,41 @@ img {
     border-collapse: collapse;
 }
 
+// 单元格不折行 + 去掉 min-width。原先的 `min-width: 6em` 本意是防止列被压太窄，结果
+// 窄屏（<500px）上五列表要占 6em×5 ≈ 480px，浏览器只能把每列压到极限再硬折行 ——
+// 「每 条 命 令 都 fsync」折成三行，比配色问题影响大多了。现在按内容自然排布，
+// 装不下就交给 .table-scroll 横滑，滚动比满屏碎行干净得多。
 .css-post table th,
 .css-post table td {
-    min-width: 6em;
     padding: 0.6rem 0.9rem;
     vertical-align: top;
+    white-space: nowrap;
     border-bottom: 1px solid var(--hr);
-    // 列分隔线：只有横线的话，四列以上的表横向读数容易串行。压到很淡，只当背景
-    // 里的引导线，别让整张表变成格子纸。
-    border-right: 1px solid color-mix(in srgb, var(--hr) 38%, transparent);
 }
 
-// 生成样式把首/末列的外侧内边距清成 0，单元格直接贴着外框；补回来，四边留白一致。
-// 末列同时去掉竖线，右边框由外框负责。
+// 首列两条规则：① 允许折行 —— 它是维度名（策略 / 结构 / 问题 …），偶尔出现长词组，
+// 放它换行可以避免整张表被这一列撑得极宽；② 外侧内边距清回 0，和末列一样贴着正文边缘。
 .css-post table th:first-child,
 .css-post table td:first-child {
-    padding-left: 1rem;
+    white-space: normal;
+    padding-left: 0;
 }
 
 .css-post table th:last-child,
 .css-post table td:last-child {
-    padding-right: 1rem;
-    border-right: 0;
+    padding-right: 0;
 }
 
-// 首列是这张表的「维度名」（策略 / 结构 / 问题 …），略微提重并提亮成标题色 ——
-// 眼睛横着扫的时候有个锚点，不会从第二列读起。只到 500，再重就压过正文了。
-.css-post table tbody td:first-child {
-    font-weight: 500;
-    color: var(--textTitle);
-}
-
-// 表头：底色走品牌粉（--pink 就是 header 用的那个粉），跟着站点主题走，
-// 比灰底干净；下边框换成 1px 的粉，够把表头和数据区分开又不压手。
+// 表头是整张表唯一保留的一层底色。走品牌粉（--pink 就是 header 用的那个粉），
+// 兑淡到 10% 只作背景暗示；真正把表头和数据区分开的是下面那条 1px 的粉线。
 .css-post table thead th {
-    background: color-mix(in srgb, var(--pink) 16%, transparent);
+    background: color-mix(in srgb, var(--pink) 10%, transparent);
     color: var(--textTitle);
     font-weight: 700;
     border-bottom: 1px solid color-mix(in srgb, var(--pink) 50%, transparent);
 }
 
-// 隔行浅底，长表格横向数行时不容易串行。同样走粉，只兑 6% —— 比表头更淡一个档。
-.css-post table tbody tr:nth-child(even) td {
-    background: color-mix(in srgb, var(--pink) 6%, transparent);
-}
-
-// 最后一行的下边框会和外框叠成两条线，去掉。
+// 最后一行下面没内容了，那条横线留着会变成表格底部一条孤零零的边，去掉。
 .css-post table tbody tr:last-child td {
     border-bottom: 0;
 }
