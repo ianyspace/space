@@ -767,11 +767,11 @@ public class User implements Serializable {
 
 > BIO 是同步阻塞模型，每个客户端连接都需要一个独立线程来处理，连接空闲时线程也在等待，连接数多时线程资源浪费严重。
 >
-> NIO 是同步非阻塞模型，核心是 Selector 多路复用器。一个线程通过 Selector 可以同时监控多个 Channel 的 IO 事件，有事件时才处理，没事件时线程不会阻塞在某个连接上。底层依赖操作系统的 epoll（Linux）或 kqueue（Mac）实现高效的事件通知。适合连接数多但数据量不大的场景，比如聊天服务器。
+> NIO 是同步非阻塞模型，核心是 Selector 多路复用器。一个线程通过 Selector 可以同时监控多个 Channel 的 IO 事件，有事件时才处理，没事件时线程不会阻塞在某个连接上。底层依赖操作系统的 <term>epoll</term>（Linux）或 kqueue（Mac）实现高效的事件通知。适合连接数多但数据量不大的场景，比如聊天服务器。
 >
 > AIO 是异步非阻塞模型，发起 IO 操作后直接返回，操作系统完成后通过回调通知应用。编程模型最复杂但理论上性能最好。不过 Java 的 AIO 在 Linux 上表现一般，实际项目中用得少。
 >
-> 实际项目中，Netty 框架基于 NIO 封装，解决了 NIO 原生 API 复杂、epoll 空轮询 bug 等问题，是目前主流的选择。
+> 实际项目中，Netty 框架基于 NIO 封装，解决了 NIO 原生 API 复杂、<term>epoll</term> 空轮询 bug 等问题，是目前主流的选择。
 
 ### 问答速查表
 

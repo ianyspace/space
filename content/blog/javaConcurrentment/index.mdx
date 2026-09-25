@@ -234,7 +234,7 @@ JDK 1.6 引入锁优化，synchronized 不再是一上来就加重量级锁，�
 
 **重量级锁**：
 - 适用场景：多线程激烈竞争
-- 原理：依赖操作系统的 Mutex Lock，未获取到锁的线程进入 BLOCKED 状态（内核态切换，开销大）
+- 原理：依赖操作系统的 Mutex Lock，未获取到锁的线程进入 BLOCKED 状态（<term>内核态切换</term>，开销大）
 - 优点：不会自旋消耗 CPU
 
 | 锁 | 优点 | 缺点 | 场景 |
@@ -542,7 +542,7 @@ public final int getAndAddInt(Object var1, long var2, int var4) {
 #### CAS 的优缺点
 
 **优点**：
-- 无锁，避免线程挂起/唤醒的内核态切换开销
+- 无锁，避免线程挂起/唤醒的<term>内核态切换</term>开销
 - 低竞争场景下性能优于锁
 
 **缺点**：
@@ -800,7 +800,7 @@ try {
 
 > 公平锁严格按照请求顺序分配，先来先得，不会饥饿。非公平锁允许新来的线程直接尝试获取锁，不等队列里的线程，可能导致队列中等待的线程被反复"插队"。
 >
-> 默认使用非公平锁是因为性能更好。原因是减少了线程挂起和唤醒的次数。举个例子：线程 A 释放锁的瞬间，线程 B 刚好来请求，非公平锁下 B 可以直接获取，不需要 A 先唤醒队列中的线程 C 再让 C 获取。省掉了一次线程挂起/唤醒的内核态切换开销。
+> 默认使用非公平锁是因为性能更好。原因是减少了线程挂起和唤醒的次数。举个例子：线程 A 释放锁的瞬间，线程 B 刚好来请求，非公平锁下 B 可以直接获取，不需要 A 先唤醒队列中的线程 C 再让 C 获取。省掉了一次线程挂起/唤醒的<term>内核态切换</term>开销。
 >
 > 但非公平锁的问题是可能导致某些线程长时间等待（饥饿）。如果业务对公平性有要求，比如先到先得的任务队列，就需要用公平锁。
 
@@ -841,7 +841,7 @@ try {
 
 ### 基础概念
 
-线程池是管理和复用线程的核心工具，避免频繁创建/销毁线程的开销，控制并发数量防止 OOM。
+线程池是管理和复用线程的核心工具，避免频繁创建/销毁线程的开销，控制并发数量防止 <term>OOM</term>。
 
 生产环境中，所有线程都应通过线程池管理，不推荐手动 new Thread。
 
@@ -958,7 +958,7 @@ pool.shutdownNow();          // 尝试中断所有正在执行的任务，返回
 > 有个容易搞混的点：不是核心线程满了就创建非核心线程，而是核心线程满了且队列也满了才创建非核心线程。队列是中间缓冲层。
 
 **追问准备**：
-- "为什么不推荐 Executors？" → newFixedThreadPool 和 newSingleThreadExecutor 用的是无界队列 LinkedBlockingQueue，任务堆积会导致 OOM。newCachedThreadPool 的 maximumPoolSize 是 Integer.MAX_VALUE，线程数无限制也会 OOM。应该手动 new ThreadPoolExecutor 显式指定参数。
+- "为什么不推荐 Executors？" → newFixedThreadPool 和 newSingleThreadExecutor 用的是无界队列 LinkedBlockingQueue，任务堆积会导致 <term>OOM</term>。newCachedThreadPool 的 maximumPoolSize 是 Integer.MAX_VALUE，线程数无限制也会 OOM。应该手动 new ThreadPoolExecutor 显式指定参数。
 - "线程池怎么优雅关闭？" → 先调 shutdown() 不再接受新任务，再调 awaitTermination 等待一段时间让已提交任务执行完。如果超时还没结束，再调 shutdownNow() 强制中断。
 
 ---
@@ -971,7 +971,7 @@ pool.shutdownNow();          // 尝试中断所有正在执行的任务，返回
 
 > 线程池大小的设定主要看任务是 CPU 密集型还是 IO 密集型。
 >
-> CPU 密集型任务，比如大量计算、加密，线程大部分时间在消耗 CPU。开太多线程反而因为上下文切换浪费性能。一般设为 CPU 核心数 + 1，多一个是为了某个线程偶尔暂停时有人顶上。
+> CPU 密集型任务，比如大量计算、加密，线程大部分时间在消耗 CPU。开太多线程反而因为<term>上下文切换</term>浪费性能。一般设为 CPU 核心数 + 1，多一个是为了某个线程偶尔暂停时有人顶上。
 >
 > IO 密集型任务，比如网络请求、数据库查询、文件读写，线程大部分时间在等待 IO 响应，CPU 其实是空闲的。这时候可以多开线程，利用等待期间的 CPU 空闲。一般设为 CPU 核心数 × 2，或者用公式 CPU 核心数 /（1 - 阻塞系数），阻塞系数越大线程数越多。
 >
@@ -1353,7 +1353,7 @@ long result = pool.invoke(new SumTask(array, 0, array.length));
 
 > BlockingQueue 是阻塞队列，支持在队列满时阻塞生产者、空时阻塞消费者，非常适合生产者-消费者模式。也是线程池内部的任务队列。
 >
-> 常用的实现有 ArrayBlockingQueue 和 LinkedBlockingQueue。ArrayBlockingQueue 基于数组，有界，必须指定容量，内部用一把锁控制入队和出队，实现简单。LinkedBlockingQueue 基于链表，可以指定容量也可以无界（默认 Integer.MAX_VALUE），内部用两把锁——putLock 和 takeLock，生产和消费可以并发，吞吐量更高。但默认无界有 OOM 风险。
+> 常用的实现有 ArrayBlockingQueue 和 LinkedBlockingQueue。ArrayBlockingQueue 基于数组，有界，必须指定容量，内部用一把锁控制入队和出队，实现简单。LinkedBlockingQueue 基于链表，可以指定容量也可以无界（默认 Integer.MAX_VALUE），内部用两把锁——putLock 和 takeLock，生产和消费可以并发，吞吐量更高。但默认无界有 <term>OOM</term> 风险。
 >
 > SynchronousQueue 比较特殊，容量为 0，不存储元素，生产者 put 必须等消费者 take 配对成功才能继续。Executors.newCachedThreadPool 用的就是它。
 >
