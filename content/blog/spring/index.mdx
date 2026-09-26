@@ -1,0 +1,830 @@
+---
+title: Spring
+date: "2026-09-26"
+description: 从 IoC、AOP、MVC 到 Spring Boot 自动配置、事务与 MyBatis 的面试问答精讲
+tags: ['Spring', 'Java', 'MyBatis', '问答']
+disqus: true
+relative: true
+---
+
+## Spring IoC（控制反转）
+
+### IoC 基础概念
+
+**IoC（Inversion of Control，控制反转）**：把对象创建和依赖管理的控制权从自己手里交出去，交给 Spring 容器。
+
+```java
+没有 IoC：
+UserService service = new UserService();          // 自己 new
+service.setUserDao(new UserDaoImpl());            // 自己组装
+
+有 IoC：
+@Autowired
+private UserService service;                       // 容器帮你注入，你不用管怎么来的
+```
+
+**DI（Dependency Injection，依赖注入）** 是 IoC 的实现方式——容器在创建 Bean 时，把依赖的 Bean 自动注入进去。
+
+**核心容器**：`ApplicationContext`（最常用）和 `BeanFactory`（底层）。
+
+| 对比 | BeanFactory | ApplicationContext |
+|------|-------------|-------------------|
+| 加载时机 | 懒加载（用到才创建） | 预加载（启动时创建所有单例） |
+| 功能 | 基础 DI | DI + AOP + 事件 + 国际化 + 环境 |
+| 使用 | 底层接口，很少直接用 | 开发中唯一用到的 |
+
+### IoC 原理深入
+
+#### Bean 的生命周期
+
+```text
+1. 实例化（Instantiation）
+   通过反射调用构造方法创建对象
+        │
+2. 属性赋值（Populate Properties）
+   注入依赖的 Bean 和配置值
+        │
+3.  Aware 接口回调
+   BeanNameAware → BeanFactoryAware → ApplicationContextAware
+        │
+4.  BeanPostProcessor 前置处理
+   postProcessBeforeInitialization()
+        │
+5.  初始化（Initialization）
+   @PostConstruct → InitializingBean.afterPropertiesSet() → init-method
+        │
+6.  BeanPostProcessor 后置处理
+   postProcessAfterInitialization()（AOP 代理就是在这里生成的）
+        │
+7.  就绪——Bean 可以使用
+        │
+8.  销毁（Destruction）
+   @PreDestroy → DisposableBean.destroy() → destroy-method
+```
+
+> **关键点**：BeanPostProcessor 的 `postProcessAfterInitialization()` 是 AOP 代理对象生成的地方。如果这个 Bean 需要被代理（有切面匹配），这里返回的就是代理对象，不是原始 Bean。
+
+#### 依赖注入的三种方式
+
+| 方式 | 写法 | 优点 | 缺点 |
+|------|------|------|------|
+| 构造器注入 | `public UserService(UserDao dao){}` | 强制依赖，不可变 | 参数多时代码长 |
+| Setter 注入 | `public void setUserDao(UserDao dao){}` | 可选依赖，灵活 | 可能漏注入 |
+| 字段注入 | `@Autowired private UserDao dao;` | 简洁 | 不可测、不可变、隐藏依赖 |
+
+**推荐**：构造器注入。依赖不可变、非空保证、方便单元测试。
+
+#### Bean 作用域
+
+| 作用域 | 说明 |
+|--------|------|
+| singleton | 默认，整个容器只有一个实例 |
+| prototype | 每次获取都创建新实例 |
+| request | 每个 HTTP 请求创建一个（Web） |
+| session | 每个 HTTP 会话创建一个（Web） |
+| application | ServletContext 级别（Web） |
+
+> singleton 的 Bean 是线程不安全的——所有线程共享一个实例。所以不要在 singleton Bean 里定义可变的成员变量存放状态。要存状态用 ThreadLocal 或 prototype。
+
+#### 循环依赖与三级缓存
+
+**什么是循环依赖**：A 依赖 B，B 依赖 A。
+
+```java
+@Component
+class A {
+    @Autowired private B b;
+}
+
+@Component
+class B {
+    @Autowired private A a;
+}
+```
+
+**Spring 怎么解决的——三级缓存**：
+
+```text
+singletonObjects        （一级缓存）: 存完全初始化好的 Bean
+earlySingletonObjects   （二级缓存）: 存提前暴露的原始 Bean（已实例化但未赋值、未初始化）
+singletonFactories      （三级缓存）: 存能生成 Bean 代理对象的 ObjectFactory
+```
+
+**解决流程**：
+
+```text
+1. 创建 A → 实例化 A（反射调构造器，得到原始对象）
+         → 把 A 的 ObjectFactory 放入三级缓存
+         → 开始给 A 注入属性
+
+2. 发现 A 需要 B → 去创建 B
+         → 实例化 B → 给 B 注入属性
+
+3. 发现 B 需要 A → 从三级缓存拿到 A 的 ObjectFactory
+         → 执行 getObject()，如果 A 需要 AOP 代理就这里生成代理 → 放入二级缓存
+         → B 拿到了 A 的（早期）引用 → B 初始化完成 → B 放入一级缓存
+
+4. 回到 A → 把 B 注入给 A → A 初始化完成 → 把二级缓存里的引用放入一级缓存
+```
+
+**为什么需要三级缓存而不是两级？**
+
+核心原因是 AOP。如果只用两级缓存，存的是原始对象。但 A 可能被 AOP 代理，注入给 B 的应该是代理对象。三级缓存的 ObjectFactory 在真正需要使用时才调用 `getObject()`，这时候 `getEarlyBeanReference()` 可以返回带 AOP 代理的对象。两级缓存没法在"存进去的时候"就知道要不要代理。
+
+**构造器注入无法解决循环依赖**：
+
+```text
+A 构造器需要 B → B 构造器需要 A → 死循环
+```
+
+因为构造器注入发生在实例化阶段，这时候 Bean 还没创建出来，连三级缓存都还没放进去。Spring 的做法是直接抛 `BeanCurrentlyInCreationException`。
+
+**三级缓存总结**：
+
+| 缓存 | 存什么 | 什么时候用 |
+|------|--------|-----------|
+| 一级（singletonObjects） | 完全初始化好的 Bean | 正常获取 Bean |
+| 二级（earlySingletonObjects） | 提前暴露的原始 Bean 或代理 | 解决循环依赖时 |
+| 三级（singletonFactories） | ObjectFactory | 需要提前暴露时调用 getObject() |
+
+### 面试实战：IoC
+
+#### 题目 1 ⭐⭐⭐：说说 Spring IoC 的理解
+
+**面试官意图**：必考题，考察对 IoC 有没有自己的理解，还是只背概念。
+
+**推荐回答**：
+
+> IoC 就是控制反转——以前我们自己 new 对象、自己管理依赖关系，现在把这些控制权交给 Spring 容器。容器负责创建 Bean、注入依赖、管理生命周期，我们只需要声明"我要什么"就行。
+>
+> 实现方式是 DI 依赖注入，构造器注入是推荐的——依赖不可变，测试时可以手动传 mock。底层的 BeanFactory 是基础容器，ApplicationContext 是它的增强版，加了 AOP、事件、国际化等，也是开发中唯一接触到的。
+>
+> Bean 的生命周期从实例化开始，经过属性注入、Aware 回调、BeanPostProcessor 的前后处理、初始化方法，最终就绪。AOP 代理就是在 BeanPostProcessor 的后置处理中生成的。
+
+#### 题目 2 ⭐⭐⭐：Spring 怎么解决循环依赖？为什么需要三级缓存？
+
+**面试官意图**：经典高阶题，考察对 Spring 底层机制的理解深度。
+
+**推荐回答**：
+
+> Spring 用三级缓存解决循环依赖。创建 A 时，先实例化拿到原始对象，把能生成它的 ObjectFactory 放入三级缓存，然后给 A 注入属性。发现需要 B，就去创建 B。B 注入属性时需要 A，从三级缓存取出 A 的 ObjectFactory 调用 getObject() 拿到 A 的引用——如果 A 需要 AOP 代理，这里就生成代理对象——放入二级缓存。B 拿到 A 后初始化完成，回到 A 继续完成初始化。
+>
+> 三级缓存比两级多的一层，核心是为了处理 AOP。如果只有二级缓存，存的就是原始对象。但如果有 AOP，注入给 B 的应该是代理对象。三级缓存的 ObjectFactory 是延迟执行的——只有真正用到时才调 getObject()，这时候通过 getEarlyBeanReference() 可以返回代理对象。
+>
+> 构造器注入无法解决循环依赖，因为依赖在实例化阶段就发生了，Bean 还没创建出来，连三级缓存都放不进去，直接抛异常。
+
+**追问准备**：
+- "如何检测循环依赖？" → Spring 用 `singletonsCurrentlyInCreation` 这个 Set 记录正在创建中的 Bean。如果发现一个 Bean 已经在 Set 里了，说明出现了循环依赖。
+
+#### 题目 3 ⭐⭐：singleton 的 Bean 是线程安全的吗？为什么？
+
+**面试官意图**：考察对 Bean 作用域和线程安全关系的理解。
+
+**推荐回答**：
+
+> singleton 本身不保证线程安全。Spring 只管创建和注入，不管你的代码怎么写。singleton 意味着所有线程都用同一个实例，如果这个实例里有可变的状态字段，多线程同时读写就会出问题。
+>
+> 所以不要在 singleton Bean 里定义可变的成员变量。需要状态要么存在方法参数里、局部变量里，要么用 ThreadLocal、要么把 Bean 声明为 prototype。
+
+## Spring AOP（面向切面编程）
+
+### AOP 基础概念
+
+AOP 是把横切逻辑（日志、事务、权限）从业务代码中抽离出来，集中管理，不污染业务代码。
+
+```java
+没有 AOP：
+    public void doBusiness() {
+        log.info("start");          // 横切逻辑
+        checkAuth();                // 横切逻辑
+        openTransaction();          // 横切逻辑
+        // ... 真正业务代码 ...
+        commitTransaction();        // 横切逻辑
+        log.info("end");            // 横切逻辑
+    }
+
+有 AOP：
+    @Transactional
+    public void doBusiness() {      // 业务代码干干净净
+        // ... 真正业务代码 ...
+    }
+```
+
+**核心术语**：
+
+| 术语 | 含义 | 类比 |
+|------|------|------|
+| Aspect（切面） | 横切逻辑的封装类 | "日志切面" |
+| JoinPoint（连接点） | 程序执行的某个点 | 方法调用、异常抛出 |
+| Pointcut（切点） | 匹配连接点的规则 | "所有 Service 层的方法" |
+| Advice（通知） | 切面在切点的具体动作 | "方法执行前打印日志" |
+| Target（目标对象） | 被代理的对象 | UserServiceImpl |
+| Weaving（织入） | 把切面应用到目标对象的过程 | 生成代理对象 |
+| Proxy（代理） | 织入后生成的代理对象 | JdkDynamicProxy 或 CglibProxy |
+
+### AOP 原理深入
+
+#### JDK 动态代理 vs CGLib 代理
+
+| 对比 | JDK 动态代理 | CGLib 代理 |
+|------|-------------|-----------|
+| 基于 | 接口 | 继承（子类） |
+| 要求 | 目标类必须实现接口 | 目标类不能是 final |
+| 生成方式 | `Proxy.newProxyInstance()` | ASM 字节码生成子类 |
+| 性能 | 反射调用，稍慢（现代 JDK 已优化） | 直接方法调用，稍快 |
+| 代理对象类型 | `com.sun.proxy.$Proxy0` | `Xxx$$EnhancerByCGLIB$$xxx` |
+
+**Spring 的选择策略**：
+- 默认：目标类实现了接口 → JDK 动态代理
+- 目标类没实现接口 → CGLib
+- `@EnableAspectJAutoProxy(proxyTargetClass = true)` → 强制 CGLib
+- Spring Boot 2.0+ AOP 默认强制 CGLib（`spring.aop.proxy-target-class=true`）
+
+**JDK 动态代理原理**（核心源码逻辑）：
+
+```java
+// 简化原理
+public static Object newProxyInstance(ClassLoader loader, Class<?>[] interfaces, InvocationHandler h) {
+    // 1. 运行时动态生成一个实现所有 interfaces 的代理类字节码
+    // 2. 加载这个类
+    // 3. 反射调构造器，传入 InvocationHandler，创建代理实例
+}
+
+// 代理类大概长这样（简化）
+public class $Proxy0 implements UserService {
+    private InvocationHandler h;
+
+    public void doBusiness() {
+        h.invoke(this, method, args);  // 所有方法调用都转发给 InvocationHandler
+    }
+}
+```
+
+**CGLib 代理原理**：
+
+```text
+CGLib 在运行时生成目标类的一个子类，重写所有非 final 方法。
+方法调用时在子类里插入切面逻辑。
+
+限制：
+- 不能代理 final 类（无法继承）
+- 不能代理 final 方法（无法重写）
+- 不能代理 private 方法（不可见）
+```
+
+#### 五种通知类型
+
+| 通知 | 注解 | 执行时机 |
+|------|------|---------|
+| 前置通知 | @Before | 目标方法执行前 |
+| 后置通知 | @AfterReturning | 目标方法正常返回后 |
+| 异常通知 | @AfterThrowing | 目标方法抛异常后 |
+| 最终通知 | @After | 目标方法执行后（不论是否异常，相当于 finally） |
+| 环绕通知 | @Around | 包裹目标方法，可控制是否执行 |
+
+**执行顺序**：
+
+```text
+@Around 前半段 → @Before → 目标方法
+    ├── 正常返回 → @AfterReturning → @After → @Around 后半段
+    └── 抛异常   → @AfterThrowing  → @After → @Around 后半段（若没 catch）
+```
+
+**多切面执行顺序**：可以用 `@Order(n)` 或 `@Priority` 控制，数字越小越先执行（@Around 前半段是先外后内，@Around 后半段是先内后外，像个洋葱）。
+
+### 面试实战：AOP
+
+#### 题目 1 ⭐⭐⭐：JDK 动态代理和 CGLib 代理的区别？Spring 怎么选的？
+
+**面试官意图**：AOP 底层高频题，必准备。
+
+**推荐回答**：
+
+> JDK 动态代理基于接口，要求目标类必须实现至少一个接口。原理是运行时动态生成一个实现了所有接口的代理类，通过 InvocationHandler 转发所有方法调用。CGLib 基于继承，运行时生成目标类的子类，重写所有非 final 方法来插入切面逻辑。
+>
+> Spring 的选择策略：目标类实现了接口默认用 JDK 代理，否则用 CGLib。但 Spring Boot 2.0+ 默认强制 CGLib——因为方便，不用考虑是否实现了接口。手动加 `proxyTargetClass=true` 也可以强制 CGLib。
+>
+> CGLib 的局限是不能代理 final 类和 final 方法，构造器里调用的方法也不会被代理（因为代理对象还没生成）。
+
+**追问准备**：
+- "JDK 代理为什么只能代理接口？" → 生成的代理类已经继承了 Proxy 类（Java 单继承），只能通过实现接口来代理目标类的行为。
+
+#### 题目 2 ⭐⭐：AOP 的应用场景有哪些？
+
+**面试官意图**：考察对 AOP 的实际运用。
+
+**推荐回答**：
+
+> 最常见的三类场景。一是事务管理——@Transactional 就是通过 AOP 在方法前后开启和提交/回滚事务。二是日志记录——统一在 Service 层入口记录请求参数、响应结果和耗时。三是权限校验——用自定义注解加切面，在方法执行前校验用户权限，拦截非法请求。
+>
+> 其他还有接口限流、缓存处理、统一异常处理、分布式锁注解化等。
+
+#### 题目 3 ⭐⭐：同一个类里方法 A 调方法 B，B 上的 @Transactional 会生效吗？
+
+**面试官意图**：考察对 AOP 代理本质的理解——这是个陷阱题。
+
+**推荐回答**：
+
+> 不会生效。AOP 的本质是代理模式——你注入的 Service 其实是个代理对象。外层调 A 方法时，实际调用的是代理对象的 A，代理可以在 A 前后加事务。但 A 方法里调 B 是 `this.B()`，this 是原始对象不是代理对象，直接跳过了代理，所以 B 上的 @Transactional 根本不生效。
+>
+> 解决方式：一是把 B 放到另一个类里通过注入来调；二是在当前类里注入自己 `@Autowired private XxxService self`，用 `self.B()` 调；三是通过 `AopContext.currentProxy()` 获取当前代理对象来调。
+
+## Spring MVC
+
+### MVC 基础概念
+
+Spring MVC 是基于 Servlet 的 MVC 框架，核心是 **DispatcherServlet**——前端控制器，所有请求都先过它，再由它分发给对应的 Handler。
+
+### MVC 原理深入
+
+#### 一个请求的完整流程
+
+```text
+用户请求: POST /user/save
+
+    ① DispatcherServlet 收到请求
+         │
+    ② HandlerMapping 查找处理器
+         │ 根据 URL 找到对应的 Controller 方法
+         │
+    ③ HandlerAdapter 执行处理器
+         │ 调用 Controller 方法
+         │ 参数解析（@RequestBody、@RequestParam 等）
+         │
+    ④ Controller 执行业务逻辑
+         │ 返回 ModelAndView 或 @ResponseBody 直接写响应
+         │
+    ⑤ ViewResolver 解析视图（返回页面时）
+         │ 逻辑视图名 → 物理视图路径
+         │ REST 接口这一步跳过
+         │
+    ⑥ 渲染视图 / 返回 JSON
+         ▼
+      响应返回给客户端
+```
+
+**流程图总结口诀**：请求 → 前端控制器 → 处理器映射器找 Handler → 处理器适配器执行 → 视图解析器找页面 → 响应。
+
+#### 核心组件
+
+| 组件 | 作用 |
+|------|------|
+| DispatcherServlet | 前端控制器，统一入口和调度 |
+| HandlerMapping | 根据 URL 找到对应的 Handler（Controller 方法） |
+| HandlerAdapter | 执行 Handler（适配不同的处理器） |
+| HandlerInterceptor | 拦截器，Handler 前后的横切操作 |
+| ViewResolver | 逻辑视图名 → 实际视图 |
+| HandlerExceptionResolver | 统一异常处理 |
+
+#### 常用注解速查
+
+| 注解 | 作用 |
+|------|------|
+| @Controller | 标识为控制器（配合视图） |
+| @RestController | @Controller + @ResponseBody |
+| @RequestMapping | 映射 URL 到方法 |
+| @GetMapping / @PostMapping / @PutMapping / @DeleteMapping | 限制 HTTP 方法 |
+| @RequestParam | 取 URL 参数 `?name=xx` |
+| @PathVariable | 取路径变量 `/user/{id}` |
+| @RequestBody | 取请求体 JSON → 对象 |
+| @RequestHeader | 取请求头 |
+| @CookieValue | 取 Cookie |
+| @ModelAttribute | 表单参数 → 对象 |
+| @ResponseBody | 返回值直接写响应体 |
+| @ResponseStatus | 指定 HTTP 状态码 |
+
+#### 拦截器 vs 过滤器
+
+| 对比 | 过滤器（Filter） | 拦截器（Interceptor） |
+|------|-----------------|---------------------|
+| 归属 | Servlet 规范 | Spring 框架 |
+| 作用范围 | 所有请求 | 只对 Spring MVC 的请求 |
+| 能否拿到 Handler | 不能 | 能（preHandle 拿 HandlerMethod） |
+| 依赖注入 | 不能直接注入 Spring Bean | 可以 |
+| 执行顺序 | 先过 Filter 再进 Servlet | 在 DispatcherServlet 之后、Controller 之前 |
+
+**执行链**：`Filter → DispatcherServlet → Interceptor.preHandle → Controller → Interceptor.postHandle → Interceptor.afterCompletion → Filter`
+
+### 面试实战：MVC
+
+#### 题目 1 ⭐⭐⭐：Spring MVC 处理请求的完整流程是怎样的？
+
+**面试官意图**：经典必考题，考察是否能画一条完整的请求处理链。
+
+**推荐回答**：
+
+> 一切从 DispatcherServlet 开始。请求进来后，DispatcherServlet 通过 HandlerMapping 根据 URL 找到对应的 Handler（就是 Controller 里的那个方法）。找到了就交给 HandlerAdapter 去执行——Adapter 负责参数解析和类型转换，比如 @RequestBody 把 JSON 转成对象、@RequestParam 取参数。执行完返回 ModelAndView 或 @ResponseBody 直接序列化 JSON。如果是视图，ViewResolver 把逻辑视图名解析成实际页面路径，渲染后返回。
+>
+> 简洁记忆就是：映射找 Handler → 适配器执行 → 视图解析渲染。
+
+#### 题目 2 ⭐⭐：过滤器和拦截器的区别？
+
+**面试官意图**：基础但容易混淆。
+
+**推荐回答**：
+
+> 过滤器是 Servlet 级别的，在请求进入 Servlet 前执行，对所有请求生效，不限于 Spring MVC。拦截器是 Spring 框架自己的，只对经过 DispatcherServlet 的请求有效。关键区别：拦截器可以拿到即将执行的 Controller 方法信息（HandlerMethod），可以基于注解做精细化控制；过滤器做不到。另外拦截器可以直接注入 Spring Bean，过滤器需要通过 DelegatingFilterProxy 桥接。
+
+## Spring Boot 核心
+
+### Spring Boot 基础概念
+
+Spring Boot 的核心设计理念：**约定优于配置**。能自动推断的就不让人写，通过 starter 和自动配置消灭 XML 和样板代码。
+
+### Spring Boot 原理深入
+
+#### @SpringBootApplication 到底做了什么
+
+```java
+@SpringBootApplication   // 一个注解 = 下面三个
+    │
+    ├── @SpringBootConfiguration     // 等价于 @Configuration，标识配置类
+    ├── @EnableAutoConfiguration     // 核心！开启自动配置
+    └── @ComponentScan               // 扫描当前包及子包下的组件
+```
+
+#### 自动配置原理（@EnableAutoConfiguration）
+
+```text
+@EnableAutoConfiguration
+    │
+    └── @Import(AutoConfigurationImportSelector.class)
+            │
+            └── 读取 META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+                    （Spring Boot 3.x，旧版是 spring.factories）
+                    │
+                    ├── 列出所有自动配置类（如 DataSourceAutoConfiguration、RedisAutoConfiguration...）
+                    │
+                    └── 每个配置类上有条件注解决定是否生效
+```
+
+**条件注解**：
+
+| 注解 | 条件 |
+|------|------|
+| @ConditionalOnClass | classpath 有指定类时才生效 |
+| @ConditionalOnMissingBean | 容器里没有这个 Bean 才生效 |
+| @ConditionalOnBean | 容器里有这个 Bean 才生效 |
+| @ConditionalOnProperty | 配置项匹配时才生效 |
+| @ConditionalOnWebApplication | 是 Web 应用才生效 |
+
+**举例**：`DataSourceAutoConfiguration` 标注了 `@ConditionalOnClass(DataSource.class)`——只要你引入了数据库驱动，classpath 里有 DataSource 类，这个自动配置就生效，会自动创建 DataSource Bean。
+
+#### starter 机制
+
+starter 是一个"启动器"，把一组相关依赖打包在一起，你引入一个 starter 就得到一组能力。
+
+```text
+引入 spring-boot-starter-web
+    = spring-webmvc + spring-web + tomcat-embed + jackson + validation + ...
+
+引入 spring-boot-starter-data-redis
+    = spring-data-redis + lettuce-pool + ...
+```
+
+**自定义 starter**：
+1. 写一个自动配置类（@Configuration + @Bean）
+2. 在 `META-INF/spring/xxx.imports` 里注册
+3. 用条件注解控制是否生效
+4. 打包发布
+
+### 面试实战：Spring Boot
+
+#### 题目 1 ⭐⭐⭐：Spring Boot 自动配置的原理是什么？
+
+**面试官意图**：Boot 最核心的机制，高频题。
+
+**推荐回答**：
+
+> @SpringBootApplication 里最关键的是 @EnableAutoConfiguration。它通过 @Import 导入 AutoConfigurationImportSelector，该 Selector 会去读 classpath 下 META-INF/spring 里的配置——Spring Boot 3.x 是 `.imports` 文件，旧版是 `spring.factories`。文件里列出了所有可能的自动配置类全限定名。
+>
+> 每个自动配置类上都有条件注解，通过判断 classpath 里有没有某个类、容器里有没有某个 Bean、配置项是否匹配等，来决定这个配置类是否生效。只有满足条件的才真正加载，创建对应的 Bean。
+>
+> 比如 DataSourceAutoConfiguration 上贴了 @ConditionalOnClass(DataSource.class)，只有引入了 JDBC 依赖才生效。而 @ConditionalOnMissingBean(DataSource.class) 保证如果用户自己定义了 DataSource，自动配置就不重复创建。
+
+#### 题目 2 ⭐⭐：如何自定义一个 starter？
+
+**面试官意图**：考察对 starter 机制的实操理解。
+
+**推荐回答**：
+
+> 四个步骤。首先写自动配置类——在 @Configuration 类里用 @Bean 定义要自动创建的 Bean，通过条件注解控制是否生效。然后在 META-INF/spring 目录下创建 `.imports` 文件，里面写自动配置类的全限定名。如果需要外部配置，用 @ConfigurationProperties 绑定 application.yml 的前缀。最后在 pom 里声明依赖，打包发布。
+
+**追问准备**：
+- "starter 和普通依赖的区别？" → starter 是聚合依赖——除了引入 jar 包，还通过自动配置自动帮你创建和注入 Bean。普通依赖你引入了 jar 还得自己配置 @Bean。
+
+## Spring 事务管理
+
+### 事务 基础概念
+
+Spring 事务是对数据库事务的抽象。一个方法上贴 `@Transactional`，Spring 就在方法前后帮你管理事务——正常返回就提交，抛异常就回滚。
+
+**声明式事务 vs 编程式事务**：
+
+| 对比 | 声明式（@Transactional） | 编程式（TransactionTemplate） |
+|------|------------------------|------------------------------|
+| 侵入性 | 无，注解搞定 | 有，代码里要写模板 |
+| 灵活度 | 固定粒度（整个方法） | 可精确控制事务边界 |
+| 使用 | 99% 的场景 | 少数需要精细控制时 |
+
+### 事务 原理深入
+
+#### 事务传播行为（7 种）
+
+| 传播行为 | 说明 |
+|---------|------|
+| REQUIRED（默认） | 当前有事务就加入，没有就新建 |
+| REQUIRES_NEW | 总是新建事务，当前事务挂起 |
+| SUPPORTS | 当前有事务就加入，没有就非事务运行 |
+| NOT_SUPPORTED | 非事务运行，当前事务挂起 |
+| MANDATORY | 必须有事务，没有就抛异常 |
+| NEVER | 必须没事务，有就抛异常 |
+| NESTED | 嵌套事务，内部回滚不影响外部（需 Savepoint 支持） |
+
+**最常用的是 REQUIRED 和 REQUIRES_NEW**。
+
+```text
+REQUIRED:
+    A（有事务）→ B（加入 A 的事务）
+    A 和 B 同生共死，一个抛异常整个回滚
+
+REQUIRES_NEW:
+    A（有事务）→ B（全新事务，A 挂起）
+    B 独立提交/回滚，不影响 A
+```
+
+**典型场景**：订单支付记录日志。即使支付失败，日志也要记录成功——日志方法用 `@Transactional(propagation = REQUIRES_NEW)`。
+
+#### @Transactional 失效的 6 种场景
+
+| 场景 | 原因 |
+|------|------|
+| 1. 注解贴在非 public 方法上 | Spring 事务基于 AOP，只能代理 public 方法 |
+| 2. 同类内部方法调用 | `this.methodB()` 不经过代理对象 |
+| 3. 异常被 try-catch 吞了 | Spring 只对未捕获的 RuntimeException 和 Error 回滚 |
+| 4. rollbackFor 没设对 | 默认不回滚 Checked Exception |
+| 5. 数据库引擎不支持事务 | MyISAM 不支持 |
+| 6. 多线程调用 | 事务跟线程绑定，新线程拿不到当前事务 |
+
+**场景 3 详解**（最常踩的坑）：
+
+```java
+@Transactional
+public void save() {
+    try {
+        db.insert(data);           // SQL 执行抛异常
+    } catch (Exception e) {
+        log.error("error", e);    // 异常被吞了！
+    }
+}
+// 方法正常返回 → Spring 以为一切正常 → 提交事务 → 数据没插入也没回滚！
+```
+
+**场景 4 详解**：
+
+```java
+// 抛 IOException，默认不回滚（IOException 是 Checked Exception）
+@Transactional
+public void upload() throws IOException {
+    fileService.write(file);
+}
+
+// 正确做法：指定 rollbackFor
+@Transactional(rollbackFor = Exception.class)
+```
+
+**场景 6 详解**：
+
+```java
+@Transactional
+public void process() {
+    new Thread(() -> {
+        userMapper.insert(user);  // 这是在新线程里，没有事务！
+    }).start();
+}
+```
+
+### 面试实战：事务
+
+#### 题目 1 ⭐⭐⭐：@Transactional 什么时候会失效？
+
+**面试官意图**：这是 Spring 面试最高频问题之一，考察实战踩坑经验。
+
+**推荐回答**：
+
+> 最常见的六个场景。第一，注解在非 public 方法上——Spring 事务的 AOP 只对 public 方法做代理。第二，同类方法内部调用——this.methodB() 直接调原始对象的 B，没走代理，B 上的 @Transactional 不起作用。第三，异常被 try-catch 吞了——方法正常返回，Spring 不知道有异常，直接提交。
+>
+> 第四，rollbackFor 没设对——默认只回滚 RuntimeException 和 Error，Checked Exception 不回滚。第五，数据库引擎不支持事务——比如用了 MyISAM。第六，多线程——事务信息绑在线程上，新启的线程拿不到事务上下文。
+>
+> 实际工作中碰得最多的是第三和第四。内部调用也常见，解体方案就是把那个方法拆到另一个类里通过注入调用，或者注入自己用 self.methodB()。
+
+#### 题目 2 ⭐⭐：事务传播行为有哪几种？REQUIRED 和 REQUIRES_NEW 的区别？
+
+**面试官意图**：考察对事务传播的理解。
+
+**推荐回答**：
+
+> 七种传播行为，核心记住两个就行。REQUIRED 是默认的——当前有事务就加入，没有就新建。REQUIRES_NEW 是什么情况都新建一个独立事务，把当前事务挂起。
+>
+> 区别在于：REQUIRED 下 A 调 B，B 抛异常整个回滚——两个方法共用同一个事务。REQUIRES_NEW 下 A 调 B，B 抛异常只回滚 B，A 不受影响——因为 B 的事务是独立的。实际运用中，REQUIRED 占 90% 以上，REQUIRES_NEW 用在"不管外层成败我都要独立提交"的场景，比如写日志。
+
+## MyBatis
+
+### MyBatis 基础概念
+
+MyBatis 是一个半自动 ORM 框架——SQL 你自己写，结果映射它帮你做。介于全手动 JDBC 和全自动 Hibernate 之间。
+
+### MyBatis 原理深入
+
+#### 工作流程
+
+```text
+1. 启动时
+   ├── 加载配置文件（mybatis-config.xml / application.yml）
+   ├── 解析 Mapper XML 或注解
+   │   ├── 解析 SQL → MappedStatement 对象（含 SQL、参数映射、结果映射）
+   │   └── 存入 Configuration 对象
+   └── 创建 SqlSessionFactory
+
+2. 运行时
+   SqlSessionFactory.openSession()
+       │
+   SqlSession.getMapper(UserMapper.class)
+       │
+       └── 返回 MapperProxy（JDK 动态代理对象）
+               │
+          调用 userMapper.selectById(1)
+               │
+          进入 MapperProxy.invoke()
+               │
+               ├── 根据方法名找到对应的 MappedStatement
+               ├── 通过 Executor 执行 SQL
+               │   ├── 一级缓存检查（默认开启）
+               │   ├── 参数处理（#{} → PreparedStatement 的参数）
+               │   ├── 执行 SQL
+               │   └── 结果映射（ResultSet → Java 对象）
+               └── 返回结果
+```
+
+#### `#{}` 和 `${}` 的区别
+
+| 对比 | `#{}` | `${}` |
+|------|-----|-----|
+| SQL 形式 | 预编译占位符 `?` | 直接拼接字符串 |
+| SQL 注入 | 安全（PreparedStatement） | 危险 |
+| 参数处理 | 自动加引号、类型转换 | 原样拼接 |
+| 使用场景 | 绝大多数参数 | 动态表名、列名、ORDER BY 字段 |
+
+```xml
+<!-- #{}：生成 SELECT * FROM user WHERE id = ? → 安全 -->
+<select id="findById" resultType="User">
+    SELECT * FROM user WHERE id = #{id}
+</select>
+
+<!-- ${}：生成 SELECT * FROM user ORDER BY create_time → 动态列名用 -->
+<select id="findAll" resultType="User">
+    SELECT * FROM user ORDER BY ${orderColumn}
+</select>
+```
+
+#### 缓存机制
+
+| 缓存 | 级别 | 作用域 | 默认 | 特点 |
+|------|------|--------|------|------|
+| 一级缓存 | SqlSession | 一次会话 | 开启 | 不用配置，自动生效 |
+| 二级缓存 | Mapper（namespace） | 多个 SqlSession 共享 | 需要手动开启 | 跨会话共享，需序列化 |
+
+**一级缓存**：
+
+```text
+SqlSession 级别的缓存，同一个 SqlSession 里两次查询同一条件，第二次直接返回缓存结果。
+
+失效条件：
+- 不同的 SqlSession
+- 同一个 SqlSession 中执行了增删改（commit 后清缓存）
+- 手动 clearCache()
+```
+
+**二级缓存**：
+
+```text
+namespace 级别的缓存，多个 SqlSession 共享。
+
+开启方式：
+1. 配置文件：<setting name="cacheEnabled" value="true"/>
+2. Mapper XML：<cache/>
+3. 实体类实现 Serializable
+
+缓存策略：
+- LRU（默认）
+- FIFO
+- SOFT（软引用）
+- WEAK（弱引用）
+```
+
+#### 分页的方式
+
+| 方式 | 原理 | 适用 |
+|------|------|------|
+| RowBounds（逻辑分页） | 查出全部数据，内存截取 | ❌ 不推荐，数据量大会 OOM |
+| SQL 里写 LIMIT | 手动传 offset 和 limit | 简单场景 |
+| PageHelper 插件 | 拦截 SQL 自动加 LIMIT | ✅ 推荐 |
+
+**PageHelper 原理**：MyBatis 的插件机制，拦截 Executor 的 query 方法。在执行 SQL 前，通过 ThreadLocal 拿到分页参数，往原始 SQL 上拼接 LIMIT 子句。同时自动执行一条 COUNT 查询获取总数。
+
+### 面试实战：MyBatis
+
+#### 题目 1 ⭐⭐：MyBatis 的工作流程？
+
+**面试官意图**：考察对整体流程的理解。
+
+**推荐回答**：
+
+> 启动时加载配置，解析 Mapper XML 或注解，把每个 SQL 封装成 MappedStatement 存到 Configuration 里。运行时通过 SqlSessionFactory 获取 SqlSession，调用 getMapper 拿到 Mapper 接口的代理对象——这个代理是 JDK 动态代理生成的 MapperProxy。
+>
+> 调用接口方法时，代理拦截请求，根据方法全限定名找到对应的 MappedStatement，交给 Executor 执行。Executor 负责缓存检查、参数处理、SQL 执行、结果映射，最终返回。
+
+#### 题目 2 ⭐⭐：`#{}` 和 `${}` 有什么区别？
+
+**面试官意图**：基础但重要，SQL 注入必考点。
+
+**推荐回答**：
+
+> `#{}` 是预编译占位符，生成 ?，通过 PreparedStatement 传参，安全防注入。`${}` 是字符串拼接，直接替换到 SQL 里，有注入风险。所以条件参数一律用 `#{}`，只有动态表名、列名、ORDER BY 字段这种无法预编译的场景才用 `${}`。
+
+#### 题目 3 ⭐⭐：MyBatis 一级缓存和二级缓存的区别？
+
+**面试官意图**：考察缓存机制的理解。
+
+**推荐回答**：
+
+> 一级缓存是 SqlSession 级别的，默认开启，不用配。同一个 SqlSession 里两次查同一数据，第二次直接走缓存。但增删改后缓存自动清空，防止脏读。
+>
+> 二级缓存是 namespace 级别的，跨 SqlSession 共享，需要手动开启。实体类必须序列化。风险在于多表关联查询时，一个 namespace 的更新不会清另一个 namespace 的缓存，可能读到脏数据。所以生产环境里二级缓存要慎重，更新频繁的表别开。
+
+## 面试速查表
+
+### IoC 速查
+
+| 问题 | 答案 |
+|------|------|
+| IoC 是什么 | 控制反转，对象创建交给容器 |
+| DI 三种方式 | 构造器、Setter、字段（推荐构造器） |
+| Bean 生命周期 | 实例化 → 属性注入 → 初始化 → 就绪 → 销毁 |
+| AOP 代理在哪生成 | BeanPostProcessor 的 postProcessAfterInitialization() |
+| 三级缓存 | singletonObjects → earlySingletonObjects → singletonFactories |
+| 为什么三级 | 处理 AOP 代理的延迟生成 |
+| 构造器循环依赖 | 无法解决，直接抛异常 |
+| BeanFactory vs ApplicationContext | 懒加载 vs 预加载，后者加 AOP/事件/国际化 |
+
+### AOP 速查
+
+| 问题 | 答案 |
+|------|------|
+| JDK 代理 | 基于接口，Proxy.newProxyInstance() |
+| CGLib 代理 | 基于继承，ASM 生成子类 |
+| 默认选择 | 有接口→JDK，否则→CGLib；Boot 2.0+ 默认 CGLib |
+| 五种通知 | Before / AfterReturning / AfterThrowing / After / Around |
+| 多切面顺序 | @Order(n)，越小越先执行 |
+| AOP 失效场景 | 同类内部调用（this.xxx 不走代理） |
+
+### MVC 速查
+
+| 问题 | 答案 |
+|------|------|
+| 核心入口 | DispatcherServlet |
+| 处理步骤 | 映射查 Handler → 适配器执行 → 视图渲染 |
+| 过滤器 vs 拦截器 | Filter 是 Servlet 级别，Interceptor 是 Spring 级别 |
+| Interceptor 能拿什么 | HandlerMethod（Controller 方法信息） |
+| @ResponseBody 作用 | 返回值直接序列化 JSON 写响应体 |
+
+### Spring Boot 速查
+
+| 问题 | 答案 |
+|------|------|
+| @SpringBootApplication | @Configuration + @EnableAutoConfiguration + @ComponentScan |
+| 自动配置原理 | 读 .imports 文件 → 条件注解筛选 → 创建 Bean |
+| starter 是什么 | 聚合依赖 + 自动配置的一键启动器 |
+| 条件注解举例 | @ConditionalOnClass / @ConditionalOnMissingBean |
+
+### 事务速查
+
+| 问题 | 答案 |
+|------|------|
+| 默认传播 | REQUIRED（有则加入，无则新建） |
+| REQUIRES_NEW | 独立新事务，外层挂起 |
+| 默认回滚 | RuntimeException + Error |
+| 想让 Checked 也回滚 | @Transactional(rollbackFor = Exception.class) |
+| 常见失效 6 种 | 非 public / 内部调用 / 异常被吞 / rollbackFor 没设 / 引擎不支持 / 多线程 |
+| 内部调用解决 | 拆到另一个类 / 注入自己 / AopContext.currentProxy() |
+
+### MyBatis 速查
+
+| 问题 | 答案 |
+|------|------|
+| 核心组件 | SqlSessionFactory → SqlSession → Executor |
+| Mapper 怎么工作的 | JDK 动态代理 → MapperProxy |
+| `#{}` vs `${}` | `#{}` 预编译安全，`${}` 字符串拼接危险 |
+| 一级缓存 | SqlSession 级别，默认开启 |
+| 二级缓存 | namespace 级别，需手动开 + 序列化 |
+| 分页推荐 | PageHelper（拦截 SQL 加 LIMIT） |
