@@ -23,7 +23,7 @@ service.setUserDao(new UserDaoImpl());            // 自己组装
 private UserService service;                       // 容器帮你注入，你不用管怎么来的
 ```
 
-**DI（Dependency Injection，依赖注入）** 是 IoC 的实现方式——容器在创建 Bean 时，把依赖的 Bean 自动注入进去。
+**DI（Dependency Injection，依赖注入）** 是 IoC 的实现方式——容器在创建 <term>Bean</term> 时，把依赖的 Bean 自动注入进去。
 
 **核心容器**：`ApplicationContext`（最常用）和 `BeanFactory`（底层）。
 
@@ -62,7 +62,7 @@ private UserService service;                       // 容器帮你注入，你�
    @PreDestroy → DisposableBean.destroy() → destroy-method
 ```
 
-> **关键点**：BeanPostProcessor 的 `postProcessAfterInitialization()` 是 AOP 代理对象生成的地方。如果这个 Bean 需要被代理（有切面匹配），这里返回的就是代理对象，不是原始 Bean。
+> **关键点**：<term>BeanPostProcessor</term> 的 `postProcessAfterInitialization()` 是 AOP 代理对象生成的地方。如果这个 <term>Bean</term> 需要被代理（有切面匹配），这里返回的就是代理对象，不是原始 Bean。
 
 #### 依赖注入的三种方式
 
@@ -84,7 +84,7 @@ private UserService service;                       // 容器帮你注入，你�
 | session | 每个 HTTP 会话创建一个（Web） |
 | application | ServletContext 级别（Web） |
 
-> singleton 的 Bean 是线程不安全的——所有线程共享一个实例。所以不要在 singleton Bean 里定义可变的成员变量存放状态。要存状态用 ThreadLocal 或 prototype。
+> singleton 的 <term>Bean</term> 是线程不安全的——所有线程共享一个实例。所以不要在 singleton Bean 里定义可变的成员变量存放状态。要存状态用 <term>ThreadLocal</term> 或 prototype。
 
 #### 循环依赖与三级缓存
 
@@ -129,7 +129,7 @@ singletonFactories      （三级缓存）: 存能生成 Bean 代理对象的 Ob
 
 **为什么需要三级缓存而不是两级？**
 
-核心原因是 AOP。如果只用两级缓存，存的是原始对象。但 A 可能被 AOP 代理，注入给 B 的应该是代理对象。三级缓存的 ObjectFactory 在真正需要使用时才调用 `getObject()`，这时候 `getEarlyBeanReference()` 可以返回带 AOP 代理的对象。两级缓存没法在"存进去的时候"就知道要不要代理。
+核心原因是 AOP。如果只用两级缓存，存的是原始对象。但 A 可能被 AOP 代理，注入给 B 的应该是代理对象。三级缓存的 <term>ObjectFactory</term> 在真正需要使用时才调用 `getObject()`，这时候 `getEarlyBeanReference()` 可以返回带 AOP 代理的对象。两级缓存没法在"存进去的时候"就知道要不要代理。
 
 **构造器注入无法解决循环依赖**：
 
@@ -137,7 +137,7 @@ singletonFactories      （三级缓存）: 存能生成 Bean 代理对象的 Ob
 A 构造器需要 B → B 构造器需要 A → 死循环
 ```
 
-因为构造器注入发生在实例化阶段，这时候 Bean 还没创建出来，连三级缓存都还没放进去。Spring 的做法是直接抛 `BeanCurrentlyInCreationException`。
+因为构造器注入发生在实例化阶段，这时候 <term>Bean</term> 还没创建出来，连三级缓存都还没放进去。Spring 的做法是直接抛 `BeanCurrentlyInCreationException`。
 
 **三级缓存总结**：
 
@@ -155,11 +155,11 @@ A 构造器需要 B → B 构造器需要 A → 死循环
 
 **推荐回答**：
 
-> IoC 就是控制反转——以前我们自己 new 对象、自己管理依赖关系，现在把这些控制权交给 Spring 容器。容器负责创建 Bean、注入依赖、管理生命周期，我们只需要声明"我要什么"就行。
+> IoC 就是控制反转——以前我们自己 new 对象、自己管理依赖关系，现在把这些控制权交给 Spring 容器。容器负责创建 <term>Bean</term>、注入依赖、管理生命周期，我们只需要声明"我要什么"就行。
 >
 > 实现方式是 DI 依赖注入，构造器注入是推荐的——依赖不可变，测试时可以手动传 mock。底层的 BeanFactory 是基础容器，ApplicationContext 是它的增强版，加了 AOP、事件、国际化等，也是开发中唯一接触到的。
 >
-> Bean 的生命周期从实例化开始，经过属性注入、Aware 回调、BeanPostProcessor 的前后处理、初始化方法，最终就绪。AOP 代理就是在 BeanPostProcessor 的后置处理中生成的。
+> <term>Bean</term> 的生命周期从实例化开始，经过属性注入、Aware 回调、<term>BeanPostProcessor</term> 的前后处理、初始化方法，最终就绪。AOP 代理就是在 BeanPostProcessor 的后置处理中生成的。
 
 #### 题目 2 ⭐⭐⭐：Spring 怎么解决循环依赖？为什么需要三级缓存？
 
@@ -167,24 +167,24 @@ A 构造器需要 B → B 构造器需要 A → 死循环
 
 **推荐回答**：
 
-> Spring 用三级缓存解决循环依赖。创建 A 时，先实例化拿到原始对象，把能生成它的 ObjectFactory 放入三级缓存，然后给 A 注入属性。发现需要 B，就去创建 B。B 注入属性时需要 A，从三级缓存取出 A 的 ObjectFactory 调用 getObject() 拿到 A 的引用——如果 A 需要 AOP 代理，这里就生成代理对象——放入二级缓存。B 拿到 A 后初始化完成，回到 A 继续完成初始化。
+> Spring 用三级缓存解决循环依赖。创建 A 时，先实例化拿到原始对象，把能生成它的 <term>ObjectFactory</term> 放入三级缓存，然后给 A 注入属性。发现需要 B，就去创建 B。B 注入属性时需要 A，从三级缓存取出 A 的 ObjectFactory 调用 getObject() 拿到 A 的引用——如果 A 需要 AOP 代理，这里就生成代理对象——放入二级缓存。B 拿到 A 后初始化完成，回到 A 继续完成初始化。
 >
-> 三级缓存比两级多的一层，核心是为了处理 AOP。如果只有二级缓存，存的就是原始对象。但如果有 AOP，注入给 B 的应该是代理对象。三级缓存的 ObjectFactory 是延迟执行的——只有真正用到时才调 getObject()，这时候通过 getEarlyBeanReference() 可以返回代理对象。
+> 三级缓存比两级多的一层，核心是为了处理 AOP。如果只有二级缓存，存的就是原始对象。但如果有 AOP，注入给 B 的应该是代理对象。三级缓存的 <term>ObjectFactory</term> 是延迟执行的——只有真正用到时才调 getObject()，这时候通过 getEarlyBeanReference() 可以返回代理对象。
 >
-> 构造器注入无法解决循环依赖，因为依赖在实例化阶段就发生了，Bean 还没创建出来，连三级缓存都放不进去，直接抛异常。
+> 构造器注入无法解决循环依赖，因为依赖在实例化阶段就发生了，<term>Bean</term> 还没创建出来，连三级缓存都放不进去，直接抛异常。
 
 **追问准备**：
-- "如何检测循环依赖？" → Spring 用 `singletonsCurrentlyInCreation` 这个 Set 记录正在创建中的 Bean。如果发现一个 Bean 已经在 Set 里了，说明出现了循环依赖。
+- "如何检测循环依赖？" → Spring 用 `singletonsCurrentlyInCreation` 这个 Set 记录正在创建中的 <term>Bean</term>。如果发现一个 Bean 已经在 Set 里了，说明出现了循环依赖。
 
 #### 题目 3 ⭐⭐：singleton 的 Bean 是线程安全的吗？为什么？
 
-**面试官意图**：考察对 Bean 作用域和线程安全关系的理解。
+**面试官意图**：考察对 <term>Bean</term> 作用域和线程安全关系的理解。
 
 **推荐回答**：
 
 > singleton 本身不保证线程安全。Spring 只管创建和注入，不管你的代码怎么写。singleton 意味着所有线程都用同一个实例，如果这个实例里有可变的状态字段，多线程同时读写就会出问题。
 >
-> 所以不要在 singleton Bean 里定义可变的成员变量。需要状态要么存在方法参数里、局部变量里，要么用 ThreadLocal、要么把 Bean 声明为 prototype。
+> 所以不要在 singleton <term>Bean</term> 里定义可变的成员变量。需要状态要么存在方法参数里、局部变量里，要么用 <term>ThreadLocal</term>、要么把 Bean 声明为 prototype。
 
 ## Spring AOP（面向切面编程）
 
@@ -236,9 +236,9 @@ AOP 是把横切逻辑（日志、事务、权限）从业务代码中抽离出�
 
 **Spring 的选择策略**：
 - 默认：目标类实现了接口 → JDK 动态代理
-- 目标类没实现接口 → CGLib
-- `@EnableAspectJAutoProxy(proxyTargetClass = true)` → 强制 CGLib
-- Spring Boot 2.0+ AOP 默认强制 CGLib（`spring.aop.proxy-target-class=true`）
+- 目标类没实现接口 → <term>CGLib</term>
+- `@EnableAspectJAutoProxy(proxyTargetClass = true)` → 强制 <term>CGLib</term>
+- Spring Boot 2.0+ AOP 默认强制 <term>CGLib</term>（`spring.aop.proxy-target-class=true`）
 
 **JDK 动态代理原理**（核心源码逻辑）：
 
@@ -260,7 +260,7 @@ public class $Proxy0 implements UserService {
 }
 ```
 
-**CGLib 代理原理**：
+**<term>CGLib</term> 代理原理**：
 
 ```text
 CGLib 在运行时生成目标类的一个子类，重写所有非 final 方法。
@@ -300,11 +300,11 @@ CGLib 在运行时生成目标类的一个子类，重写所有非 final 方法�
 
 **推荐回答**：
 
-> JDK 动态代理基于接口，要求目标类必须实现至少一个接口。原理是运行时动态生成一个实现了所有接口的代理类，通过 InvocationHandler 转发所有方法调用。CGLib 基于继承，运行时生成目标类的子类，重写所有非 final 方法来插入切面逻辑。
+> JDK 动态代理基于接口，要求目标类必须实现至少一个接口。原理是运行时动态生成一个实现了所有接口的代理类，通过 InvocationHandler 转发所有方法调用。<term>CGLib</term> 基于继承，运行时生成目标类的子类，重写所有非 final 方法来插入切面逻辑。
 >
-> Spring 的选择策略：目标类实现了接口默认用 JDK 代理，否则用 CGLib。但 Spring Boot 2.0+ 默认强制 CGLib——因为方便，不用考虑是否实现了接口。手动加 `proxyTargetClass=true` 也可以强制 CGLib。
+> Spring 的选择策略：目标类实现了接口默认用 JDK 代理，否则用 <term>CGLib</term>。但 Spring Boot 2.0+ 默认强制 CGLib——因为方便，不用考虑是否实现了接口。手动加 `proxyTargetClass=true` 也可以强制 CGLib。
 >
-> CGLib 的局限是不能代理 final 类和 final 方法，构造器里调用的方法也不会被代理（因为代理对象还没生成）。
+> <term>CGLib</term> 的局限是不能代理 final 类和 final 方法，构造器里调用的方法也不会被代理（因为代理对象还没生成）。
 
 **追问准备**：
 - "JDK 代理为什么只能代理接口？" → 生成的代理类已经继承了 Proxy 类（Java 单继承），只能通过实现接口来代理目标类的行为。
@@ -333,7 +333,7 @@ CGLib 在运行时生成目标类的一个子类，重写所有非 final 方法�
 
 ### MVC 基础概念
 
-Spring MVC 是基于 Servlet 的 MVC 框架，核心是 **DispatcherServlet**——前端控制器，所有请求都先过它，再由它分发给对应的 Handler。
+Spring MVC 是基于 <term>Servlet</term> 的 MVC 框架，核心是 **DispatcherServlet**——前端控制器，所有请求都先过它，再由它分发给对应的 Handler。
 
 ### MVC 原理深入
 
@@ -423,7 +423,7 @@ Spring MVC 是基于 Servlet 的 MVC 框架，核心是 **DispatcherServlet**—
 
 **推荐回答**：
 
-> 过滤器是 Servlet 级别的，在请求进入 Servlet 前执行，对所有请求生效，不限于 Spring MVC。拦截器是 Spring 框架自己的，只对经过 DispatcherServlet 的请求有效。关键区别：拦截器可以拿到即将执行的 Controller 方法信息（HandlerMethod），可以基于注解做精细化控制；过滤器做不到。另外拦截器可以直接注入 Spring Bean，过滤器需要通过 DelegatingFilterProxy 桥接。
+> 过滤器是 <term>Servlet</term> 级别的，在请求进入 Servlet 前执行，对所有请求生效，不限于 Spring MVC。拦截器是 Spring 框架自己的，只对经过 DispatcherServlet 的请求有效。关键区别：拦截器可以拿到即将执行的 Controller 方法信息（HandlerMethod），可以基于注解做精细化控制；过滤器做不到。另外拦截器可以直接注入 Spring <term>Bean</term>，过滤器需要通过 DelegatingFilterProxy 桥接。
 
 ## Spring Boot 核心
 
@@ -468,7 +468,7 @@ Spring Boot 的核心设计理念：**约定优于配置**。能自动推断的�
 | @ConditionalOnProperty | 配置项匹配时才生效 |
 | @ConditionalOnWebApplication | 是 Web 应用才生效 |
 
-**举例**：`DataSourceAutoConfiguration` 标注了 `@ConditionalOnClass(DataSource.class)`——只要你引入了数据库驱动，classpath 里有 DataSource 类，这个自动配置就生效，会自动创建 DataSource Bean。
+**举例**：`DataSourceAutoConfiguration` 标注了 `@ConditionalOnClass(DataSource.class)`——只要你引入了数据库驱动，classpath 里有 DataSource 类，这个自动配置就生效，会自动创建 DataSource <term>Bean</term>。
 
 #### starter 机制
 
@@ -483,7 +483,7 @@ starter 是一个"启动器"，把一组相关依赖打包在一起，你引入�
 ```
 
 **自定义 starter**：
-1. 写一个自动配置类（@Configuration + @Bean）
+1. 写一个自动配置类（@Configuration + @<term>Bean</term>）
 2. 在 `META-INF/spring/xxx.imports` 里注册
 3. 用条件注解控制是否生效
 4. 打包发布
@@ -498,7 +498,7 @@ starter 是一个"启动器"，把一组相关依赖打包在一起，你引入�
 
 > @SpringBootApplication 里最关键的是 @EnableAutoConfiguration。它通过 @Import 导入 AutoConfigurationImportSelector，该 Selector 会去读 classpath 下 META-INF/spring 里的配置——Spring Boot 3.x 是 `.imports` 文件，旧版是 `spring.factories`。文件里列出了所有可能的自动配置类全限定名。
 >
-> 每个自动配置类上都有条件注解，通过判断 classpath 里有没有某个类、容器里有没有某个 Bean、配置项是否匹配等，来决定这个配置类是否生效。只有满足条件的才真正加载，创建对应的 Bean。
+> 每个自动配置类上都有条件注解，通过判断 classpath 里有没有某个类、容器里有没有某个 <term>Bean</term>、配置项是否匹配等，来决定这个配置类是否生效。只有满足条件的才真正加载，创建对应的 Bean。
 >
 > 比如 DataSourceAutoConfiguration 上贴了 @ConditionalOnClass(DataSource.class)，只有引入了 JDBC 依赖才生效。而 @ConditionalOnMissingBean(DataSource.class) 保证如果用户自己定义了 DataSource，自动配置就不重复创建。
 
@@ -508,10 +508,10 @@ starter 是一个"启动器"，把一组相关依赖打包在一起，你引入�
 
 **推荐回答**：
 
-> 四个步骤。首先写自动配置类——在 @Configuration 类里用 @Bean 定义要自动创建的 Bean，通过条件注解控制是否生效。然后在 META-INF/spring 目录下创建 `.imports` 文件，里面写自动配置类的全限定名。如果需要外部配置，用 @ConfigurationProperties 绑定 application.yml 的前缀。最后在 pom 里声明依赖，打包发布。
+> 四个步骤。首先写自动配置类——在 @Configuration 类里用 @<term>Bean</term> 定义要自动创建的 Bean，通过条件注解控制是否生效。然后在 META-INF/spring 目录下创建 `.imports` 文件，里面写自动配置类的全限定名。如果需要外部配置，用 @ConfigurationProperties 绑定 application.yml 的前缀。最后在 pom 里声明依赖，打包发布。
 
 **追问准备**：
-- "starter 和普通依赖的区别？" → starter 是聚合依赖——除了引入 jar 包，还通过自动配置自动帮你创建和注入 Bean。普通依赖你引入了 jar 还得自己配置 @Bean。
+- "starter 和普通依赖的区别？" → starter 是聚合依赖——除了引入 jar 包，还通过自动配置自动帮你创建和注入 <term>Bean</term>。普通依赖你引入了 jar 还得自己配置 @Bean。
 
 ## Spring 事务管理
 
@@ -730,7 +730,7 @@ namespace 级别的缓存，多个 SqlSession 共享。
 | SQL 里写 LIMIT | 手动传 offset 和 limit | 简单场景 |
 | PageHelper 插件 | 拦截 SQL 自动加 LIMIT | ✅ 推荐 |
 
-**PageHelper 原理**：MyBatis 的插件机制，拦截 Executor 的 query 方法。在执行 SQL 前，通过 ThreadLocal 拿到分页参数，往原始 SQL 上拼接 LIMIT 子句。同时自动执行一条 COUNT 查询获取总数。
+**PageHelper 原理**：MyBatis 的插件机制，拦截 <term>Executor</term> 的 query 方法。在执行 SQL 前，通过 <term>ThreadLocal</term> 拿到分页参数，往原始 SQL 上拼接 LIMIT 子句。同时自动执行一条 COUNT 查询获取总数。
 
 ### 面试实战：MyBatis
 
@@ -740,9 +740,9 @@ namespace 级别的缓存，多个 SqlSession 共享。
 
 **推荐回答**：
 
-> 启动时加载配置，解析 Mapper XML 或注解，把每个 SQL 封装成 MappedStatement 存到 Configuration 里。运行时通过 SqlSessionFactory 获取 SqlSession，调用 getMapper 拿到 Mapper 接口的代理对象——这个代理是 JDK 动态代理生成的 MapperProxy。
+> 启动时加载配置，解析 Mapper XML 或注解，把每个 SQL 封装成 MappedStatement 存到 Configuration 里。运行时通过 SqlSessionFactory 获取 <term>SqlSession</term>，调用 getMapper 拿到 Mapper 接口的代理对象——这个代理是 JDK 动态代理生成的 MapperProxy。
 >
-> 调用接口方法时，代理拦截请求，根据方法全限定名找到对应的 MappedStatement，交给 Executor 执行。Executor 负责缓存检查、参数处理、SQL 执行、结果映射，最终返回。
+> 调用接口方法时，代理拦截请求，根据方法全限定名找到对应的 MappedStatement，交给 <term>Executor</term> 执行。Executor 负责缓存检查、参数处理、SQL 执行、结果映射，最终返回。
 
 #### 题目 2 ⭐⭐：`#{}` 和 `${}` 有什么区别？
 
@@ -758,9 +758,9 @@ namespace 级别的缓存，多个 SqlSession 共享。
 
 **推荐回答**：
 
-> 一级缓存是 SqlSession 级别的，默认开启，不用配。同一个 SqlSession 里两次查同一数据，第二次直接走缓存。但增删改后缓存自动清空，防止脏读。
+> 一级缓存是 <term>SqlSession</term> 级别的，默认开启，不用配。同一个 SqlSession 里两次查同一数据，第二次直接走缓存。但增删改后缓存自动清空，防止脏读。
 >
-> 二级缓存是 namespace 级别的，跨 SqlSession 共享，需要手动开启。实体类必须序列化。风险在于多表关联查询时，一个 namespace 的更新不会清另一个 namespace 的缓存，可能读到脏数据。所以生产环境里二级缓存要慎重，更新频繁的表别开。
+> 二级缓存是 namespace 级别的，跨 <term>SqlSession</term> 共享，需要手动开启。实体类必须序列化。风险在于多表关联查询时，一个 namespace 的更新不会清另一个 namespace 的缓存，可能读到脏数据。所以生产环境里二级缓存要慎重，更新频繁的表别开。
 
 ## 面试速查表
 

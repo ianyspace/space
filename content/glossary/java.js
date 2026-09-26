@@ -39,6 +39,10 @@ const java = {
         def: 'Linux 提供的 IO 多路复用机制，让一个线程同时监听大量连接上的事件。',
         more: 'NIO 的 Selector 在 Linux 上底层就是它，连接多、活跃少时远比 select 高效。',
     },
+    ThreadLocal: {
+        def: '让每个线程各自持有一份独立副本的变量容器，线程之间互不干扰。',
+        more: '常用来在线程内部透传上下文（事务连接、分页参数都靠它），用完必须 remove —— 线程是池化复用的，不清会让下一个请求读到上一个的脏数据。',
+    },
 };
 
 export default java;
