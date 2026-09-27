@@ -1,24 +1,19 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Link from 'next/link';
+import styles from './Tag.module.scss';
 
-// `round` (the outer wrapper), `link` and `text` are shared with
-// `components/SocialBar`, so they are global utilities declared in
-// `styles/global.scss` rather than a CSS module.
 const Tag = function ({ url, text, count = null, ...restProps }) {
-    let countPart;
-    if (count != null) {
-        countPart = `  (${count})`;
-    }
     return (
-        <div className="round" {...restProps}>
-            <Link className="link" href={url}>
-                <span className="text">
-                    {text}
-                    {countPart}
-                </span>
+        <span className={styles['tag-item']} {...restProps}>
+            <Link className={styles['tag-link']} href={url}>
+                <span className={styles['tag-hash']}>#</span>
+                <span className={styles['tag-text']}>{text}</span>
+                {count != null && (
+                    <span className={styles['tag-count']}>{count}</span>
+                )}
             </Link>
-        </div>
+        </span>
     );
 };
 

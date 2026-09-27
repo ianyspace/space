@@ -1,34 +1,84 @@
-// Tag detail page (`/tags/<tag>/`) — Apple-style large title with a muted count
-// line, then the post list with hairline separators between rows. Same rhythm as
-// the grouped cards on the settings page.
-
+// Clean editorial Tag Detail page
 .tag-header {
-    margin: 0 0 1.5rem;
+    margin: 0.5rem 0 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--hr);
+}
+
+.header-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.title-group {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.tag-hash {
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: var(--breadcrumbsTextColorActive);
+    opacity: 0.5;
 }
 
 .tag-title {
-    margin: 0 0 0.4rem;
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: -0.022em;
-}
-
-.tag-meta {
     margin: 0;
-    color: var(--breadcrumbsTextColorActive);
-    font-size: 13.5px;
-    line-height: 1.6;
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--textTitle);
+    line-height: 1.15;
 }
 
-// `article` is the element `PostAbbrevSimple` renders. Reaching it with an
-// element selector keeps this stylesheet from depending on another component's
-// module class names.
+.tag-count-label {
+    font-size: 13.5px;
+    color: var(--breadcrumbsTextColorActive);
+    font-variant-numeric: tabular-nums;
+}
+
+.related-bar {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 14px;
+    font-size: 13px;
+    flex-wrap: wrap;
+}
+
+.related-title {
+    color: var(--breadcrumbsTextColorActive);
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.related-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.related-link {
+    text-decoration: none;
+    color: var(--breadcrumbsTextColorActive);
+    transition: color 0.18s ease;
+
+    &:hover {
+        color: var(--textLink);
+    }
+}
+
 .tag-posts article {
-    padding-bottom: 16px;
+    padding-bottom: 18px;
 }
 
 .tag-posts article + article {
-    padding-top: 18px;
+    padding-top: 20px;
     border-top: 1px solid color-mix(in srgb, var(--hr) 45%, transparent);
 }
 

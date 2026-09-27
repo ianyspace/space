@@ -1,139 +1,359 @@
-// Tag relation graph, Apple-style: no card chrome, no legend — just the map
-// breathing on the page. Pink bubbles on a clean backdrop, light hairline
-// edges, generous whitespace, smooth focus transitions.
-//
-// The nodes are real links: mouse, keyboard and touch all get the same feedback
-// (hover/focus share one "hot" look, see below).
+// Obsidian / Roam styled premium Knowledge Graph
+.graph-stage {
+    position: relative;
+    width: 100%;
+    margin: 0.5rem 0 2rem;
+}
 
-.wrap {
-    margin: 0.5rem 0 1rem;
-    padding: 0 4px;
+.canvas-container {
+    position: relative;
+    width: 100%;
+    height: 620px;
+    background: color-mix(in srgb, var(--bg-article) 60%, transparent);
+    border: 1px solid var(--hr);
+    border-radius: 20px;
+    overflow: hidden;
     user-select: none;
+    -webkit-backdrop-filter: var(--article-backdrop);
+    backdrop-filter: var(--article-backdrop);
+    box-shadow: 0 4px 30px -10px rgba(0, 0, 0, 0.06);
+    cursor: grab;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        border-color: color-mix(in srgb, var(--textLink) 35%, var(--hr));
+    }
+
+    &.is-dragging {
+        cursor: grabbing;
+    }
+}
+
+:global(body.dark) .canvas-container {
+    box-shadow: 0 8px 32px -10px rgba(0, 0, 0, 0.45);
 }
 
 .svg {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
     overflow: visible;
-    animation: graph-in 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+// Edges
 .edge {
     stroke: var(--hr);
-    stroke-width: 1;
-    opacity: 0.6;
-    transition: opacity 0.25s ease, stroke 0.25s ease, stroke-width 0.25s ease;
+    stroke-width: 1.2;
+    opacity: 0.45;
+    transition: opacity 0.25s cubic-bezier(0.2, 0, 0, 1),
+        stroke 0.25s ease, stroke-width 0.25s ease;
 }
 
 .edge-hot {
-    stroke: var(--pink);
-    stroke-width: 1.6;
-    opacity: 0.8;
+    stroke: var(--textLink);
+    stroke-width: 2;
+    opacity: 0.9;
 }
 
 .edge-dim {
-    opacity: 0.12;
+    opacity: 0.06;
 }
 
+// Nodes
 .node {
     cursor: pointer;
+
+    &:focus:not(:focus-visible) {
+        outline: none;
+    }
 }
 
-// Invisible circle under the bubble: a slightly larger hit area makes the node
-// easier to grab without making it look bigger.
 .hit {
+    fill: transparent;
     cursor: pointer;
 }
 
-// Pointer focus should not paint a ring; keyboard focus must. The suppressing
-// rule is dropped by engines without `:focus-visible`, which leaves their
-// default focus ring in place — the safe fallback.
-.node:focus:not(:focus-visible) {
-    outline: none;
-}
-
-.node:focus-visible .bubble {
-    stroke: var(--pink);
-    stroke-width: 2.5;
+.bubble-halo {
+    fill: none;
+    stroke: var(--textLink);
+    stroke-width: 2px;
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.2, 0, 0, 1);
 }
 
 .bubble {
-    fill: color-mix(in srgb, var(--pink) 16%, var(--bg-article));
-    stroke: color-mix(in srgb, var(--pink) 35%, var(--hr));
+    fill: var(--bg);
+    stroke: color-mix(in srgb, var(--textTitle) 20%, var(--hr));
     stroke-width: 1.5;
     transform-box: fill-box;
     transform-origin: center;
-    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), fill 0.25s ease,
-        stroke 0.25s ease, opacity 0.25s ease;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        fill 0.2s ease, stroke 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
 }
 
-@supports (fill: color-mix(in srgb, red 50%, blue)) {
-    :global(body.light) .bubble {
-        fill: color-mix(in srgb, var(--pink) 18%, #ffffff);
-        stroke: color-mix(in srgb, var(--pink) 40%, rgba(0, 0, 0, 0.15));
+:global(body.light) .bubble {
+    fill: #ffffff;
+    stroke: rgba(0, 0, 0, 0.14);
+}
+
+:global(body.dark) .bubble {
+    fill: #22262e;
+    stroke: rgba(255, 255, 255, 0.16);
+}
+
+// Interactive states
+.node-connected {
+    .bubble {
+        stroke: var(--textLink);
+        stroke-width: 2;
     }
 
-    :global(body.dark) .bubble {
-        fill: color-mix(in srgb, var(--pink) 20%, #2b303b);
-        stroke: color-mix(in srgb, var(--pink) 40%, rgba(255, 255, 255, 0.15));
+    .bubble-halo {
+        opacity: 0.35;
+        stroke-dasharray: 3 3;
     }
 }
 
-// Hover, keyboard focus and click-focus all share one "hot" look: the bubble
-// fills in, scales up and picks up a soft pink glow so the active node reads as
-// lifted off the map instead of just darker.
-.node:hover .bubble,
-.node-hot .bubble,
-.node:focus-visible .bubble {
-    fill: var(--pink);
-    transform: scale(1.06);
-    filter: drop-shadow(0 6px 12px rgba(255, 167, 196, 0.45));
+.node:hover,
+.node-hot,
+.node:focus-visible {
+    .bubble-halo {
+        opacity: 0.6;
+        transform: scale(1.18);
+    }
+
+    .bubble {
+        fill: var(--textLink);
+        stroke: var(--textLink);
+        transform: scale(1.1);
+    }
 }
 
-.node-hot .bubble {
-    stroke: var(--pink);
+:global(body.light) .node:hover,
+:global(body.light) .node-hot,
+:global(body.light) .node:focus-visible {
+    .bubble {
+        filter: drop-shadow(0 6px 14px rgba(210, 54, 105, 0.35));
+    }
+}
+
+:global(body.dark) .node:hover,
+:global(body.dark) .node-hot,
+:global(body.dark) .node:focus-visible {
+    .bubble {
+        filter: drop-shadow(0 6px 16px rgba(255, 167, 196, 0.45));
+    }
 }
 
 .label {
     fill: var(--textTitle);
-    font-size: 12.5px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
     pointer-events: none;
-    transition: fill 0.25s ease;
+    transition: fill 0.2s ease;
 }
 
 .node:hover .label,
 .node-hot .label,
 .node:focus-visible .label {
-    fill: var(--textNormal);
+    fill: #ffffff;
+    font-weight: 600;
 }
 
 .count {
     fill: var(--breadcrumbsTextColorActive);
-    font-size: 10.5px;
+    font-size: 10px;
     font-variant-numeric: tabular-nums;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
 }
 
 .node-dim {
-    opacity: 0.22;
+    opacity: 0.12;
+
+    .bubble,
+    .label,
+    .count {
+        opacity: 0.4;
+    }
 }
 
-.node-dim .bubble,
-.node-dim .label,
-.node-dim .count {
-    opacity: 0.7;
+// Top-right zoom & reset controls
+.viewport-controls {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 10;
 }
 
-@keyframes graph-in {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
+.ctrl-btn {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--hr);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--textTitle);
+    font-size: 15px;
+    font-family: inherit;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.18s ease;
+
+    &:hover {
+        color: var(--textLink);
+        border-color: var(--textLink);
+        transform: translateY(-1px);
     }
 
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+// Bottom inspector HUD
+.inspector-card {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    max-width: 480px;
+    padding: 14px 18px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border: 1px solid var(--hr);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.12);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    z-index: 10;
+    animation: inspector-in 0.25s cubic-bezier(0.2, 0, 0, 1);
+}
+
+:global(body.dark) .inspector-card {
+    box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.5);
+}
+
+.inspector-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.inspector-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.inspector-hash {
+    font-size: 1.1rem;
+    color: var(--textLink);
+    font-weight: 600;
+}
+
+.inspector-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--textTitle);
+    letter-spacing: -0.02em;
+}
+
+.inspector-count {
+    font-size: 12px;
+    color: var(--breadcrumbsTextColorActive);
+    font-variant-numeric: tabular-nums;
+    margin-left: 4px;
+}
+
+.inspector-action {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--textLink);
+    border: 1px solid var(--textLink);
+    border-radius: 999px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.18s ease;
+
+    &:hover {
+        background: var(--textLink);
+        color: #ffffff;
+    }
+}
+
+.inspector-related {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--hr);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    overflow-x: auto;
+}
+
+.inspector-related-label {
+    flex-shrink: 0;
+    color: var(--breadcrumbsTextColorActive);
+    opacity: 0.8;
+}
+
+.inspector-related-tags {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+.inspector-rel-btn {
+    padding: 2px 8px;
+    font-size: 11px;
+    font-family: inherit;
+    color: var(--breadcrumbsTextColorActive);
+    border: 0;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+
+    &:hover {
+        color: var(--textLink);
+        background: rgba(0, 0, 0, 0.08);
+    }
+}
+
+:global(body.dark) .inspector-rel-btn {
+    background: rgba(255, 255, 255, 0.08);
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.14);
+        color: #ffffff;
+    }
+}
+
+@keyframes inspector-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
     to {
         opacity: 1;
         transform: none;
@@ -141,15 +361,14 @@
 }
 
 @media screen and (max-width: 650px) {
-    // A 760×560 viewBox squeezed into a phone screen would scale the labels down
-    // to a few pixels, so the map keeps a readable width and pans instead.
-    .wrap {
-        overflow-x: auto;
-        overscroll-behavior-x: contain;
-        -webkit-overflow-scrolling: touch;
+    .canvas-container {
+        height: 520px;
     }
 
-    .svg {
-        min-width: 560px;
+    .inspector-card {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        padding: 10px 14px;
     }
 }

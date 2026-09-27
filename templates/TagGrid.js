@@ -9,30 +9,28 @@ export default function TagGrid({ tagGroups, getTagUrl }) {
     const articlesCountFn = (count) => formatMessage('tTagArticlesCount', count);
 
     return (
-        <div className={styles.grid}>
+        <div className={styles['grid-container']}>
             {tagGroups.map((tag) => {
                 const tagUrl = getTagUrl(tag.fieldValue);
                 const related = tag.tagList || [];
 
                 return (
-                    <div key={tag.fieldValue} className={styles.card}>
-                        <Link href={tagUrl} className={styles['card-main']}>
-                            <div className={styles['header-row']}>
-                                <div className={styles['title-group']}>
-                                    <span className={styles.hash}>#</span>
-                                    <h3 className={styles.name}>{tag.fieldValue}</h3>
-                                </div>
-                                <span className={styles.count}>
-                                    {articlesCountFn(tag.totalCount)}
-                                </span>
+                    <article key={tag.fieldValue} className={styles['tag-card']}>
+                        <Link href={tagUrl} className={styles['card-header']}>
+                            <div className={styles['title-group']}>
+                                <span className={styles['tag-prefix']}>#</span>
+                                <h3 className={styles['tag-name']}>{tag.fieldValue}</h3>
                             </div>
+                            <span className={styles['tag-count']}>
+                                {articlesCountFn(tag.totalCount)}
+                            </span>
                         </Link>
 
                         {related.length > 0 && (
-                            <div className={styles['related-section']}>
-                                <span className={styles['related-hint']}>{relatedText}</span>
-                                <div className={styles['related-tags']}>
-                                    {related.slice(0, 5).map((rel) => (
+                            <div className={styles['related-row']}>
+                                <span className={styles['related-label']}>{relatedText}</span>
+                                <div className={styles['related-list']}>
+                                    {related.slice(0, 4).map((rel) => (
                                         <Link
                                             key={rel}
                                             href={getTagUrl(rel)}
@@ -41,15 +39,15 @@ export default function TagGrid({ tagGroups, getTagUrl }) {
                                             {rel}
                                         </Link>
                                     ))}
-                                    {related.length > 5 && (
+                                    {related.length > 4 && (
                                         <span className={styles['rel-more']}>
-                                            +{related.length - 5}
+                                            +{related.length - 4}
                                         </span>
                                     )}
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </article>
                 );
             })}
         </div>
