@@ -1,10 +1,10 @@
 ---
 title: JAVA并发
 date: "2026-09-13"
-description: 学完将理解Java 0.6%
-tags: ['Java']
-disqus: false
-relative: false
+description: 从线程基础到 JUC 工具类的 Java 并发面试攻略，覆盖线程状态与中断、锁升级、volatile 与 JMM、CAS 与原子类、AQS、线程池、ThreadLocal 与并发集合
+tags: ['Java', '并发', '多线程', '面试']
+disqus: true
+relative: true
 # cover: /blog/template/cover.svg   # 需要封面时取消注释，并把 cover.svg 放进本目录，路径里的目录名要和文章目录一致
 ---
 
@@ -14,7 +14,7 @@ relative: false
 
 **进程**：操作系统**分配资源**的基本单位，拥有独立的内存空间；进程之间相互隔离，一个进程崩溃，通常不会拖垮其他进程。
 
-**线程**：CPU **调度**的基本单位，一个进程可以包含多个线程；创建和切换的开销都比进程小得多。同一进程内的线程共享堆和方法区，但各自拥有独立的栈和程序计数器。
+**线程**：CPU **调度**的基本单位，一个进程可以包含多个线程；创建和切换的开销都比进程小得多。同一进程内的线程共享堆和方法区，但各自拥有独立的栈和<term>程序计数器</term>。
 
 <process-thread-figure></process-thread-figure>
 
@@ -92,6 +92,26 @@ pool.submit(() -> System.out.println("线程池任务"));
 - `wait` 释放锁，进入等待队列，被 notify 唤醒后重新竞争锁
 - `yield` 只是建议，调度器可以忽略
 
+**wait 必须写在循环里**（高频考点，也是最容易写错的地方）：
+
+```java
+synchronized (lock) {
+    while (!condition) {          // 用 while，绝不能用 if
+        lock.wait();
+    }
+    // 条件满足，往下干活
+}
+```
+
+有两个理由，缺一个就会写出 bug：
+
+1. <term>虚假唤醒</term> — 用 `if` 的话，假醒之后条件其实还没成立，代码却直接往下跑了，逻辑就崩了
+2. 醒来 ≠ 条件满足 — `wait` 醒后要先重新竞争锁，抢到锁才从 `wait()` 返回，而这段时间内条件可能又被别的线程改掉了
+
+`while` 同时解决这两个问题：它会让线程醒来后**再检查一遍条件**，不满足就接着等。
+
+**notify vs notifyAll**：`notify` 只随机唤醒等待队列里的**一个**线程，`notifyAll` 唤醒**全部**。如果多个线程在同一把锁上等的是**不同的条件**，用 `notify` 可能唤醒的那个线程条件并不满足，于是它又睡回去，而真正该醒的线程没被叫到 —— 这种场景只能用 `notifyAll`。生产代码基本一律 `notifyAll`。
+
 #### start() vs run()
 
 - `start()`：启动新线程，JVM 底层调用 `start0()` 本地方法创建操作系统线程，然后在新线程中执行 `run()`
@@ -102,6 +122,84 @@ Thread t = new Thread(() -> System.out.println(Thread.currentThread().getName())
 t.run();    // 输出: main（没有新线程）
 t.start();  // 输出: Thread-0（新线程）
 ```
+
+> `start()` **只能调用一次**，重复调用会抛 `IllegalThreadStateException`。线程的生命周期是单向的，一旦进入 TERMINATED 就回不到 NEW；想再跑一遍同样的任务，只能新建一个 Thread 对象。
+
+#### 中断机制：interrupt / isInterrupted / interrupted
+
+`interrupt()` **不是强行杀死线程**，它只是把目标线程的中断标志位置成 true，发一个"请你停止"的协作式请求 —— 线程自己决定要不要停、什么时候停。
+
+| 方法 | 作用 | 是否清除标志位 |
+|------|------|--------------|
+| `t.interrupt()` | 给线程 t 设置中断标志；若 t 正阻塞在 sleep/wait/join，先把它唤醒并抛异常 | 见下 |
+| `t.isInterrupted()` | 查询**指定线程**的中断标志 | **不清** |
+| `Thread.interrupted()` | 查询**当前线程**的中断标志 | **会清**（静态方法） |
+
+为什么设计成协作式？因为强行杀掉线程会让它持有的锁来不及释放、共享数据处于"改了一半"的状态。Java 早期的 `Thread.stop()` 就是这么干的，已经废弃多年。
+
+**正确的停止姿势**：
+
+```java
+Thread worker = new Thread(() -> {
+    while (!Thread.currentThread().isInterrupted()) {
+        System.out.println("工作中...");
+    }
+    System.out.println("收到中断，收尾后退出");
+});
+worker.start();
+Thread.sleep(100);
+worker.interrupt();     // 只是发个信号，worker 下次循环自己退出
+```
+
+**最大的坑：InterruptedException 会清掉标志位**。当线程正阻塞在 `sleep`/`wait`/`join` 上时被 interrupt，它会立刻抛出 `InterruptedException`，并且**在抛异常前把中断标志位清掉**。所以下面这种写法会让线程永远停不下来：
+
+```java
+// 错误示范：吞掉异常，标志位也没了
+try {
+    Thread.sleep(1000);
+} catch (InterruptedException e) {
+    e.printStackTrace();    // 线程继续跑，中断请求丢失
+}
+
+// 正确做法：补回中断标志，或者干脆把异常往上抛
+try {
+    Thread.sleep(1000);
+} catch (InterruptedException e) {
+    Thread.currentThread().interrupt();    // 恢复标志位，让上层也能感知
+}
+```
+
+一句话记住：**捕获 InterruptedException 后，要么重新设上中断标志，要么把异常继续往上抛，绝不能什么都不做。**
+
+#### 守护线程（Daemon）
+
+Java 线程分两类：**用户线程**和**守护线程**。守护线程是给用户线程"打杂"的，最典型的就是 GC 线程。
+
+```java
+Thread daemon = new Thread(() -> {
+    while (true) { /* 后台支撑工作 */ }
+});
+daemon.setDaemon(true);    // 必须在 start() 之前调用
+daemon.start();
+```
+
+**两条必须记住的规则**：
+
+- `setDaemon(true)` 必须在 `start()` **之前**调用，否则抛 `IllegalThreadStateException`
+- JVM 退出的条件是"**所有用户线程都结束**"，不看守护线程 —— 所以一旦用户线程跑完，守护线程会被**直接掐断**，它的 `finally` 块**不保证执行**
+
+正因为第二条，**守护线程里绝对不能写资源释放、事务提交这类收尾逻辑**（比如 `finally { connection.close(); }`），否则 JVM 退出时可能漏掉。
+
+> **面试追问**：子线程默认是什么类型？—— 默认继承创建它的父线程：父是守护线程则子也是；主线程是用户线程，所以主线程里 new 出来的默认都是用户线程。
+
+#### Java 线程模型：为什么创建线程那么贵
+
+需要记一句结论：**Java 线程和操作系统内核线程是 1:1 对应的**（主流 JVM 实现）。`new Thread()` + `start()` 会真的在操作系统里建一个线程，带来两个成本：
+
+- 线程栈要预分配一块连续内存（默认 1MB，可用 `-Xss` 调小但会牺牲调用深度）
+- 每次<term>上下文切换</term>要保存/恢复现场，还要在用户态与内核态之间<term>内核态切换</term>，通常在微秒级
+
+所以"创建一堆线程跑任务"这条路在高并发下走不通 —— 这既是**线程池**存在的理由，也是 JDK 21 要引入<term>虚拟线程</term>的原因。两者的取舍放在线程池那章展开说。
 
 ### 问答实战（精讲及回答）
 
@@ -149,6 +247,32 @@ t.start();  // 输出: Thread-0（新线程）
 >
 > 生产环境唯一推荐的方式是线程池，通过 ExecutorService 管理线程的创建、复用和销毁，避免频繁创建线程带来的开销，也能控制并发数量防止 <term>OOM</term>。这也是问答时应该强调的点——不是"知道几种方式"，而是"实际项目只用线程池"。
 
+#### ⭐⭐⭐ 如何优雅地停止一个线程？interrupt 到底做了什么？
+
+**提问意图**：区分"会调 API"和"真懂协作式中断"，这几年几乎是必问题。
+
+**推荐回答**：
+
+> 首先明确一点：不要用 `stop()` 或 `suspend()`。它们强行终止线程，会让持有锁的线程来不及释放锁、共享对象停留在"改了一半"的状态，早就废弃了。
+>
+> 正确做法是**协作式**的：调用 `thread.interrupt()` 只是给目标线程打一个中断标志，线程自己在合适的时机检查这个标志、自己决定退出。`run()` 里通常写成 `while (!Thread.currentThread().isInterrupted())`，每轮循环检查一次。
+>
+> 这里有个必须说清的坑：如果线程正阻塞在 `sleep` / `wait` / `join` 上，interrupt 会让它立刻抛 `InterruptedException`，而且**抛异常之前会把中断标志清掉**。所以 catch 里只打个日志是不行的 —— 线程会接着往下跑，中断请求就这么丢了。标准做法是 catch 里补一句 `Thread.currentThread().interrupt()` 把标志恢复回去，或者干脆把异常抛给上层处理。
+>
+> 顺带区分一下两个查询方法：`isInterrupted()` 查的是**指定线程**的标志、不清；`Thread.interrupted()` 是静态方法、查**当前线程**、而且**会清除**标志位。
+
+#### ⭐⭐ 守护线程是什么？有什么坑？
+
+**提问意图**：确认对 JVM 退出条件和线程分类有正确认识。
+
+**推荐回答**：
+
+> 守护线程是给用户线程"打杂"的，最典型的就是 GC 线程。`setDaemon(true)` 必须在 `start()` 之前调用，否则抛 `IllegalThreadStateException`。
+>
+> 关键点是 **JVM 的退出条件：所有用户线程都结束后 JVM 就退出，不看守护线程**。所以用户线程跑完，守护线程会被直接掐断，它里面的 `finally` 块**不保证执行**。这意味着守护线程里绝对不能放资源释放、事务提交这类收尾逻辑。
+>
+> 最后一点：daemon 属性是继承的。父线程是守护线程，它创建的子线程默认也是；我们在 main 方法里 new 出来的默认都是用户线程。
+
 ### 问答速查表
 
 | 考点 | 一句话答案 |
@@ -161,6 +285,12 @@ t.start();  // 输出: Thread-0（新线程）
 | start vs run | start 创建新线程执行 run；直接调 run 只是普通方法调用 |
 | yield | 建议让出 CPU，调度器可忽略，不释放锁 |
 | join | 等待目标线程执行完毕再继续，本质是 wait(0) |
+| 停止线程 | 用 interrupt 发协作式通知，别用 stop；catch InterruptedException 后要恢复标志位 |
+| 中断标志查询 | isInterrupted() 查指定线程、不清标志；Thread.interrupted() 查当前线程、会清标志 |
+| wait 的正确写法 | 必须包在 while 循环里（防虚假唤醒 + 醒来重查条件） |
+| notify vs notifyAll | notify 随机唤醒一个；多条件共用一把锁时必须 notifyAll |
+| 守护线程 | setDaemon 必须在 start 前；JVM 退出不看守护线程，finally 不保证执行 |
+| 虚拟线程 | JDK 21 引入，JVM 自己调度不做 1:1 内核映射，适合高并发 IO 场景 |
 
 ---
 
@@ -668,7 +798,7 @@ AQS 的核心思想：维护一个**共享状态 state** 和一个**FIFO 等待�
 #### 独占模式（以 ReentrantLock 为例）
 
 **获取锁（acquire）**：
-```
+```text
 1. 子类 tryAcquire() 尝试获取锁
    - 如果 state == 0，CAS 设置为 1，成功
    - 如果当前线程已持有，state + 1（重入）
@@ -684,7 +814,7 @@ AQS 的核心思想：维护一个**共享状态 state** 和一个**FIFO 等待�
 ```
 
 **释放锁（release）**：
-```
+```text
 1. 子类 tryRelease()：state - 1，如果 state == 0 则完全释放
 
 2. 唤醒队列中 head 的下一个节点（unpark）
@@ -911,13 +1041,13 @@ public ThreadPoolExecutor(
 #### 线程池大小如何设定
 
 **CPU 密集型**（计算为主）：
-```
+```text
 线程数 ≈ CPU 核心数 + 1
 ```
 多一个是为了某个线程偶尔因<term>缺页中断</term>等暂停时，额外线程能顶上。
 
 **IO 密集型**（网络/磁盘 IO 为主）：
-```
+```text
 线程数 ≈ CPU 核心数 × 2
 或
 线程数 = CPU 核心数 / (1 - 阻塞系数)  // 阻塞系数 0~1，IO 越多越大
