@@ -41,6 +41,8 @@ relative: true
 
 现代 MQ 基本都是两种模型的组合——Topic 下可以有多个 Consumer Group，同一个 Group 内是点对点，不同 Group 之间是发布订阅。
 
+<consumer-group-figure></consumer-group-figure>
+
 ### 主流 MQ 对比
 
 | 对比项 | Kafka | RocketMQ | RabbitMQ |
@@ -110,11 +112,7 @@ relative: true
 
 消息丢失发生在三个阶段：**生产阶段、Broker 存储阶段、消费阶段**。
 
-```
-生产者 ──①──→ MQ Broker ──②──→ 消费者
-   ↑              ↑              ↑
- 丢失原因1     丢失原因2      丢失原因3
-```
+<message-reliability-figure></message-reliability-figure>
 
 要回答"怎么保证消息不丢"，就得一个阶段一个阶段说清楚。
 
@@ -315,6 +313,8 @@ WHERE user_id=1001 AND version=5;
 
 **分区顺序**：同一个业务 ID（如订单号）的消息在同一个 Partition 里，该 Partition 内的消息严格有序。这是生产中的实际做法。
 
+<order-partition-figure></order-partition-figure>
+
 ### 原理深入
 
 #### RocketMQ 顺序消息
@@ -451,16 +451,7 @@ for (Message msg : msgs) {
 
 **RocketMQ 的事务消息（Half Message）**：
 
-```
-1. 生产者发送一条 Half Message（半消息，消费者暂时不可见）
-2. Broker 存储 Half Message，返回成功
-3. 生产者执行本地事务（如写数据库）
-4. 根据本地事务结果：
-   成功 → 向 Broker 发送 Commit → 消费者可见
-   失败 → 向 Broker 发送 Rollback → 消息删除
-5. 如果 Broker 一直没收到 Commit/Rollback（生产者挂了）：
-   Broker 回调生产者的 checkLocalTransaction() 方法反查本地事务状态
-```
+<transaction-message-figure></transaction-message-figure>
 
 **Kafka 的事务**：Kafka 0.11+ 支持幂等生产者 + 事务，但它的"事务"指的是保证一次会话内发送多条消息的原子性，跟 RocketMQ 的半消息事务是不同概念。
 
@@ -498,6 +489,8 @@ acks=all + min.insync.replicas=2 + replication.factor=3
 3. **<term>零拷贝</term>**：`sendfile` 系统调用，数据不经过用户态，直接从磁盘页缓存 → 网卡
 4. **批量 + 压缩**：Producer 批量发送，Broker 批量刷盘，支持 gzip/snappy/lz4 压缩
 5. **分区并行**：一个 Topic 多个 Partition 并行读写，水平扩展
+
+<kafka-speed-figure></kafka-speed-figure>
 
 ### 面试实战（精讲及回答）
 

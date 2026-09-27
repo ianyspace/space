@@ -1,6 +1,5 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
-import { useRouter } from 'next/router';
 import { formatMessage } from 'utils/i18n';
 import styles from './TagGraph.module.scss';
 
@@ -19,7 +18,7 @@ function computeLayout(tagGroups) {
     const n = tagGroups.length;
     const nodes = tagGroups.map((tag, i) => {
         const goldenRatio = (1 + Math.sqrt(5)) / 2;
-        const theta = 2 * Math.PI * i / goldenRatio;
+        const theta = (2 * Math.PI * i) / goldenRatio;
         const r = Math.sqrt(i / n) * (VIEW_H * 0.36);
         return {
             ...tag,
@@ -57,8 +56,8 @@ function computeLayout(tagGroups) {
     const maxDegree = Math.max(...degree, 1);
 
     const radiusOf = (i) => {
-        const countWeight = (nodes[i].totalCount / maxCount);
-        const degWeight = (degree[i] / maxDegree);
+        const countWeight = nodes[i].totalCount / maxCount;
+        const degWeight = degree[i] / maxDegree;
         return MIN_R + (countWeight * 0.65 + degWeight * 0.35) * (MAX_R - MIN_R);
     };
 
@@ -73,7 +72,9 @@ function computeLayout(tagGroups) {
                 const dy = nodes[b].y - nodes[a].y;
                 const dist = Math.hypot(dx, dy) || 1;
                 const minGap = radiusOf(a) + radiusOf(b) + 38;
-                const push = (minGap - dist > 0 ? (minGap - dist) * 0.22 : 0) + (100 * 20) / (dist * dist);
+                const push =
+                    (minGap - dist > 0 ? (minGap - dist) * 0.22 : 0) +
+                    (100 * 20) / (dist * dist);
                 const fx = (dx / dist) * push;
                 const fy = (dy / dist) * push;
                 nodes[a].vx -= fx;
@@ -127,19 +128,11 @@ export default function TagGraph({ tagGroups, getTagUrl }) {
     const dragStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
     const wrapRef = useRef(null);
 
-    let router = null;
-    try {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        router = useRouter();
-    } catch {
-        // static export safe
-    }
-
     const tTagGraphAria = formatMessage('tTagGraphAria');
     const articlesCountFn = (count) => formatMessage('tTagArticlesCount', count);
     const relatedText = formatMessage('tTagConnectedTo');
 
-    const { nodes, links, radiusOf, degree } = useMemo(
+    const { nodes, links, radiusOf } = useMemo(
         () => computeLayout(tagGroups),
         [tagGroups],
     );
@@ -171,14 +164,15 @@ export default function TagGraph({ tagGroups, getTagUrl }) {
         return link.source !== targetIndex && link.target !== targetIndex;
     };
 
-    const openTag = useCallback((tag) => {
-        const url = getTagUrl(tag);
-        if (router && router.push) {
-            router.push(url);
-        } else if (typeof window !== 'undefined') {
-            window.location.href = url;
-        }
-    }, [getTagUrl, router]);
+    const openTag = useCallback(
+        (tag) => {
+            const url = getTagUrl(tag);
+            if (typeof window !== 'undefined') {
+                window.location.href = url;
+            }
+        },
+        [getTagUrl],
+    );
 
     // Zoom controls
     const handleZoomIn = () => setZoom((z) => Math.min(z + 0.25, 2.2));
@@ -265,7 +259,10 @@ export default function TagGraph({ tagGroups, getTagUrl }) {
                     {/* Canvas Background Grid */}
                     <rect width={VIEW_W} height={VIEW_H} fill="url(#graph-grid)" />
 
-                    <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`} transform-origin={`${VIEW_W / 2} ${VIEW_H / 2}`}>
+                    <g
+                        transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}
+                        style={{ transformOrigin: `${VIEW_W / 2}px ${VIEW_H / 2}px` }}
+                    >
                         {/* Connecting Edges */}
                         <g className={styles['edges-layer']}>
                             {links.map((link) => {
@@ -294,7 +291,9 @@ export default function TagGraph({ tagGroups, getTagUrl }) {
                                 const r = radiusOf(i);
                                 const dimmed = isDimmed(i);
                                 const isCurrent = i === targetIndex;
-                                const isConnected = targetIndex != null && (neighbourOf.get(targetIndex) || new Set()).has(i);
+                                const isConnected =
+                                    targetIndex != null &&
+                                    (neighbourOf.get(targetIndex) || new Set()).has(i);
 
                                 return (
                                     <g

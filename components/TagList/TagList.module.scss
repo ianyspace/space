@@ -1,15 +1,21 @@
+// Ported from `src/components/TagList/TagList.css`.
 .tag-ul {
-    margin: 0.25rem 0 0.25rem 0;
+    margin: -0.75rem 0 0.75rem 0;
     padding: 0;
     list-style: none;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 8px 12px;
+    gap: 8px 14px;
 
     li {
         display: inline-flex;
         margin: 0;
         padding: 0;
+
+        :global(.round-tag) {
+            margin-bottom: 0;
+        }
     }
 }
+

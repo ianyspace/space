@@ -28,7 +28,7 @@ const PostAbbrevSimple = function ({
     let tagsPart;
     if (tags) {
         tagsPart = (
-            <TagList style={{ margin: '0.5rem 0 -0.5rem -0.5rem' }} tags={tags} baseUrl={`${base}tags`} />
+            <TagList style={{ margin: '0.5rem 0 0 0' }} tags={tags} baseUrl={`${base}tags`} />
         );
     }
 

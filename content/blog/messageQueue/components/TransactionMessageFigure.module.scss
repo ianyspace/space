@@ -1,0 +1,219 @@
+.tmf {
+  --tmf-text: #222222;
+  --tmf-panel-bg: rgba(127, 127, 127, 0.06);
+  --tmf-panel-border: rgba(127, 127, 127, 0.2);
+  --tmf-card-bg: #ffffff;
+  --tmf-accent: #8055d6;
+  --tmf-accent-bg: rgba(128, 85, 214, 0.15);
+
+  --tmf-ok: #16a34a;
+  --tmf-ok-bg: rgba(22, 163, 74, 0.12);
+  --tmf-err: #dc2626;
+  --tmf-err-bg: rgba(220, 38, 38, 0.12);
+  --tmf-warn: #d97706;
+  --tmf-warn-bg: rgba(217, 119, 6, 0.12);
+
+  margin: 1.6rem 0 2.2rem;
+  padding: 16px 18px;
+  border: 1px solid var(--tmf-panel-border);
+  border-radius: 12px;
+  background: var(--tmf-panel-bg);
+  font-family: var(--systemFont, sans-serif);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--tmf-text);
+}
+
+:global(body.dark) .tmf {
+  --tmf-text: rgba(255, 255, 255, 0.92);
+  --tmf-panel-bg: rgba(255, 255, 255, 0.05);
+  --tmf-panel-border: rgba(255, 255, 255, 0.16);
+  --tmf-card-bg: rgba(255, 255, 255, 0.08);
+  --tmf-accent: #b795ff;
+  --tmf-accent-bg: rgba(183, 149, 255, 0.18);
+
+  --tmf-ok: #4ade80;
+  --tmf-ok-bg: rgba(74, 222, 128, 0.18);
+  --tmf-err: #f87171;
+  --tmf-err-bg: rgba(248, 113, 113, 0.18);
+  --tmf-warn: #fbbf24;
+  --tmf-warn-bg: rgba(251, 191, 36, 0.18);
+}
+
+.tmf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.tmf-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14.5px;
+}
+
+.tmf-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--tmf-accent);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.tmf-modes {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.mode-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--tmf-panel-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tmf-text);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: var(--tmf-accent);
+  }
+
+  &.active {
+    background: var(--tmf-accent);
+    border-color: var(--tmf-accent);
+    color: #fff;
+    font-weight: 600;
+  }
+}
+
+.step-viewer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.btn-step {
+  padding: 5px 14px;
+  border: 1px solid var(--tmf-accent);
+  border-radius: 6px;
+  background: var(--tmf-accent-bg);
+  color: var(--tmf-accent);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: var(--tmf-accent);
+    color: #fff;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.step-indicator {
+  font-size: 12.5px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.flow-box {
+  padding: 16px;
+  background: var(--tmf-card-bg);
+  border: 1px solid var(--tmf-panel-border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.timeline-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--tmf-panel-border);
+  background: var(--tmf-panel-bg);
+  transition: all 0.25s ease;
+
+  &.current {
+    border-color: var(--tmf-accent);
+    background: var(--tmf-accent-bg);
+    transform: translateX(4px);
+    box-shadow: 0 0 10px rgba(128, 85, 214, 0.15);
+  }
+
+  &.done {
+    opacity: 0.65;
+  }
+}
+
+.step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--tmf-panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+
+  .current & {
+    background: var(--tmf-accent);
+    color: #fff;
+  }
+}
+
+.step-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.step-title {
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.step-desc {
+  font-size: 12.5px;
+  opacity: 0.85;
+}
+
+.tmf-explain {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--tmf-panel-bg);
+  border-left: 3px solid var(--tmf-accent);
+  border-radius: 0 6px 6px 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
