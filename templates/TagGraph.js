@@ -121,7 +121,13 @@ function computeLayout(tagGroups) {
 
 const TagGraph = function ({ tagGroups, getTagUrl }) {
     const [hovered, setHovered] = useState(null);
-    const router = useRouter();
+    let router = null;
+    try {
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        router = useRouter();
+    } catch {
+        // Safe during static export prerender if router is not mounted
+    }
     // Resolved once, outside the node loop: `formatMessage` is a hook, and the
     // tag counts are plain data, so the counts are interpolated with `String`.
     const tTagGraphAria = formatMessage('tTagGraphAria');
@@ -143,7 +149,14 @@ const TagGraph = function ({ tagGroups, getTagUrl }) {
         return !(neighbourOf.get(hovered) || new Set()).has(i);
     };
 
-    const openTag = (tag) => router.push(getTagUrl(tag));
+    const openTag = (tag) => {
+        const url = getTagUrl(tag);
+        if (router && router.push) {
+            router.push(url);
+        } else if (typeof window !== 'undefined') {
+            window.location.href = url;
+        }
+    };
 
     return (
         <div className={styles.wrap}>

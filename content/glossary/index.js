@@ -14,6 +14,7 @@ import mysql from './mysql';
 import java from './java';
 import redis from './redis';
 import spring from './spring';
+import mq from './mq';
 
 /** `' GC  Roots '` -> `'gcroots'` */
 export function normalize(value) {
@@ -23,7 +24,7 @@ export function normalize(value) {
         .replace(/\s+/g, '');
 }
 
-const DOMAINS = { jvm, mysql, java, redis, spring };
+const DOMAINS = { jvm, mysql, java, redis, spring, mq };
 
 const glossary = {};
 

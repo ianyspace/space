@@ -1,0 +1,591 @@
+---
+title: 消息队列 · 面试全攻略
+date: "2026-09-27"
+description: 从入门到原理，从实战到速查 —— 初中级 Java 后端消息队列面试一站式指南
+tags: ['Java', '消息队列', 'Kafka', 'RocketMQ', '问答']
+disqus: true
+relative: true
+---
+
+> 从入门到原理，从实战到速查 —— 初中级 Java 后端面试一站式指南
+
+---
+
+## 消息队列基础
+
+### 基础概念
+
+**消息队列（Message Queue）** 是一种异步通信机制。生产者往队列里发消息，消费者从队列里取消息，双方不需要同时在线，也不直接通信——MQ 在中间做缓冲。
+
+**消息队列三大核心作用**：
+
+```
+三个词记住：解耦、削峰、异步
+
+解耦：A 系统不用直接调 B、C、D 的接口，把消息扔 MQ 就行，
+      B、C、D 自己订阅。新系统 E 想接？订阅就行，A 不用改代码。
+
+削峰：（削峰填谷）双十一瞬间几万下单，数据库扛不住。
+      MQ 先收着，消费者按自己能承受的速度慢慢处理。
+
+异步：用户注册后要发短信、送积分、写日志，
+      主流程只做"注册成功 + 发 MQ 消息"，后续的事异步干，响应快。
+```
+
+### 消息模型
+
+| 模型 | 类比 | 特点 |
+|------|------|------|
+| 点对点（Queue） | 快递柜——一人取走就没了 | 一条消息只能被一个消费者消费 |
+| 发布订阅（Topic） | 公众号——所有粉丝都收到 | 一条消息所有订阅者都收到 |
+
+现代 MQ 基本都是两种模型的组合——Topic 下可以有多个 Consumer Group，同一个 Group 内是点对点，不同 Group 之间是发布订阅。
+
+### 主流 MQ 对比
+
+| 对比项 | Kafka | RocketMQ | RabbitMQ |
+|--------|-------|----------|----------|
+| 开发语言 | Java/Scala | Java | <term>Erlang</term> |
+| 吞吐量 | 极高（百万级 TPS） | 高（十万级 TPS） | 中等（万级 TPS） |
+| 时效性 | 毫秒级 | 毫秒级 | 微秒级 |
+| 事务消息 | 不支持（0.11+ 支持） | 支持 | 不支持 |
+| 顺序消息 | 分区有序 | 支持 | 支持 |
+| 延时消息 | 不支持（需插件） | 支持（18 个级别） | <term>死信队列</term> + TTL 变通 |
+| 消息回溯 | 支持（按时间/偏移量） | 支持（按时间） | 不支持 |
+| 运维难度 | 高 | 中 | 低 |
+| 社区生态 | 极强（大数据标配） | 中等（阿里开源） | 强（金融/银行） |
+
+**选型建议**：
+- 大数据、日志采集、流计算 → Kafka
+- 电商交易、金融支付、需要事务消息 → RocketMQ
+- 中小项目、要求简单可靠 → RabbitMQ
+
+### 核心概念速览
+
+| 概念 | Kafka | RocketMQ |
+|------|-------|----------|
+| 消息主题 | Topic | Topic |
+| 分区/队列 | Partition | MessageQueue |
+| 消费者组 | Consumer Group | Consumer Group |
+| 偏移量 | Offset | Offset |
+| 集群协调 | Zookeeper / <term>KRaft</term> | <term>NameServer</term> |
+
+### 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐⭐：为什么用消息队列？不用行不行？
+
+**面试官意图**：考察你是否明白 MQ 解决什么问题，而不是人云亦云。技术选型题。
+
+**推荐回答**：
+
+> 消息队列解决三个问题：解耦、削峰、异步。
+>
+> 解耦——多个下游系统需要同一份数据时，如果 A 直接同步调用 B、C、D，每新加一个系统 A 都要改代码。用 MQ 后 A 只发消息，下游自己订阅，A 不用管谁消费。
+>
+> 削峰——瞬时高并发下数据库扛不住，MQ 在中间做缓冲。比如秒杀一秒几万请求，MQ 先全部收下，后台消费者按能力慢慢处理，数据库不会被冲垮。
+>
+> 异步——用户注册后需要发短信、发优惠券、写欢迎日志，主流程只需要把消息发到 MQ 然后返回"注册成功"，后面的事异步去干，接口响应快很多。
+>
+> 不用 MQ 能不能行？流量小的时候当然可以——直接同步调用就行。引入 MQ 也带来新的问题：消息丢失、重复消费、顺序问题、运维复杂度。所以 MQ 是"在流量变大、系统变复杂后"的一个合理的复杂度交换。
+
+---
+
+#### 题目 2 ⭐⭐：Kafka、RocketMQ、RabbitMQ 怎么选？
+
+**面试官意图**：考察对不同 MQ 特性和适用场景的了解。
+
+**推荐回答**：
+
+> 三个维度看。吞吐量方面 Kafka 最强，单机百万 TPS，适合日志、埋点、流计算这种大数据量场景。功能性方面 RocketMQ 最丰富，事务消息、顺序消息、延时消息都支持，阿里系多年双十一验证，适合电商和金融交易。
+>
+> RabbitMQ 吞吐量最低但延迟最低（微秒级），运维最简单，社区成熟，适合中小项目和金融行业。
+>
+> 总结一句话：大数据选 Kafka，交易选 RocketMQ，简单可靠选 RabbitMQ。
+
+---
+
+## 消息可靠性（不丢消息）
+
+### 基础概念
+
+消息丢失发生在三个阶段：**生产阶段、Broker 存储阶段、消费阶段**。
+
+```
+生产者 ──①──→ MQ Broker ──②──→ 消费者
+   ↑              ↑              ↑
+ 丢失原因1     丢失原因2      丢失原因3
+```
+
+要回答"怎么保证消息不丢"，就得一个阶段一个阶段说清楚。
+
+### 原理深入
+
+#### 生产者 → Broker（发送阶段）
+
+**丢消息场景**：生产者发了，网络抖动没到 Broker；或者到了但 Broker 宕了没持久化。
+
+**Kafka 解决方案**：
+
+```
+发送确认机制（acks 参数）：
+
+acks=0   生产者不等待确认，最快，但消息可能没到
+         → 不保证不丢，性能最好
+
+acks=1   生产者等待 Leader 写入本地日志就确认
+         → 如果 Leader 刚写完挂了还没同步给 Follower，消息丢了
+         → 生产常用，平衡可靠性和性能
+
+acks=all（或 -1）  生产者等待所有 ISR（同步副本集）都写入才确认
+         → 最可靠，一条消息至少存了两份（Leader + 至少一个 Follower）
+         → 配合 min.insync.replicas >= 2
+
+retries=3  发送失败自动重试
+```
+
+```java
+// Kafka 生产者可靠配置
+Properties props = new Properties();
+props.put("acks", "all");
+props.put("retries", 3);
+props.put("enable.idempotence", true);  // 开启幂等，防重试导致重复
+```
+
+**RocketMQ 解决方案**：
+- 同步发送 + 重试：`producer.send(msg, callback)` + 失败重试
+- 事务消息：先发 Half Message，Broker 收到后回调本地事务，根据事务状态决定提交或回滚
+
+#### Broker 存储阶段
+
+**丢消息场景**：Broker 收到消息但还没来得及刷盘就宕机了；或者 Leader 挂了但 Follower 没同步。
+
+**Kafka 解决方案**：
+- `replication.factor >= 3`：每条消息至少 3 个副本
+- `min.insync.replicas >= 2`：至少 2 个 ISR 副本确认（含 Leader）
+- `unclean.leader.election.enable = false`：不允许落后太多的副本竞选 Leader（宁可不可用也不丢数据）
+
+**RocketMQ 解决方案**：
+- 同步刷盘：`flushDiskType = SYNC_FLUSH`，刷到磁盘才返回成功（影响性能，金融类用）
+- 异步刷盘 + 主从同步：生产更常用，Master 写入后同步给 Slave
+
+#### Broker → 消费者（消费阶段）
+
+**丢消息场景**：消费者拿到了消息，还没处理完就自动提交了偏移量（offset），然后消费者挂了，这条消息就被跳过去了。
+
+**核心原则：先处理，再提交**。
+
+**Kafka**：
+```java
+// ❌ 自动提交——处理前就提交，处理失败消息丢了
+props.put("enable.auto.commit", "true");
+
+// ✅ 手动提交——处理完再提交
+props.put("enable.auto.commit", "false");
+// 消费代码
+while (true) {
+    ConsumerRecords<String, String> records = consumer.poll(1000);
+    for (ConsumerRecord<String, String> record : records) {
+        process(record);  // 先处理
+    }
+    consumer.commitSync();  // 处理完一批，再提交
+}
+```
+
+**RocketMQ**：
+```java
+consumer.registerMessageListener((MessageListenerConcurrently) (msgs, context) -> {
+    for (MessageExt msg : msgs) {
+        process(msg);
+    }
+    return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;  // 返回成功才提交
+});
+```
+
+### 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐⭐：怎么保证消息不丢？
+
+**面试官意图**：最常见也是最核心的 MQ 面试题，必须按"三阶段"一条线说下来。
+
+**推荐回答**：
+
+> 分三阶段。生产阶段，生产者发消息时要确认 Broker 收到了。Kafka 设 acks=all 配合 min.insync.replicas >= 2，等所有 ISR 都确认；RocketMQ 用同步发送加重试，最关键可以用事务消息。
+>
+> Broker 阶段，消息要持久化。Kafka 设 replication.factor >= 3 多副本，禁止 unclean 选举；RocketMQ 用同步刷盘或主从同步。极端重要场景把钱花在磁盘和副本上，别省。
+>
+> 消费阶段，最核心——先处理再提交。关掉自动提交，消费者处理完全部消息后再手动 commit offset。处理失败不要提交，消息会被重新消费。但这样会引入重复消费问题，需要消费端做幂等。
+
+---
+
+## 重复消费与幂等
+
+### 基础概念
+
+**重复消费**：同一条消息被消费了多次，导致业务逻辑被重复执行。
+
+**为什么会产生**：
+- 生产端：网络超时重发（Broker 收到了但 ACK 没回到生产者，生产者重试）
+- 消费端：消费者处理完还没来得及提交 offset 就挂了，重启后重新消费
+- 再平衡：Consumer Group 发生 <term>Rebalance</term> 时，已处理但未提交的消息会被新消费者重新消费
+
+**结论**：MQ 能做到 at-least-once（至少一次），做不到 exactly-once（恰好一次）。所以**幂等性必须在消费端自己实现**。
+
+### 原理深入
+
+#### 幂等性方案对比
+
+| 方案 | 实现方式 | 适用场景 |
+|------|---------|---------|
+| 数据库唯一键 | INSERT 用唯一索引，重复直接忽略 | 强一致性场景（订单、支付） |
+| Redis 去重 | 用 <term>SETNX</term> 记录已处理的 msgId | 高频场景，能接受少量丢失 |
+| 版本号 | UPDATE ... SET version=version+1 WHERE version=旧值 | 有状态更新的场景 |
+| 业务状态机 | 已处理的状态拒绝再次处理 | 有明确状态流转的场景 |
+
+#### 方案一：数据库唯一约束（最常用）
+
+```java
+// 用消息 ID 作为唯一键，重复插入报错就忽略
+@Transactional
+public void handle(String msgId, OrderMessage msg) {
+    try {
+        // 先记录消息 ID（唯一索引），成功说明没处理过
+        messageLogMapper.insert(msgId);
+        // 再处理业务
+        orderService.createOrder(msg.getOrder());
+    } catch (DuplicateKeyException e) {
+        // 已处理过，忽略
+        log.info("重复消息，跳过: {}", msgId);
+    }
+}
+```
+
+**注意**：消息记录和业务逻辑要在同一个事务里。否则消息记录了但业务失败了，下次来发现消息已记录就不再处理，导致业务丢失。
+
+#### 方案二：Redis 去重
+
+```java
+// SETNX：只有 key 不存在才设置成功
+String key = "msg:dedup:" + msgId;
+boolean first = redis.setnx(key, "1");
+if (!first) {
+    log.info("重复消息，跳过: {}", msgId);
+    return;
+}
+redis.expire(key, 3600);  // 设过期，防止积压
+process(msg);
+```
+
+**注意**：SETNX 和 EXPIRE 要原子——用 `SET key value NX EX 3600` 一个命令搞定。Redis 方案不能保证 100% 不丢（Redis 宕机会丢去重记录），适合能接受小概率重复的场景。
+
+#### 方案三：版本号
+
+```java
+// 更新时带版本号条件
+UPDATE account SET balance=balance-10, version=version+1
+WHERE user_id=1001 AND version=5;
+// 如果影响行数为 0，说明版本已变（已被处理过），跳过
+```
+
+### 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐⭐：怎么保证消息不重复消费？或者说幂等性怎么实现？
+
+**面试官意图**：MQ 面试第二高频题，考察从 MQ 原理到业务实现的完整链路。
+
+**推荐回答**：
+
+> 先明确一点：MQ 做不到 exactly-once，最多是 at-least-once。所以幂等必须在消费端自己实现。
+>
+> 最保险的方案是数据库唯一键。在业务数据库里建一张消息记录表，msgId 加唯一索引。消费消息时，先把 msgId 插入消息表。如果插入成功说明没处理过，继续执行业务逻辑；如果抛 DuplicateKeyException 说明已经处理过了，直接忽略。关键点是消息记录和业务逻辑要在同一个事务里，否则可能出现消息记录了但业务没执行的漏处理。
+>
+> 高频场景下不想每次查数据库，可以用 Redis 去重——SET NX 判断 msgId 是否已处理。优点快，缺点 Redis 宕了会丢去重记录，只能做到"大概率不重复"。
+>
+> 有状态更新场景可以用版本号方案——UPDATE 时带版本条件，版本号对不上说明已被处理过。
+
+**追问准备**：
+- "如果消息没有全局唯一 ID 怎么办？" → 用业务字段组合做唯一标识——比如 `订单号 + 操作类型 + 时间戳` 取 MD5。或者要求上游必须带唯一 ID。
+
+---
+
+## 顺序消息
+
+### 基础概念
+
+**全局顺序**：所有消息严格按先后顺序消费——一个 Topic 只能有一个 Partition，一个消费者。吞吐量极低，不现实。
+
+**分区顺序**：同一个业务 ID（如订单号）的消息在同一个 Partition 里，该 Partition 内的消息严格有序。这是生产中的实际做法。
+
+### 原理深入
+
+#### RocketMQ 顺序消息
+
+```java
+// 生产者——按业务 ID 选择同一队列
+producer.send(msg, new MessageQueueSelector() {
+    @Override
+    public MessageQueue select(List<MessageQueue> mqs, Message msg, Object arg) {
+        long orderId = (Long) arg;
+        int index = (int) (orderId % mqs.size());  // 同订单进同一队列
+        return mqs.get(index);
+    }
+}, orderId);
+
+// 消费者——对同一队列加锁，保证串行消费
+consumer.registerMessageListener((MessageListenerOrderly) (msgs, context) -> {
+    for (MessageExt msg : msgs) {
+        process(msg);   // 同一队列内串行处理
+    }
+    return ConsumeOrderlyStatus.SUCCESS;
+});
+```
+
+**RocketMQ 顺序消息原理**：
+- Broker 内同一个 MessageQueue 的消息是 FIFO 严格有序的
+- 消费者端用 MessageListenerOrderly，对同一队列串行处理
+- 消费失败会阻塞后续消息，直到重试成功
+
+#### Kafka 分区顺序
+
+Kafka 天然支持分区有序——同一个 Partition 内的消息严格有序。
+
+```java
+// 生产者——指定 key，同 key 进同一 Partition
+producer.send(new ProducerRecord<>("topic", "orderId_1001", message));
+
+// 默认分区策略：hash(key) % partitionCount
+// 同一个 orderId 永远去同一个 Partition，该 Partition 内严格有序
+```
+
+**Kafka 分区顺序的坑**：Partition 数量不能随便改，一改 hash 结果就变了，原来同 key 的消息可能分到不同 Partition。
+
+### 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐：订单的"创建、支付、发货"消息，怎么保证按顺序消费？
+
+**面试官意图**：经典场景题，考察顺序消息的实际应用。
+
+**推荐回答**：
+
+> 不需要全局有序，只需要同一笔订单的三条消息有序，这就是分区有序。
+>
+> 生产者发消息时，用订单 ID 做路由——`hash(orderId) % 队列数`，这样同一笔订单的三条消息一定进入同一个 Partition/MessageQueue。在该分区内部，消息天然是 FIFO 有序的。
+>
+> 消费者端用顺序消费模式（RocketMQ 的 MessageListenerOrderly），对该分区内消息串行处理——创建完才处理支付、支付完才处理发货。如果某条消息处理失败，阻塞后续消息，不断重试直到成功。
+>
+> 有个额外的点：消费者数量不能超过分区数，因为一个分区同一时刻只能被一个消费者线程处理，多出来的消费者闲着。
+
+**追问准备**：
+- "消费失败了怎么办？" → 顺序消费模式下不能跳过——消费失败会一直重试当前消息，后面的消息阻塞等待。如果一直重试失败，人工介入跳过该消息。所以分区顺序消费的可用性要求高，建议对每条消息做好容错。
+
+---
+
+## 消息积压与消费延迟
+
+### 基础概念
+
+**消息积压**：MQ 里堆积了大量待消费的消息，消费速度跟不上生产速度。
+
+**常见原因**：
+- 消费者处理逻辑太慢（查数据库、调第三方接口超时）
+- 消费者实例不够（分区多但消费者少）
+- 消费端故障（代码 bug、数据库连不上）
+- 上游突发大量消息（秒杀、大促）
+
+### 解决方案
+
+#### 紧急止损（线上事故）
+
+```
+现象：消息积压几十万条，延迟超过 10 分钟
+
+动作：
+1. 先止损：临时扩容消费者（加机器、加线程）
+2. 降级非核心逻辑：日志、统计之类的先跳过，保核心链路
+3. 如果扩容还不够：启用临时 Consumer Group + 新 Topic
+   ├── 新建一个 Topic，分区数设多些
+   ├── 原有消费者把积压消息转发到新 Topic
+   ├── 新消费者（更多实例）快速消费新 Topic 的消息
+   └── 积压清完后切回原流程
+```
+
+```java
+// 临时降级代码
+for (Message msg : msgs) {
+    // 只处理核心业务
+    processCore(msg);
+    // 非核心先扔到另一个 Topic，等高峰期过了再处理
+    producer.send("delay-topic", msg);
+}
+```
+
+#### 根本解决
+
+- 优化消费者性能：批量处理、异步化、减少外部调用
+- 增加分区数（提前规划好，不能临时改太多）
+- 消费者横向扩容
+- SQL 优化、加缓存、精简逻辑
+
+### 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐：线上消息积压了几十万条，怎么处理？
+
+**面试官意图**：场景题，考察线上故障应急能力。
+
+**推荐回答**：
+
+> 先止损定位。看监控确认是哪里的问题——是消费者挂了还是处理太慢。如果消费者挂了，赶紧重启；如果是处理太慢，紧急扩容消费者实例。
+>
+> 如果扩容还是追不上，第二招是临时降级。非核心逻辑——发短信、记日志、更新统计——先跳过或转到一个延迟处理的 Topic 去，保核心链路的实时性。
+>
+> 如果还不行，第三招是"临时转存"。建一个新 Topic 分区数更多，原有消费者把积压消息快速转发过去（只转发不做业务），新起一批消费者从新 Topic 拉消息快速处理。积压清了再切回。
+>
+> 事后治本：分析消费者性能瓶颈——是不是哪里没加索引、是不是可以批量处理、是不是线程池调优。分区数也要重新评估，保证消费者数 ≤ 分区数才能充分利用。
+
+---
+
+## 高级面试题拾遗
+
+### 事务消息
+
+**问题**：数据库操作成功但发 MQ 失败了，或者 MQ 发出去了但数据库操作回滚了。怎么保证本地事务和消息的一致性？
+
+**RocketMQ 的事务消息（Half Message）**：
+
+```
+1. 生产者发送一条 Half Message（半消息，消费者暂时不可见）
+2. Broker 存储 Half Message，返回成功
+3. 生产者执行本地事务（如写数据库）
+4. 根据本地事务结果：
+   成功 → 向 Broker 发送 Commit → 消费者可见
+   失败 → 向 Broker 发送 Rollback → 消息删除
+5. 如果 Broker 一直没收到 Commit/Rollback（生产者挂了）：
+   Broker 回调生产者的 checkLocalTransaction() 方法反查本地事务状态
+```
+
+**Kafka 的事务**：Kafka 0.11+ 支持幂等生产者 + 事务，但它的"事务"指的是保证一次会话内发送多条消息的原子性，跟 RocketMQ 的半消息事务是不同概念。
+
+### ISR 机制（Kafka）
+
+**ISR（In-Sync Replicas）**：与 Leader 保持同步的副本集合。
+
+- Leader 挂了，从 ISR 中选新 Leader——因为 ISR 里的副本和 Leader 数据是一致的
+- 不在 ISR 的 Follower 不能竞选，防止选出一个落后太多的副本导致数据丢失
+- Follower 落后超过 `replica.lag.time.max.ms`（默认 30s）则踢出 ISR
+
+**配置组合**：
+```
+acks=all + min.insync.replicas=2 + replication.factor=3
+→ 至少 3 个副本，至少 2 个 ISR 确认，保证不丢消息
+```
+
+### 消息队列 vs Redis List 做队列
+
+| 对比项 | MQ | Redis List |
+|--------|-----|------------|
+| 可靠性 | 持久化、副本、ACK 机制 | 单机、断电丢数据（AOF/RDB 可补充但不等效） |
+| 消费确认 | 完善的 ACK/Offset | BRPOP 弹出即消失 |
+| 消费组 | 天然支持 | 没有，需手动实现 |
+| 顺序 | 分区有序 | 单 List 全局有序 |
+| 消息回溯 | 支持（offset/时间） | 不支持 |
+| 运维 | 独立系统 | Redis 顺手用 |
+
+**什么时候可以用 Redis List**：消息量不大、丢几条消息可以接受、不想为 MQ 多维护一套服务。绝大多数生产场景还是老老实实用 MQ。
+
+### Kafka 为什么快
+
+1. **顺序写磁盘**：顺序 I/O 接近内存速度，零随机读写
+2. **<term>Page Cache</term>**：利用操作系统的页缓存，读写本质是内存操作
+3. **<term>零拷贝</term>**：`sendfile` 系统调用，数据不经过用户态，直接从磁盘页缓存 → 网卡
+4. **批量 + 压缩**：Producer 批量发送，Broker 批量刷盘，支持 gzip/snappy/lz4 压缩
+5. **分区并行**：一个 Topic 多个 Partition 并行读写，水平扩展
+
+### 面试实战（精讲及回答）
+
+#### 题目 1 ⭐⭐：RocketMQ 的事务消息是怎么实现的？
+
+**面试官意图**：考察对分布式事务与消息一致性方案的理解。
+
+**推荐回答**：
+
+> 事务消息解决的核心问题是本地事务和发消息的原子性——不能出现"数据库操作成功了但消息没发出去"或者"消息发出去了但回滚了"。
+>
+> RocketMQ 的方案是两阶段提交 + 回查。第一阶段发 Half Message——这条消息存在 Broker 上但对消费者不可见。Broker 确认收到后，生产者开始执行本地事务。事务成功就给 Broker 发 Commit，消息对消费者可见；事务失败就发 Rollback，消息删掉。
+>
+> 如果生产者执行本地事务时挂了，Broker 收不到 Commit/Rollback，会主动回调生产者——生产者在 checkLocalTransaction 方法里查询本地事务状态（比如查订单表），告诉 Broker 是提交还是回滚。这套机制保证最终一致性。
+
+---
+
+#### 题目 2 ⭐⭐：Kafka 为什么这么快？
+
+**面试官意图**：考察对 Kafka 底层 IO 优化的理解，属于加分题。
+
+**推荐回答**：
+
+> 五个层面的优化。第一，顺序写磁盘——Kafka 消息是追加到日志文件末尾的，顺序 I/O 比随机 I/O 快几个数量级，机械盘也能跑到几百 MB/s。第二，Page Cache——充分利用操作系统的页缓存，读写消息本质是内存操作，不直接落盘。第三，零拷贝——用 sendfile 系统调用，数据从磁盘页缓存直接送到网卡，不经过用户态，省了一次内核到用户态的拷贝。第四，批量处理——Producer 攒一批一起发，Broker 攒一批一起刷盘，减少操作系统调用次数。第五，分区并行——一个 Topic 切分成多个 Partition，读写可以并行，吞吐量随 Partition 线性增长。
+
+---
+
+## 面试速查表
+
+### 基础概念速查
+
+| 问题 | 答案 |
+|------|------|
+| MQ 三大作用 | 解耦、削峰、异步 |
+| 点对点 vs 发布订阅 | Queue 一人消费 vs Topic 多人订阅 |
+| Kafka 特点 | 极高吞吐（百万 TPS），顺序写+零拷贝，大数据标配 |
+| RocketMQ 特点 | 功能最全（事务、顺序、延时），阿里双十一验证 |
+| RabbitMQ 特点 | 延迟最低（微秒），运维简单，金融常用 |
+| Kafka Partition | 分区内有序，通过 key hash 路由 |
+| RocketMQ MessageQueue | 等同于 Partition，顺序消息依赖它 |
+
+### 消息可靠性速查
+
+| 问题 | 答案 |
+|------|------|
+| 丢消息三阶段 | 生产端 → Broker → 消费端 |
+| Kafka 发送确认 | acks=all + min.insync.replicas>=2 + retries |
+| RocketMQ 发送确认 | 同步发送 + 重试 + 事务消息 |
+| Broker 防丢 | 多副本 replication.factor>=3，同步刷盘/主从同步 |
+| 消费端防丢 | 先处理再提交！关闭自动提交，手动 commit |
+| 自动提交的坑 | 还没处理就提交 offset，消费者挂了消息丢失 |
+
+### 重复消费/幂等速查
+
+| 问题 | 答案 |
+|------|------|
+| 重复消费原因 | 网络重试 / 消费完未提交 / Rebalance |
+| MQ 能 exactly-once 吗 | 不能，最多 at-least-once，幂等靠消费端 |
+| 数据库唯一键 | msgId 唯一索引，插入成功=未处理（需和业务同一事务） |
+| Redis 去重 | SET NX EX 原子操作，速度快，不保证100% |
+| 版本号 | UPDATE ... WHERE version=旧值，影响行数为0=已处理 |
+
+### 顺序消息速查
+
+| 问题 | 答案 |
+|------|------|
+| 全局顺序 | 一个 Partition = 低吞吐，不现实 |
+| 分区顺序 | 同订单 ID 进同一分区，分区内 FIFO 有序 |
+| Kafka 实现 | hash(key) % partitionCount → 同 key 同分区 |
+| RocketMQ 实现 | MessageQueueSelector 选队列 + MessageListenerOrderly |
+| 消费失败怎么办 | 顺序模式下阻塞重试当前消息，不跳过 |
+| 消费者数限制 | 不能超过分区数，多的闲在那 |
+
+### 消息积压速查
+
+| 问题 | 答案 |
+|------|------|
+| 积压原因 | 消费者慢 / 实例少 / 故障 / 突发流量 |
+| 紧急止损 | 扩容消费者 + 降级非核心逻辑 |
+| 临时转存 | 新 Topic 多分区 → 转消息 → 快速消费 → 切回 |
+| 根治 | 优化消费性能、批量处理、增加分区、横向扩容 |
+
+### 进阶速查
+
+| 问题 | 答案 |
+|------|------|
+| 事务消息 | RocketMQ Half Message → 本地事务 → Commit/Rollback → 回查 |
+| ISR | In-Sync Replicas，与 Leader 同步的副本集合，Leader 选举候选 |
+| Kafka 为什么快 | 顺序写、Page Cache、零拷贝(sendfile)、批量+压缩、分区并行 |
+| MQ vs Redis List | MQ 有 ACK/持久化/消费组/回溯，Redis List 轻量但不保可靠 |
+| 死信队列 | 消费失败重试N次后进入死信队列，人工处理 |
