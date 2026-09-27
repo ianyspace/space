@@ -1,18 +1,23 @@
-// Tags index. Apple-style page header: one large title and a single muted line
-// that carries both the tag count and the interaction hint, then the graph
-// (see `TagGraph.module.scss`) breathing on the page below it.
-
 .tag-page {
     margin-bottom: 2.625rem;
     margin-top: 0.5rem;
 }
 
 .tag-header {
+    margin-bottom: 1.5rem;
+}
+
+.tag-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
     margin-bottom: 1.25rem;
 }
 
 .tag-title {
-    margin: 0 0 0.4rem;
+    margin: 0 0 0.35rem;
     font-size: 2rem;
     font-weight: 700;
     letter-spacing: -0.022em;
@@ -25,17 +30,220 @@
     line-height: 1.6;
 }
 
-// Middot between the count and the hint — it keeps the line readable when it
-// wraps on narrow screens.
 .tag-meta-dot {
     margin: 0 7px;
     opacity: 0.6;
 }
 
+// View mode tabs (Graph, Cloud, Cards)
+.view-tabs {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px;
+    background: var(--bg-article);
+    border: 1px solid var(--hr);
+    border-radius: 999px;
+    gap: 2px;
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04);
+}
+
+.tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--breadcrumbsTextColorActive);
+    font-size: 12.5px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+
+    &:hover {
+        color: var(--textTitle);
+    }
+}
+
+.tab-btn-active {
+    background: #ffffff;
+    color: var(--pink);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+:global(body.dark) .tab-btn-active {
+    background: #373c49;
+    color: #ffa7c4;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.24);
+}
+
+.tab-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.tab-text {
+    line-height: 1;
+}
+
+// Toolbar for search and sorting
+.tag-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 8px 12px;
+    background: color-mix(in srgb, var(--bg-article) 60%, transparent);
+    border: 1px solid var(--hr);
+    border-radius: 12px;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 200px;
+    max-width: 320px;
+    position: relative;
+}
+
+.search-icon {
+    width: 15px;
+    height: 15px;
+    color: var(--breadcrumbsTextColorActive);
+    flex-shrink: 0;
+}
+
+.search-input {
+    width: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--textNormal);
+
+    &::placeholder {
+        color: var(--breadcrumbsTextColorActive);
+        opacity: 0.75;
+    }
+}
+
+.clear-btn {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--textNormal);
+    font-size: 13px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+
+    &:hover {
+        background: var(--pink);
+        color: #fff;
+    }
+}
+
+:global(body.dark) .clear-btn {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.sort-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sort-btn {
+    padding: 4px 10px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--breadcrumbsTextColorActive);
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+        color: var(--textTitle);
+    }
+}
+
+.sort-btn-active {
+    background: var(--bg-article);
+    border-color: var(--hr);
+    color: var(--textTitle);
+    font-weight: 600;
+}
+
+.view-content {
+    margin-top: 1rem;
+}
+
 .tag-empty {
     margin: 0;
-    padding: 2rem 0;
+    padding: 3.5rem 1rem;
     color: var(--breadcrumbsTextColorActive);
-    font-size: 15px;
+    font-size: 14.5px;
     text-align: center;
+    background: var(--bg-article);
+    border: 1px dashed var(--hr);
+    border-radius: 14px;
+}
+
+.reset-filter-btn {
+    margin-top: 10px;
+    padding: 5px 14px;
+    border: 1px solid var(--pink);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--pink);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: var(--pink);
+        color: #ffffff;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .tag-title-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .view-tabs {
+        width: 100%;
+        justify-content: space-around;
+    }
+
+    .tab-btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .tag-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-box {
+        max-width: 100%;
+    }
+
+    .sort-group {
+        justify-content: flex-end;
+    }
 }

@@ -4,7 +4,7 @@
     "private": true,
     "description": "Next.js + MDX port of the gatsby-simple-blog (anyspace) article features",
     "scripts": {
-        "dev": "npm run gen:articles && npm run gen:search && next dev --turbopack",
+        "dev": "npm run gen:articles && npm run gen:search && next dev -p 3000 -H 0.0.0.0",
         "build": "npm run typography && npm run gen:articles && npm run gen:search && next build",
         "start": "next start",
         "typography": "node scripts/gen-typography.js",
@@ -41,6 +41,10 @@
         "unist-util-visit": "^5.0.0"
     },
     "devDependencies": {
+        "@eslint/eslintrc": "^3.3.7",
+        "eslint": "^9",
+        "eslint-config-next": "^16.3.6",
+        "eslint-plugin-react": "^7.37.5",
         "patch-package": "^8.0.1",
         "sass": "^1.104.0"
     }

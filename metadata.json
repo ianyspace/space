@@ -1,0 +1,5 @@
+{
+  "name": "space",
+  "description": "一个记录知识和生活的神秘小空间",
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

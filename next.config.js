@@ -6,29 +6,48 @@
  * is needed and no custom webpack rules are required anymore.
  */
 
+const { PHASE_DEVELOPMENT_SERVER } = require('next/constants');
 const { site } = require('./config');
 
 const basePath = site.pathPrefix || '';
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-    // GitHub Pages only serves static files, so `next build` has to emit a fully
-    // static site into `out/` instead of a server rendered app.
-    output: 'export',
-    // Deployed as a project page (`https://ianyspace.github.io/space/`), which
-    // requires every route and `_next/*` asset to be prefixed with the repo name.
-    ...(basePath ? { basePath } : {}),
-    reactStrictMode: false,
-    trailingSlash: true,
-    outputFileTracingRoot: __dirname,
-    images: {
-        // The original blog references remote covers/avatars from image hosts.
-        remotePatterns: [
-            { protocol: 'https', hostname: 'img.picgo.net' },
-            { protocol: 'https', hostname: 'npm.elemecdn.com' },
-        ],
-        unoptimized: true,
-    },
-};
+module.exports = (phase) => {
+    const isDev = phase === PHASE_DEVELOPMENT_SERVER;
 
-module.exports = nextConfig;
+    /** @type {import('next').NextConfig} */
+    const nextConfig = {
+        // GitHub Pages only serves static files, so `next build` has to emit a fully
+        // static site into `out/` instead of a server rendered app.
+        output: 'export',
+        // Deployed as a project page (`https://ianyspace.github.io/space/`), which
+        // requires every route and `_next/*` asset to be prefixed with the repo name.
+        ...(basePath ? { basePath } : {}),
+        reactStrictMode: false,
+        trailingSlash: true,
+        outputFileTracingRoot: __dirname,
+        images: {
+            // The original blog references remote covers/avatars from image hosts.
+            remotePatterns: [
+                { protocol: 'https', hostname: 'img.picgo.net' },
+                { protocol: 'https', hostname: 'npm.elemecdn.com' },
+            ],
+            unoptimized: true,
+        },
+        ...(isDev && basePath
+            ? {
+                  async redirects() {
+                      return [
+                          {
+                              source: '/',
+                              destination: `${basePath}/`,
+                              basePath: false,
+                              permanent: false,
+                          },
+                      ];
+                  },
+              }
+            : {}),
+    };
+
+    return nextConfig;
+};

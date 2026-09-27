@@ -59,22 +59,24 @@
 }
 
 .bubble {
-    fill: var(--pink);
-    stroke: transparent;
-    stroke-width: 2;
+    fill: color-mix(in srgb, var(--pink) 16%, var(--bg-article));
+    stroke: color-mix(in srgb, var(--pink) 35%, var(--hr));
+    stroke-width: 1.5;
     transform-box: fill-box;
     transform-origin: center;
     transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), fill 0.25s ease,
-        opacity 0.25s ease;
+        stroke 0.25s ease, opacity 0.25s ease;
 }
 
 @supports (fill: color-mix(in srgb, red 50%, blue)) {
     :global(body.light) .bubble {
-        fill: color-mix(in srgb, var(--pink) 12%, #ffffff);
+        fill: color-mix(in srgb, var(--pink) 18%, #ffffff);
+        stroke: color-mix(in srgb, var(--pink) 40%, rgba(0, 0, 0, 0.15));
     }
 
     :global(body.dark) .bubble {
-        fill: color-mix(in srgb, var(--pink) 16%, #2b303b);
+        fill: color-mix(in srgb, var(--pink) 20%, #2b303b);
+        stroke: color-mix(in srgb, var(--pink) 40%, rgba(255, 255, 255, 0.15));
     }
 }
 
