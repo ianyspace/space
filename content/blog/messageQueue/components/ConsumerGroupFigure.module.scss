@@ -1,360 +1,235 @@
-// 配色取自站点本身的一套色（玫红 / 橙 / 蓝 / 青绿），与全站的链接、标签、代码高亮同源；
-// 中性面板仍由主题变量推导，浅色 / 深色自动适配。
-.cgf {
-  --cgf-text: var(--textNormal);
-  --cgf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
-  --cgf-panel-border: var(--hr);
-  --cgf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
+// 消息分发模型对比（静态三卡）。配色取自站点同源的一套色：点对点=橙、发布订阅=蓝、
+// 现代集群=玫红（推荐）。中性面板由主题变量推导，浅色 / 深色自动适配。
+.msgm {
+  --msgm-text: var(--textNormal);
+  --msgm-muted: color-mix(in srgb, var(--textNormal) 62%, transparent);
+  --msgm-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
+  --msgm-panel-border: var(--hr);
+  --msgm-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
 
-  --cgf-rose: #c62f5f;
-  --cgf-rose-bg: rgba(198, 47, 95, 0.12);
-  --cgf-orange: #cf7a1e;
-  --cgf-orange-bg: rgba(207, 122, 30, 0.12);
-  --cgf-blue: #3d76b8;
-  --cgf-blue-bg: rgba(61, 118, 184, 0.12);
-  --cgf-teal: #2b9384;
-  --cgf-teal-bg: rgba(43, 147, 132, 0.12);
+  --msgm-rose: #c62f5f;
+  --msgm-rose-bg: rgba(198, 47, 95, 0.12);
+  --msgm-orange: #cf7a1e;
+  --msgm-orange-bg: rgba(207, 122, 30, 0.12);
+  --msgm-blue: #3d76b8;
+  --msgm-blue-bg: rgba(61, 118, 184, 0.12);
 
-  --cgf-accent: var(--cgf-rose);
-  --cgf-accent-ink: #ffffff;
-  --cgf-active-bg: var(--cgf-rose-bg);
+  --msgm-neutral: color-mix(in srgb, var(--textNormal) 72%, transparent);
+  --msgm-neutral-bg: color-mix(in srgb, var(--textNormal) 10%, transparent);
 
-  --cgf-p1: var(--cgf-rose);
-  --cgf-p1-bg: var(--cgf-rose-bg);
-  --cgf-p2: var(--cgf-orange);
-  --cgf-p2-bg: var(--cgf-orange-bg);
-  --cgf-p3: var(--cgf-blue);
-  --cgf-p3-bg: var(--cgf-blue-bg);
-  --cgf-purple: var(--cgf-teal);
-  --cgf-purple-bg: var(--cgf-teal-bg);
+  --msgm-accent: var(--msgm-rose);
+  --msgm-accent-bg: var(--msgm-rose-bg);
+  --msgm-accent-ink: #ffffff;
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
-  border: 1px solid var(--cgf-panel-border);
+  border: 1px solid var(--msgm-panel-border);
   border-radius: 12px;
-  background: var(--cgf-panel-bg);
+  background: var(--msgm-panel-bg);
   font-family: var(--systemFont, sans-serif);
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--cgf-text);
-}
-
-:global(body.dark) .cgf {
-  --cgf-rose: #ffa7c4;
-  --cgf-rose-bg: rgba(255, 167, 196, 0.16);
-  --cgf-orange: #f0a35a;
-  --cgf-orange-bg: rgba(240, 163, 90, 0.16);
-  --cgf-blue: #82aaff;
-  --cgf-blue-bg: rgba(130, 170, 255, 0.16);
-  --cgf-teal: #6fd6c4;
-  --cgf-teal-bg: rgba(111, 214, 196, 0.16);
-  // 深色下这些色偏亮，填充块上要用深色字。
-  --cgf-accent-ink: #241016;
-}
-
-.cgf-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-
-.cgf-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 14.5px;
-}
-
-.cgf-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--cgf-accent);
-  color: var(--cgf-accent-ink);
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.cgf-tabs {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.cgf-tab {
-  padding: 4px 12px;
-  border: 1px solid var(--cgf-panel-border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--cgf-text);
-  font-size: 12.5px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: var(--cgf-accent);
-    color: var(--cgf-accent);
-  }
-
-  &.active {
-    background: var(--cgf-accent);
-    border-color: var(--cgf-accent);
-    color: var(--cgf-accent-ink);
-    font-weight: 600;
-  }
-}
-
-.cgf-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-}
-
-.cgf-btn {
-  padding: 6px 14px;
-  border: 1px solid var(--cgf-accent);
-  border-radius: 6px;
-  background: var(--cgf-active-bg);
-  color: var(--cgf-accent);
   font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: var(--cgf-accent);
-    color: var(--cgf-accent-ink);
-  }
+  line-height: 1.5;
+  color: var(--msgm-text);
 }
 
-.cgf-btn-reset {
-  padding: 6px 12px;
-  border: 1px solid var(--cgf-panel-border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--cgf-text);
-  font-size: 12.5px;
-  cursor: pointer;
-  opacity: 0.75;
-  transition: all 0.2s;
-
-  &:hover {
-    opacity: 1;
-    border-color: var(--cgf-text);
-  }
+:global(body.dark) .msgm {
+  --msgm-rose: #ffa7c4;
+  --msgm-rose-bg: rgba(255, 167, 196, 0.16);
+  --msgm-orange: #f0a35a;
+  --msgm-orange-bg: rgba(240, 163, 90, 0.16);
+  --msgm-blue: #82aaff;
+  --msgm-blue-bg: rgba(130, 170, 255, 0.16);
+  // 深色下这些色偏亮，填充块上要用深色字。
+  --msgm-accent-ink: #241016;
 }
 
-.cgf-stage {
+.msgm-grid {
   display: grid;
-  grid-template-columns: 140px 1fr 1fr;
-  gap: 16px;
-  padding: 16px;
-  background: var(--cgf-card-bg);
-  border: 1px solid var(--cgf-panel-border);
-  border-radius: 10px;
-  align-items: stretch;
-  min-height: 220px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
 
   @media (max-width: 720px) {
     grid-template-columns: 1fr;
-    gap: 12px;
   }
 }
 
-.col-producer,
-.col-broker,
-.col-consumer {
+.msgm-card {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding: 14px;
+  background: var(--msgm-card-bg);
+  border: 1px solid var(--msgm-panel-border);
+  border-radius: 10px;
 }
 
-.col-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--cgf-accent);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding-bottom: 4px;
-  border-bottom: 1px dashed var(--cgf-panel-border);
+// 每张卡片用自己的强调色：点对点=橙、发布订阅=蓝、现代集群=玫红。
+.msgm-p2p {
+  --msgm-accent: var(--msgm-orange);
+  --msgm-accent-bg: var(--msgm-orange-bg);
+}
+
+.msgm-pubsub {
+  --msgm-accent: var(--msgm-blue);
+  --msgm-accent-bg: var(--msgm-blue-bg);
+}
+
+.msgm-cluster {
+  --msgm-accent: var(--msgm-rose);
+  --msgm-accent-bg: var(--msgm-rose-bg);
+}
+
+.msgm-head {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.producer-box {
-  display: flex;
-  flex-direction: column;
+.msgm-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
-  padding: 14px 10px;
-  background: var(--cgf-panel-bg);
-  border: 1px solid var(--cgf-panel-border);
-  border-radius: 8px;
-  text-align: center;
-  gap: 8px;
-}
-
-.producer-icon {
-  font-size: 26px;
-}
-
-.producer-tag {
   font-size: 12px;
-  font-weight: 600;
-}
-
-.queue-card {
-  padding: 10px 12px;
-  background: var(--cgf-panel-bg);
-  border: 1px solid var(--cgf-panel-border);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.queue-title {
-  font-size: 12px;
-  font-weight: 600;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.queue-items {
-  display: flex;
-  gap: 4px;
-  min-height: 28px;
-  padding: 4px;
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 4px;
-  overflow-x: auto;
-  align-items: center;
-}
-
-:global(body.dark) .queue-items {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.msg-pill {
-  padding: 2px 7px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-  animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.pill-p1 {
-  background: var(--cgf-p1-bg);
-  color: var(--cgf-p1);
-  border: 1px solid var(--cgf-p1);
-}
-
-.pill-p2 {
-  background: var(--cgf-p2-bg);
-  color: var(--cgf-p2);
-  border: 1px solid var(--cgf-p2);
-}
-
-.pill-p3 {
-  background: var(--cgf-p3-bg);
-  color: var(--cgf-p3);
-  border: 1px solid var(--cgf-p3);
-}
-
-.group-wrap {
-  border: 1px dashed var(--cgf-panel-border);
-  border-radius: 8px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.group-name {
-  font-size: 11.5px;
   font-weight: 700;
-  color: var(--cgf-purple);
-  display: flex;
-  justify-content: space-between;
+  color: var(--msgm-accent-ink);
+  background: var(--msgm-accent);
 }
 
-.consumer-item {
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: var(--cgf-panel-bg);
-  border: 1px solid var(--cgf-panel-border);
+.msgm-name {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.msgm-badge {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--msgm-accent);
+  background: var(--msgm-accent-bg);
+  border: 1px solid var(--msgm-accent);
+}
+
+.msgm-tagline {
+  margin: 0;
+  font-size: 12px;
+  color: var(--msgm-muted);
+}
+
+/* ---- 数据流 ---- */
+.msgm-flow {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  transition: all 0.2s ease;
-
-  &.active-consume {
-    border-color: var(--cgf-accent);
-    box-shadow: 0 0 8px color-mix(in srgb, var(--cgf-accent) 30%, transparent);
-  }
-}
-
-.consumer-head {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 12px;
-  font-weight: 600;
+  gap: 4px;
+  padding: 12px 8px;
+  background: var(--msgm-panel-bg);
+  border-radius: 8px;
 }
 
-.consumer-stats {
+.msgm-node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.msgm-producer {
+  background: var(--msgm-neutral-bg);
+  color: var(--msgm-neutral);
+  border-color: var(--msgm-neutral);
+}
+
+.msgm-broker {
+  background: var(--msgm-accent);
+  color: var(--msgm-accent-ink);
+  padding: 5px 18px;
+}
+
+.msgm-arrow {
+  font-size: 12px;
+  line-height: 1;
+  color: var(--msgm-muted);
+}
+
+.msgm-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.msgm-chip {
+  padding: 3px 8px;
+  border-radius: 6px;
   font-size: 11px;
-  opacity: 0.75;
-}
-
-.consumer-last {
-  font-size: 11.5px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.05);
-  display: inline-block;
-  align-self: flex-start;
-}
-
-:global(body.dark) .consumer-last {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.cgf-explain {
-  margin-top: 12px;
-  padding: 10px 14px;
-  background: var(--cgf-panel-bg);
-  border-left: 3px solid var(--cgf-accent);
-  border-radius: 0 6px 6px 0;
-  font-size: 12.5px;
-  line-height: 1.6;
-}
-
-.cgf-log {
-  margin-top: 8px;
-  font-size: 12px;
-  font-family: monospace;
-  color: var(--cgf-accent);
   font-weight: 600;
+  background: var(--msgm-card-bg);
+  border: 1px dashed var(--msgm-panel-border);
+  color: var(--msgm-muted);
 }
 
-@keyframes popIn {
-  from {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+// 收到消息的那一方：用卡片的强调色标出。
+.msgm-chip-on {
+  background: var(--msgm-accent-bg);
+  border: 1px solid var(--msgm-accent);
+  color: var(--msgm-accent);
+}
+
+/* ---- 现代集群的两个消费组 ---- */
+.msgm-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+}
+
+.msgm-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px dashed var(--msgm-panel-border);
+  border-radius: 8px;
+  flex: 1;
+  min-width: 92px;
+}
+
+.msgm-group-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--msgm-muted);
+}
+
+/* ---- 底部一句话 ---- */
+.msgm-note {
+  margin: auto 0 0;
+  padding-top: 9px;
+  border-top: 1px dashed var(--msgm-panel-border);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--msgm-muted);
+}
+
+.msgm-note strong {
+  color: var(--msgm-accent);
+}
+
+.msgm-caption {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.6;
 }
