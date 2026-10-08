@@ -1,20 +1,28 @@
-// 配色统一到站点主题：中性灰 + 单一强调色（--textLink）。「危险/丢消息」用强调色，
-// 「安全」用深灰，不再用红绿橙蓝多色。色值由主题变量推导，浅色深色自动适配。
+// 配色取自站点本身的一套色（橙 / 红 / 青绿 / 蓝）：危险=红、安全=青绿、信息=蓝、
+// 强调=橙，与全站标签、代码高亮同源。中性面板由主题变量推导，浅色 / 深色自动适配。
 .mrf {
   --mrf-text: var(--textNormal);
   --mrf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
   --mrf-panel-border: var(--hr);
   --mrf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
-  --mrf-accent: var(--textLink);
-  --mrf-accent-ink: #ffffff;
-  --mrf-accent-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
 
-  --mrf-err: var(--textLink);
-  --mrf-err-bg: color-mix(in srgb, var(--textLink) 12%, transparent);
-  --mrf-ok: color-mix(in srgb, var(--textNormal) 78%, transparent);
-  --mrf-ok-bg: color-mix(in srgb, var(--textNormal) 9%, transparent);
-  --mrf-blue: color-mix(in srgb, var(--textNormal) 55%, transparent);
-  --mrf-blue-bg: color-mix(in srgb, var(--textNormal) 8%, transparent);
+  --mrf-orange: #cf7a1e;
+  --mrf-orange-bg: rgba(207, 122, 30, 0.14);
+  --mrf-blue: #3d76b8;
+  --mrf-blue-bg: rgba(61, 118, 184, 0.12);
+  --mrf-teal: #2b9384;
+  --mrf-teal-bg: rgba(43, 147, 132, 0.12);
+  --mrf-red: #c94848;
+  --mrf-red-bg: rgba(201, 72, 72, 0.12);
+
+  --mrf-accent: var(--mrf-orange);
+  --mrf-accent-ink: #ffffff;
+  --mrf-accent-bg: var(--mrf-orange-bg);
+
+  --mrf-err: var(--mrf-red);
+  --mrf-err-bg: var(--mrf-red-bg);
+  --mrf-ok: var(--mrf-teal);
+  --mrf-ok-bg: var(--mrf-teal-bg);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -28,7 +36,15 @@
 }
 
 :global(body.dark) .mrf {
-  // 深色下强调色是亮粉，填充块上要用深色字。
+  --mrf-orange: #f0a35a;
+  --mrf-orange-bg: rgba(240, 163, 90, 0.16);
+  --mrf-blue: #82aaff;
+  --mrf-blue-bg: rgba(130, 170, 255, 0.16);
+  --mrf-teal: #6fd6c4;
+  --mrf-teal-bg: rgba(111, 214, 196, 0.16);
+  --mrf-red: #ff8080;
+  --mrf-red-bg: rgba(255, 128, 128, 0.16);
+  // 深色下这些色偏亮，填充块上要用深色字。
   --mrf-accent-ink: #241016;
 }
 

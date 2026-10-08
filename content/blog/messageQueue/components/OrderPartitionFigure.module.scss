@@ -1,20 +1,30 @@
-// 配色统一到站点主题：中性灰 + 单一强调色（--textLink）。三笔订单用「强调色 / 深灰 / 浅灰」
-// 区分，不再用蓝橙紫多色。色值由主题变量推导，浅色深色自动适配。
+// 配色取自站点本身的一套色（玫红 / 橙 / 蓝 / 青绿）：三笔订单用玫红/橙/蓝区分，
+// 强调色用青绿，与全站链接、标签同源。中性面板由主题变量推导，浅色 / 深色自动适配。
 .opf {
   --opf-text: var(--textNormal);
   --opf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
   --opf-panel-border: var(--hr);
   --opf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
-  --opf-accent: var(--textLink);
-  --opf-accent-ink: #ffffff;
-  --opf-accent-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
 
-  --opf-ord-a: var(--textLink);
-  --opf-ord-a-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
-  --opf-ord-b: color-mix(in srgb, var(--textNormal) 72%, transparent);
-  --opf-ord-b-bg: color-mix(in srgb, var(--textNormal) 10%, transparent);
-  --opf-ord-c: color-mix(in srgb, var(--textNormal) 48%, transparent);
-  --opf-ord-c-bg: color-mix(in srgb, var(--textNormal) 7%, transparent);
+  --opf-rose: #c62f5f;
+  --opf-rose-bg: rgba(198, 47, 95, 0.12);
+  --opf-orange: #cf7a1e;
+  --opf-orange-bg: rgba(207, 122, 30, 0.12);
+  --opf-blue: #3d76b8;
+  --opf-blue-bg: rgba(61, 118, 184, 0.12);
+  --opf-teal: #2b9384;
+  --opf-teal-bg: rgba(43, 147, 132, 0.12);
+
+  --opf-accent: var(--opf-teal);
+  --opf-accent-ink: #ffffff;
+  --opf-accent-bg: var(--opf-teal-bg);
+
+  --opf-ord-a: var(--opf-rose);
+  --opf-ord-a-bg: var(--opf-rose-bg);
+  --opf-ord-b: var(--opf-orange);
+  --opf-ord-b-bg: var(--opf-orange-bg);
+  --opf-ord-c: var(--opf-blue);
+  --opf-ord-c-bg: var(--opf-blue-bg);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -28,7 +38,15 @@
 }
 
 :global(body.dark) .opf {
-  // 深色下强调色是亮粉，填充块上要用深色字。
+  --opf-rose: #ffa7c4;
+  --opf-rose-bg: rgba(255, 167, 196, 0.16);
+  --opf-orange: #f0a35a;
+  --opf-orange-bg: rgba(240, 163, 90, 0.16);
+  --opf-blue: #82aaff;
+  --opf-blue-bg: rgba(130, 170, 255, 0.16);
+  --opf-teal: #6fd6c4;
+  --opf-teal-bg: rgba(111, 214, 196, 0.16);
+  // 深色下这些色偏亮，填充块上要用深色字。
   --opf-accent-ink: #241016;
 }
 

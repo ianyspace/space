@@ -1,17 +1,22 @@
-// 配色统一到站点主题：中性灰 + 单一强调色（--textLink）。CPU 拷贝（慢）用强调色，
-// DMA 零拷贝（快）用深灰，不再用红绿蓝多色。色值由主题变量推导，浅色深色自动适配。
+// 配色取自站点本身的一套色（蓝 / 红 / 青绿）：强调=蓝、CPU 拷贝（慢）=红、
+// DMA 零拷贝（快）=青绿，与全站链接、代码高亮同源。中性面板由主题变量推导。
 .ksf {
   --ksf-text: var(--textNormal);
   --ksf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
   --ksf-panel-border: var(--hr);
   --ksf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
-  --ksf-accent: var(--textLink);
-  --ksf-accent-ink: #ffffff;
-  --ksf-accent-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
 
-  --ksf-cpu: var(--textLink);
-  --ksf-dma: color-mix(in srgb, var(--textNormal) 78%, transparent);
+  --ksf-blue: #3d76b8;
+  --ksf-blue-bg: rgba(61, 118, 184, 0.14);
+  --ksf-red: #c94848;
+  --ksf-teal: #2b9384;
   --ksf-soft: color-mix(in srgb, var(--textNormal) 6%, transparent);
+
+  --ksf-accent: var(--ksf-blue);
+  --ksf-accent-ink: #ffffff;
+  --ksf-accent-bg: var(--ksf-blue-bg);
+  --ksf-cpu: var(--ksf-red);
+  --ksf-dma: var(--ksf-teal);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -25,7 +30,11 @@
 }
 
 :global(body.dark) .ksf {
-  // 深色下强调色是亮粉，填充块上要用深色字。
+  --ksf-blue: #82aaff;
+  --ksf-blue-bg: rgba(130, 170, 255, 0.16);
+  --ksf-red: #ff8080;
+  --ksf-teal: #6fd6c4;
+  // 深色下这些色偏亮，填充块上要用深色字。
   --ksf-accent-ink: #241016;
 }
 

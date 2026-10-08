@@ -1,6 +1,5 @@
-// 配色统一到站点主题：中性灰 + 单一强调色（--textLink，浅色深玫红 / 深色亮粉）。
-// 不再用蓝/橙/绿多色，避免与全站「中性 + 一点玫红」的语言打架。
-// 所有色值都由主题变量推导，浅色 / 深色自动适配，无需各写一套。
+// 配色取自站点本身的一套色（玫红 / 橙 / 蓝）：三张卡片各用一个色，与全站链接、
+// 标签、代码高亮同源；其余一律中性。中性面板由主题变量推导，浅色 / 深色自动适配。
 .mqcr {
   --mqcr-text: var(--textNormal);
   --mqcr-muted: color-mix(in srgb, var(--textNormal) 62%, transparent);
@@ -8,8 +7,15 @@
   --mqcr-panel-border: var(--hr);
   --mqcr-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
 
-  --mqcr-accent: var(--textLink);
-  --mqcr-accent-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
+  --mqcr-rose: #c62f5f;
+  --mqcr-rose-bg: rgba(198, 47, 95, 0.12);
+  --mqcr-orange: #cf7a1e;
+  --mqcr-orange-bg: rgba(207, 122, 30, 0.12);
+  --mqcr-blue: #3d76b8;
+  --mqcr-blue-bg: rgba(61, 118, 184, 0.12);
+
+  --mqcr-accent: var(--mqcr-rose);
+  --mqcr-accent-bg: var(--mqcr-rose-bg);
   --mqcr-accent-ink: #ffffff;
 
   --mqcr-neutral: color-mix(in srgb, var(--textNormal) 72%, transparent);
@@ -27,7 +33,13 @@
 }
 
 :global(body.dark) .mqcr {
-  // 深色下强调色是亮粉，填充块上要用深色字才看得清。
+  --mqcr-rose: #ffa7c4;
+  --mqcr-rose-bg: rgba(255, 167, 196, 0.16);
+  --mqcr-orange: #f0a35a;
+  --mqcr-orange-bg: rgba(240, 163, 90, 0.16);
+  --mqcr-blue: #82aaff;
+  --mqcr-blue-bg: rgba(130, 170, 255, 0.16);
+  // 深色下这些色偏亮，填充块上要用深色字。
   --mqcr-accent-ink: #241016;
 }
 
@@ -49,6 +61,22 @@
   background: var(--mqcr-card-bg);
   border: 1px solid var(--mqcr-panel-border);
   border-radius: 10px;
+}
+
+// 三张卡片各用自己的强调色：解耦=玫红、削峰=橙、异步=蓝。
+.mqcr-decouple {
+  --mqcr-accent: var(--mqcr-rose);
+  --mqcr-accent-bg: var(--mqcr-rose-bg);
+}
+
+.mqcr-peak {
+  --mqcr-accent: var(--mqcr-orange);
+  --mqcr-accent-bg: var(--mqcr-orange-bg);
+}
+
+.mqcr-async {
+  --mqcr-accent: var(--mqcr-blue);
+  --mqcr-accent-bg: var(--mqcr-blue-bg);
 }
 
 .mqcr-head {

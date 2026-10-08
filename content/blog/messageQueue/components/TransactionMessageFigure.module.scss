@@ -1,20 +1,30 @@
-// 配色统一到站点主题：中性灰 + 单一强调色（--textLink）。成功/失败/警告用
-// 「强调色 / 深灰 / 中灰」区分，不再用紫绿红橙多色。色值由主题变量推导，浅色深色自动适配。
+// 配色取自站点本身的一套色（玫红 / 青绿 / 红 / 橙）：强调=玫红、成功=青绿、
+// 失败=红、警告=橙，与全站链接、标签、代码高亮同源。中性面板由主题变量推导。
 .tmf {
   --tmf-text: var(--textNormal);
   --tmf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
   --tmf-panel-border: var(--hr);
   --tmf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
-  --tmf-accent: var(--textLink);
-  --tmf-accent-ink: #ffffff;
-  --tmf-accent-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
 
-  --tmf-ok: color-mix(in srgb, var(--textNormal) 78%, transparent);
-  --tmf-ok-bg: color-mix(in srgb, var(--textNormal) 9%, transparent);
-  --tmf-err: var(--textLink);
-  --tmf-err-bg: color-mix(in srgb, var(--textLink) 12%, transparent);
-  --tmf-warn: color-mix(in srgb, var(--textNormal) 55%, transparent);
-  --tmf-warn-bg: color-mix(in srgb, var(--textNormal) 8%, transparent);
+  --tmf-rose: #c62f5f;
+  --tmf-rose-bg: rgba(198, 47, 95, 0.14);
+  --tmf-orange: #cf7a1e;
+  --tmf-orange-bg: rgba(207, 122, 30, 0.12);
+  --tmf-teal: #2b9384;
+  --tmf-teal-bg: rgba(43, 147, 132, 0.12);
+  --tmf-red: #c94848;
+  --tmf-red-bg: rgba(201, 72, 72, 0.12);
+
+  --tmf-accent: var(--tmf-rose);
+  --tmf-accent-ink: #ffffff;
+  --tmf-accent-bg: var(--tmf-rose-bg);
+
+  --tmf-ok: var(--tmf-teal);
+  --tmf-ok-bg: var(--tmf-teal-bg);
+  --tmf-err: var(--tmf-red);
+  --tmf-err-bg: var(--tmf-red-bg);
+  --tmf-warn: var(--tmf-orange);
+  --tmf-warn-bg: var(--tmf-orange-bg);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -28,7 +38,15 @@
 }
 
 :global(body.dark) .tmf {
-  // 深色下强调色是亮粉，填充块上要用深色字。
+  --tmf-rose: #ffa7c4;
+  --tmf-rose-bg: rgba(255, 167, 196, 0.16);
+  --tmf-orange: #f0a35a;
+  --tmf-orange-bg: rgba(240, 163, 90, 0.16);
+  --tmf-teal: #6fd6c4;
+  --tmf-teal-bg: rgba(111, 214, 196, 0.16);
+  --tmf-red: #ff8080;
+  --tmf-red-bg: rgba(255, 128, 128, 0.16);
+  // 深色下这些色偏亮，填充块上要用深色字。
   --tmf-accent-ink: #241016;
 }
 

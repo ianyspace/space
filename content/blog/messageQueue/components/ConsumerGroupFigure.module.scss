@@ -1,22 +1,32 @@
-// 配色统一到站点主题：中性灰 + 单一强调色（--textLink）。分区用「强调色 / 深灰 / 浅灰」
-// 三档区分，不再用蓝绿橙紫多色。色值全部由主题变量推导，浅色深色自动适配。
+// 配色取自站点本身的一套色（玫红 / 橙 / 蓝 / 青绿），与全站的链接、标签、代码高亮同源；
+// 中性面板仍由主题变量推导，浅色 / 深色自动适配。
 .cgf {
   --cgf-text: var(--textNormal);
   --cgf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
   --cgf-panel-border: var(--hr);
   --cgf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
-  --cgf-accent: var(--textLink);
-  --cgf-accent-ink: #ffffff;
-  --cgf-active-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
 
-  --cgf-p1: var(--textLink);
-  --cgf-p1-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
-  --cgf-p2: color-mix(in srgb, var(--textNormal) 72%, transparent);
-  --cgf-p2-bg: color-mix(in srgb, var(--textNormal) 10%, transparent);
-  --cgf-p3: color-mix(in srgb, var(--textNormal) 48%, transparent);
-  --cgf-p3-bg: color-mix(in srgb, var(--textNormal) 7%, transparent);
-  --cgf-purple: color-mix(in srgb, var(--textNormal) 72%, transparent);
-  --cgf-purple-bg: color-mix(in srgb, var(--textNormal) 10%, transparent);
+  --cgf-rose: #c62f5f;
+  --cgf-rose-bg: rgba(198, 47, 95, 0.12);
+  --cgf-orange: #cf7a1e;
+  --cgf-orange-bg: rgba(207, 122, 30, 0.12);
+  --cgf-blue: #3d76b8;
+  --cgf-blue-bg: rgba(61, 118, 184, 0.12);
+  --cgf-teal: #2b9384;
+  --cgf-teal-bg: rgba(43, 147, 132, 0.12);
+
+  --cgf-accent: var(--cgf-rose);
+  --cgf-accent-ink: #ffffff;
+  --cgf-active-bg: var(--cgf-rose-bg);
+
+  --cgf-p1: var(--cgf-rose);
+  --cgf-p1-bg: var(--cgf-rose-bg);
+  --cgf-p2: var(--cgf-orange);
+  --cgf-p2-bg: var(--cgf-orange-bg);
+  --cgf-p3: var(--cgf-blue);
+  --cgf-p3-bg: var(--cgf-blue-bg);
+  --cgf-purple: var(--cgf-teal);
+  --cgf-purple-bg: var(--cgf-teal-bg);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -30,7 +40,15 @@
 }
 
 :global(body.dark) .cgf {
-  // 深色下强调色是亮粉，填充块上要用深色字。
+  --cgf-rose: #ffa7c4;
+  --cgf-rose-bg: rgba(255, 167, 196, 0.16);
+  --cgf-orange: #f0a35a;
+  --cgf-orange-bg: rgba(240, 163, 90, 0.16);
+  --cgf-blue: #82aaff;
+  --cgf-blue-bg: rgba(130, 170, 255, 0.16);
+  --cgf-teal: #6fd6c4;
+  --cgf-teal-bg: rgba(111, 214, 196, 0.16);
+  // 深色下这些色偏亮，填充块上要用深色字。
   --cgf-accent-ink: #241016;
 }
 
