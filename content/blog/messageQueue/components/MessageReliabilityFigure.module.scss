@@ -1,135 +1,265 @@
-// 消息不丢失 · 三阶段全链路防线（静态流水线）。配色取自站点同源色：风险=红、防线=青绿。
-// 中性面板由主题变量推导，浅色 / 深色自动适配。
+// 消息不丢失 · 三阶段全链路防线（静态详解）。
+// 配色取自站点同源色：风险=红、防线=青绿、配置=蓝；中性面板由主题变量推导，浅 / 深色自动适配。
+// 最外层不加容器框，只做排版，避免「框套框」。
 .mrf {
   --mrf-text: var(--textNormal);
-  --mrf-muted: color-mix(in srgb, var(--textNormal) 62%, transparent);
-  --mrf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
-  --mrf-panel-border: var(--hr);
+  --mrf-muted: color-mix(in srgb, var(--textNormal) 60%, transparent);
+  --mrf-border: var(--hr);
   --mrf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
+  --mrf-accent: var(--textLink);
 
   --mrf-red: #c94848;
-  --mrf-red-bg: rgba(201, 72, 72, 0.1);
+  --mrf-red-bg: rgba(201, 72, 72, 0.09);
   --mrf-teal: #2b9384;
-  --mrf-teal-bg: rgba(43, 147, 132, 0.1);
+  --mrf-teal-bg: rgba(43, 147, 132, 0.09);
+  --mrf-blue: #3d76b8;
+  --mrf-blue-bg: rgba(61, 118, 184, 0.1);
 
   margin: 1.6rem 0 2.2rem;
   font-family: var(--systemFont, sans-serif);
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.6;
   color: var(--mrf-text);
 }
 
 :global(body.dark) .mrf {
   --mrf-red: #ff8080;
-  --mrf-red-bg: rgba(255, 128, 128, 0.14);
+  --mrf-red-bg: rgba(255, 128, 128, 0.13);
   --mrf-teal: #6fd6c4;
-  --mrf-teal-bg: rgba(111, 214, 196, 0.14);
+  --mrf-teal-bg: rgba(111, 214, 196, 0.13);
+  --mrf-blue: #82aaff;
+  --mrf-blue-bg: rgba(130, 170, 255, 0.14);
 }
 
-/* ---- 三阶段流水线 ---- */
-.mrf-pipe {
+/* ---- 顶部全链路 ---- */
+.mrf-flow {
   display: flex;
-  align-items: stretch;
-  gap: 0;
-
-  @media (max-width: 720px) {
-    flex-direction: column;
-    gap: 0;
-  }
-}
-
-.mrf-arrow {
-  flex: 0 0 auto;
-  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  padding: 0 6px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--mrf-muted);
+  gap: 6px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--mrf-border);
+}
 
-  @media (max-width: 720px) {
-    padding: 5px 0;
-    transform: rotate(90deg);
+.mrf-node {
+  padding: 4px 10px;
+  border: 1px solid var(--mrf-border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mrf-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--mrf-muted);
+  white-space: nowrap;
+
+  &::before {
+    content: '──▶';
+    font-size: 10px;
+    letter-spacing: -1px;
+  }
+
+  em {
+    font-style: normal;
+    font-weight: 700;
+    color: var(--mrf-accent);
   }
 }
 
-.mrf-card {
-  flex: 1;
-  min-width: 0;
+/* ---- 三阶段列表 ---- */
+.mrf-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
+}
+
+.mrf-row {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 16px;
   padding: 14px;
   background: var(--mrf-card-bg);
-  border: 1px solid var(--mrf-panel-border);
+  border: 1px solid var(--mrf-border);
   border-radius: 10px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+}
+
+/* ---- 左侧阶段头 ---- */
+.mrf-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  @media (max-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+}
+
+.mrf-head-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.mrf-no {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--mrf-accent) 16%, transparent);
+  color: var(--mrf-accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mrf-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .mrf-step {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--mrf-muted);
-  letter-spacing: 0.02em;
-}
-
-.mrf-title {
   font-size: 13.5px;
   font-weight: 700;
-  padding-bottom: 8px;
-  border-bottom: 1px dashed var(--mrf-panel-border);
 }
 
-.mrf-risk,
-.mrf-guard {
+.mrf-route {
+  font-size: 11.5px;
+  color: var(--mrf-muted);
+}
+
+.mrf-key {
+  margin-top: auto;
+  padding: 7px 9px;
+  border-left: 3px solid var(--mrf-accent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--mrf-accent) 9%, transparent);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--mrf-accent);
+
+  @media (max-width: 640px) {
+    margin-top: 0;
+    max-width: 46%;
+  }
+}
+
+/* ---- 右侧详解 ---- */
+.mrf-body {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.mrf-tag {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--mrf-muted);
+}
+
+.mrf-flowline {
+  .mrf-text {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+}
+
+.mrf-block {
+  padding: 8px 11px;
+  border-radius: 7px;
+
+  .mrf-tag {
+    margin-bottom: 3px;
+  }
+}
+
+.mrf-block--risk {
+  background: var(--mrf-red-bg);
+  border-left: 3px solid var(--mrf-red);
+
+  .mrf-tag {
+    color: var(--mrf-red);
+  }
+
+  li::marker {
+    color: var(--mrf-red);
+  }
+}
+
+.mrf-block--guard {
+  background: var(--mrf-teal-bg);
+  border-left: 3px solid var(--mrf-teal);
+
+  .mrf-tag {
+    color: var(--mrf-teal);
+  }
+
+  li::marker {
+    color: var(--mrf-teal);
+  }
+}
+
+.mrf-ul {
+  margin: 0;
+  padding-left: 1.1em;
   display: flex;
   flex-direction: column;
   gap: 3px;
-  padding: 8px 10px;
-  border-radius: 7px;
+
+  li {
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
 }
 
-.mrf-risk {
-  background: var(--mrf-red-bg);
-  border-left: 3px solid var(--mrf-red);
+.mrf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.mrf-guard {
-  background: var(--mrf-teal-bg);
-  border-left: 3px solid var(--mrf-teal);
-}
-
-.mrf-label {
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.mrf-risk .mrf-label {
-  color: var(--mrf-red);
-}
-
-.mrf-guard .mrf-label {
-  color: var(--mrf-teal);
-}
-
-.mrf-text {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.mrf-config {
-  margin-top: auto;
-  padding-top: 8px;
-  border-top: 1px dashed var(--mrf-panel-border);
+.mrf-chip {
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: var(--mrf-blue-bg);
+  color: var(--mrf-blue);
   font-family: Consolas, Menlo, Monaco, monospace;
-  font-size: 11px;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.mrf-note {
+  padding-top: 2px;
+  font-size: 11.5px;
+  line-height: 1.6;
   color: var(--mrf-muted);
-  word-break: break-word;
 }
 
 .mrf-caption {
-  margin-top: 8px;
+  margin-top: 10px;
   text-align: center;
   font-size: 12px;
   opacity: 0.6;
