@@ -1,0 +1,337 @@
+.mqcr {
+  --mqcr-text: #222222;
+  --mqcr-muted: rgba(0, 0, 0, 0.55);
+  --mqcr-panel-bg: rgba(127, 127, 127, 0.06);
+  --mqcr-panel-border: rgba(127, 127, 127, 0.2);
+  --mqcr-card-bg: #ffffff;
+
+  --mqcr-blue: #2b7cc7;
+  --mqcr-blue-bg: rgba(43, 124, 199, 0.12);
+  --mqcr-orange: #d97706;
+  --mqcr-orange-bg: rgba(217, 119, 6, 0.12);
+  --mqcr-green: #2f9e63;
+  --mqcr-green-bg: rgba(47, 158, 99, 0.12);
+
+  margin: 1.6rem 0 2.2rem;
+  padding: 16px 18px;
+  border: 1px solid var(--mqcr-panel-border);
+  border-radius: 12px;
+  background: var(--mqcr-panel-bg);
+  font-family: var(--systemFont, sans-serif);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--mqcr-text);
+}
+
+:global(body.dark) .mqcr {
+  --mqcr-text: rgba(255, 255, 255, 0.92);
+  --mqcr-muted: rgba(255, 255, 255, 0.62);
+  --mqcr-panel-bg: rgba(255, 255, 255, 0.05);
+  --mqcr-panel-border: rgba(255, 255, 255, 0.16);
+  --mqcr-card-bg: rgba(255, 255, 255, 0.06);
+
+  --mqcr-blue: #6cb6ff;
+  --mqcr-blue-bg: rgba(108, 182, 255, 0.16);
+  --mqcr-orange: #f59e0b;
+  --mqcr-orange-bg: rgba(245, 158, 11, 0.16);
+  --mqcr-green: #4cd98c;
+  --mqcr-green-bg: rgba(76, 217, 140, 0.16);
+}
+
+.mqcr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mqcr-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--mqcr-card-bg);
+  border: 1px solid var(--mqcr-panel-border);
+  border-radius: 10px;
+}
+
+.mqcr-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mqcr-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--mqcr-blue);
+}
+
+.mqcr-peak .mqcr-num {
+  background: var(--mqcr-orange);
+}
+
+.mqcr-async .mqcr-num {
+  background: var(--mqcr-green);
+}
+
+.mqcr-name {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.mqcr-tagline {
+  margin: 0;
+  font-size: 12px;
+  color: var(--mqcr-muted);
+}
+
+/* ---- 解耦：纵向数据流 ---- */
+.mqcr-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: var(--mqcr-panel-bg);
+  border-radius: 8px;
+}
+
+.mqcr-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.mqcr-node-a {
+  background: var(--mqcr-blue-bg);
+  color: var(--mqcr-blue);
+  border-color: var(--mqcr-blue);
+}
+
+.mqcr-node-mq {
+  background: var(--mqcr-blue);
+  color: #fff;
+  padding: 6px 18px;
+}
+
+.mqcr-node-icon {
+  font-size: 13px;
+}
+
+.mqcr-vlink {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--mqcr-muted);
+  font-size: 10.5px;
+}
+
+.mqcr-vline {
+  width: 1px;
+  height: 9px;
+  background: var(--mqcr-panel-border);
+}
+
+.mqcr-subs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+}
+
+.mqcr-sub {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--mqcr-card-bg);
+  border: 1px dashed var(--mqcr-blue);
+  color: var(--mqcr-blue);
+}
+
+.mqcr-sub-2 {
+  border-color: var(--mqcr-orange);
+  color: var(--mqcr-orange);
+}
+
+.mqcr-sub-3 {
+  border-color: var(--mqcr-green);
+  color: var(--mqcr-green);
+}
+
+/* ---- 削峰：柱状图 + 消费能力线 ---- */
+.mqcr-chart {
+  padding: 12px 8px 8px;
+  background: var(--mqcr-panel-bg);
+  border-radius: 8px;
+}
+
+.mqcr-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 6px;
+  height: 62px;
+  padding: 0 10px;
+}
+
+.mqcr-bar {
+  flex: 1;
+  min-height: 4px;
+  border-radius: 3px 3px 0 0;
+  background: var(--mqcr-orange-bg);
+  border: 1px solid var(--mqcr-orange);
+  border-bottom: none;
+}
+
+.mqcr-bar-peak {
+  background: var(--mqcr-orange);
+}
+
+.mqcr-flat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 0 10px;
+}
+
+.mqcr-flat-line {
+  flex: 1;
+  height: 0;
+  border-top: 2px dashed var(--mqcr-green);
+}
+
+.mqcr-flat-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--mqcr-green);
+  white-space: nowrap;
+}
+
+/* ---- 异步：两条时间线 ---- */
+.mqcr-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 8px;
+  background: var(--mqcr-panel-bg);
+  border-radius: 8px;
+}
+
+.mqcr-lane {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mqcr-lane-label {
+  flex: none;
+  width: 26px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mqcr-muted);
+}
+
+.mqcr-lane-track {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 3px;
+}
+
+.mqcr-seg {
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--mqcr-panel-bg);
+  border: 1px solid var(--mqcr-panel-border);
+}
+
+.mqcr-seg-core {
+  background: var(--mqcr-green-bg);
+  color: var(--mqcr-green);
+  border-color: var(--mqcr-green);
+}
+
+.mqcr-seg-mq {
+  background: var(--mqcr-green);
+  color: #fff;
+  border-color: var(--mqcr-green);
+}
+
+.mqcr-seg-bg {
+  border-style: dashed;
+  opacity: 0.75;
+}
+
+.mqcr-cost {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.mqcr-cost-slow {
+  color: var(--mqcr-orange);
+}
+
+.mqcr-cost-fast {
+  color: var(--mqcr-green);
+}
+
+/* ---- 底部说明 ---- */
+.mqcr-note {
+  margin: auto 0 0;
+  padding-top: 9px;
+  border-top: 1px dashed var(--mqcr-panel-border);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--mqcr-muted);
+}
+
+.mqcr-note strong {
+  color: var(--mqcr-text);
+}
+
+.mqcr-summary {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--mqcr-panel-bg);
+  border-left: 3px solid var(--mqcr-blue);
+  border-radius: 0 6px 6px 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.mqcr-summary strong {
+  color: var(--mqcr-blue);
+}
+
+.mqcr-caption {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.6;
+}
