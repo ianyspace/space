@@ -1,14 +1,17 @@
+// 配色统一到站点主题：中性灰 + 单一强调色（--textLink）。CPU 拷贝（慢）用强调色，
+// DMA 零拷贝（快）用深灰，不再用红绿蓝多色。色值由主题变量推导，浅色深色自动适配。
 .ksf {
-  --ksf-text: #222222;
-  --ksf-panel-bg: rgba(127, 127, 127, 0.06);
-  --ksf-panel-border: rgba(127, 127, 127, 0.2);
-  --ksf-card-bg: #ffffff;
-  --ksf-accent: #2563eb;
-  --ksf-accent-bg: rgba(37, 99, 235, 0.14);
+  --ksf-text: var(--textNormal);
+  --ksf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
+  --ksf-panel-border: var(--hr);
+  --ksf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
+  --ksf-accent: var(--textLink);
+  --ksf-accent-ink: #ffffff;
+  --ksf-accent-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
 
-  --ksf-cpu: #dc2626;
-  --ksf-dma: #16a34a;
-  --ksf-soft: rgba(0, 0, 0, 0.04);
+  --ksf-cpu: var(--textLink);
+  --ksf-dma: color-mix(in srgb, var(--textNormal) 78%, transparent);
+  --ksf-soft: color-mix(in srgb, var(--textNormal) 6%, transparent);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -22,16 +25,8 @@
 }
 
 :global(body.dark) .ksf {
-  --ksf-text: rgba(255, 255, 255, 0.92);
-  --ksf-panel-bg: rgba(255, 255, 255, 0.05);
-  --ksf-panel-border: rgba(255, 255, 255, 0.16);
-  --ksf-card-bg: rgba(255, 255, 255, 0.08);
-  --ksf-accent: #60a5fa;
-  --ksf-accent-bg: rgba(96, 165, 250, 0.2);
-
-  --ksf-cpu: #f87171;
-  --ksf-dma: #4ade80;
-  --ksf-soft: rgba(255, 255, 255, 0.05);
+  // 深色下强调色是亮粉，填充块上要用深色字。
+  --ksf-accent-ink: #241016;
 }
 
 .ksf-header {
@@ -56,7 +51,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--ksf-accent);
-  color: #fff;
+  color: var(--ksf-accent-ink);
   font-size: 11.5px;
   font-weight: 600;
 }
@@ -84,7 +79,7 @@
   &.active {
     background: var(--ksf-accent);
     border-color: var(--ksf-accent);
-    color: #fff;
+    color: var(--ksf-accent-ink);
     font-weight: 600;
   }
 }
@@ -159,13 +154,13 @@
 }
 
 .pill-bad {
-  background: rgba(220, 38, 38, 0.15);
+  background: color-mix(in srgb, var(--ksf-cpu) 15%, transparent);
   color: var(--ksf-cpu);
   font-weight: 700;
 }
 
 .pill-good {
-  background: rgba(22, 163, 74, 0.15);
+  background: color-mix(in srgb, var(--ksf-dma) 15%, transparent);
   color: var(--ksf-dma);
   font-weight: 700;
 }

@@ -1,17 +1,20 @@
+// 配色统一到站点主题：中性灰 + 单一强调色（--textLink）。「危险/丢消息」用强调色，
+// 「安全」用深灰，不再用红绿橙蓝多色。色值由主题变量推导，浅色深色自动适配。
 .mrf {
-  --mrf-text: #222222;
-  --mrf-panel-bg: rgba(127, 127, 127, 0.06);
-  --mrf-panel-border: rgba(127, 127, 127, 0.2);
-  --mrf-card-bg: #ffffff;
-  --mrf-accent: #e0821f;
-  --mrf-accent-bg: rgba(247, 160, 70, 0.15);
+  --mrf-text: var(--textNormal);
+  --mrf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
+  --mrf-panel-border: var(--hr);
+  --mrf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
+  --mrf-accent: var(--textLink);
+  --mrf-accent-ink: #ffffff;
+  --mrf-accent-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
 
-  --mrf-err: #dc2626;
-  --mrf-err-bg: rgba(220, 38, 38, 0.12);
-  --mrf-ok: #16a34a;
-  --mrf-ok-bg: rgba(22, 163, 74, 0.12);
-  --mrf-blue: #2563eb;
-  --mrf-blue-bg: rgba(37, 99, 235, 0.12);
+  --mrf-err: var(--textLink);
+  --mrf-err-bg: color-mix(in srgb, var(--textLink) 12%, transparent);
+  --mrf-ok: color-mix(in srgb, var(--textNormal) 78%, transparent);
+  --mrf-ok-bg: color-mix(in srgb, var(--textNormal) 9%, transparent);
+  --mrf-blue: color-mix(in srgb, var(--textNormal) 55%, transparent);
+  --mrf-blue-bg: color-mix(in srgb, var(--textNormal) 8%, transparent);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -25,19 +28,8 @@
 }
 
 :global(body.dark) .mrf {
-  --mrf-text: rgba(255, 255, 255, 0.92);
-  --mrf-panel-bg: rgba(255, 255, 255, 0.05);
-  --mrf-panel-border: rgba(255, 255, 255, 0.16);
-  --mrf-card-bg: rgba(255, 255, 255, 0.08);
-  --mrf-accent: #f7a046;
-  --mrf-accent-bg: rgba(247, 160, 70, 0.2);
-
-  --mrf-err: #f87171;
-  --mrf-err-bg: rgba(248, 113, 113, 0.18);
-  --mrf-ok: #4ade80;
-  --mrf-ok-bg: rgba(74, 222, 128, 0.18);
-  --mrf-blue: #60a5fa;
-  --mrf-blue-bg: rgba(96, 165, 250, 0.18);
+  // 深色下强调色是亮粉，填充块上要用深色字。
+  --mrf-accent-ink: #241016;
 }
 
 .mrf-header {
@@ -62,7 +54,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--mrf-accent);
-  color: #fff;
+  color: var(--mrf-accent-ink);
   font-size: 11.5px;
   font-weight: 600;
 }
@@ -98,7 +90,7 @@
   &.active {
     border-color: var(--mrf-accent);
     background: var(--mrf-accent-bg);
-    box-shadow: 0 0 10px rgba(247, 160, 70, 0.2);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--mrf-accent) 25%, transparent);
   }
 }
 

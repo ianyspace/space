@@ -1,19 +1,22 @@
+// 配色统一到站点主题：中性灰 + 单一强调色（--textLink）。分区用「强调色 / 深灰 / 浅灰」
+// 三档区分，不再用蓝绿橙紫多色。色值全部由主题变量推导，浅色深色自动适配。
 .cgf {
-  --cgf-text: #222222;
-  --cgf-panel-bg: rgba(127, 127, 127, 0.06);
-  --cgf-panel-border: rgba(127, 127, 127, 0.2);
-  --cgf-card-bg: #ffffff;
-  --cgf-accent: #3498db;
-  --cgf-active-bg: rgba(52, 152, 219, 0.1);
+  --cgf-text: var(--textNormal);
+  --cgf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
+  --cgf-panel-border: var(--hr);
+  --cgf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
+  --cgf-accent: var(--textLink);
+  --cgf-accent-ink: #ffffff;
+  --cgf-active-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
 
-  --cgf-p1: #2b7cc7;
-  --cgf-p1-bg: rgba(43, 124, 199, 0.12);
-  --cgf-p2: #2f9e63;
-  --cgf-p2-bg: rgba(47, 158, 99, 0.12);
-  --cgf-p3: #d97706;
-  --cgf-p3-bg: rgba(217, 119, 6, 0.12);
-  --cgf-purple: #8055d6;
-  --cgf-purple-bg: rgba(128, 85, 214, 0.12);
+  --cgf-p1: var(--textLink);
+  --cgf-p1-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
+  --cgf-p2: color-mix(in srgb, var(--textNormal) 72%, transparent);
+  --cgf-p2-bg: color-mix(in srgb, var(--textNormal) 10%, transparent);
+  --cgf-p3: color-mix(in srgb, var(--textNormal) 48%, transparent);
+  --cgf-p3-bg: color-mix(in srgb, var(--textNormal) 7%, transparent);
+  --cgf-purple: color-mix(in srgb, var(--textNormal) 72%, transparent);
+  --cgf-purple-bg: color-mix(in srgb, var(--textNormal) 10%, transparent);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -27,21 +30,8 @@
 }
 
 :global(body.dark) .cgf {
-  --cgf-text: rgba(255, 255, 255, 0.92);
-  --cgf-panel-bg: rgba(255, 255, 255, 0.05);
-  --cgf-panel-border: rgba(255, 255, 255, 0.16);
-  --cgf-card-bg: rgba(255, 255, 255, 0.08);
-  --cgf-accent: #6cb6ff;
-  --cgf-active-bg: rgba(108, 182, 255, 0.18);
-
-  --cgf-p1: #6cb6ff;
-  --cgf-p1-bg: rgba(108, 182, 255, 0.18);
-  --cgf-p2: #4cd98c;
-  --cgf-p2-bg: rgba(76, 217, 140, 0.18);
-  --cgf-p3: #f59e0b;
-  --cgf-p3-bg: rgba(245, 158, 11, 0.18);
-  --cgf-purple: #b795ff;
-  --cgf-purple-bg: rgba(183, 149, 255, 0.18);
+  // 深色下强调色是亮粉，填充块上要用深色字。
+  --cgf-accent-ink: #241016;
 }
 
 .cgf-header {
@@ -66,7 +56,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--cgf-accent);
-  color: #fff;
+  color: var(--cgf-accent-ink);
   font-size: 11.5px;
   font-weight: 600;
 }
@@ -95,7 +85,7 @@
   &.active {
     background: var(--cgf-accent);
     border-color: var(--cgf-accent);
-    color: #fff;
+    color: var(--cgf-accent-ink);
     font-weight: 600;
   }
 }
@@ -121,7 +111,7 @@
 
   &:hover {
     background: var(--cgf-accent);
-    color: #ffffff;
+    color: var(--cgf-accent-ink);
   }
 }
 
@@ -292,7 +282,7 @@
 
   &.active-consume {
     border-color: var(--cgf-accent);
-    box-shadow: 0 0 8px rgba(52, 152, 219, 0.25);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--cgf-accent) 30%, transparent);
   }
 }
 

@@ -1,17 +1,20 @@
+// 配色统一到站点主题：中性灰 + 单一强调色（--textLink）。成功/失败/警告用
+// 「强调色 / 深灰 / 中灰」区分，不再用紫绿红橙多色。色值由主题变量推导，浅色深色自动适配。
 .tmf {
-  --tmf-text: #222222;
-  --tmf-panel-bg: rgba(127, 127, 127, 0.06);
-  --tmf-panel-border: rgba(127, 127, 127, 0.2);
-  --tmf-card-bg: #ffffff;
-  --tmf-accent: #8055d6;
-  --tmf-accent-bg: rgba(128, 85, 214, 0.15);
+  --tmf-text: var(--textNormal);
+  --tmf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
+  --tmf-panel-border: var(--hr);
+  --tmf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
+  --tmf-accent: var(--textLink);
+  --tmf-accent-ink: #ffffff;
+  --tmf-accent-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
 
-  --tmf-ok: #16a34a;
-  --tmf-ok-bg: rgba(22, 163, 74, 0.12);
-  --tmf-err: #dc2626;
-  --tmf-err-bg: rgba(220, 38, 38, 0.12);
-  --tmf-warn: #d97706;
-  --tmf-warn-bg: rgba(217, 119, 6, 0.12);
+  --tmf-ok: color-mix(in srgb, var(--textNormal) 78%, transparent);
+  --tmf-ok-bg: color-mix(in srgb, var(--textNormal) 9%, transparent);
+  --tmf-err: var(--textLink);
+  --tmf-err-bg: color-mix(in srgb, var(--textLink) 12%, transparent);
+  --tmf-warn: color-mix(in srgb, var(--textNormal) 55%, transparent);
+  --tmf-warn-bg: color-mix(in srgb, var(--textNormal) 8%, transparent);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -25,19 +28,8 @@
 }
 
 :global(body.dark) .tmf {
-  --tmf-text: rgba(255, 255, 255, 0.92);
-  --tmf-panel-bg: rgba(255, 255, 255, 0.05);
-  --tmf-panel-border: rgba(255, 255, 255, 0.16);
-  --tmf-card-bg: rgba(255, 255, 255, 0.08);
-  --tmf-accent: #b795ff;
-  --tmf-accent-bg: rgba(183, 149, 255, 0.18);
-
-  --tmf-ok: #4ade80;
-  --tmf-ok-bg: rgba(74, 222, 128, 0.18);
-  --tmf-err: #f87171;
-  --tmf-err-bg: rgba(248, 113, 113, 0.18);
-  --tmf-warn: #fbbf24;
-  --tmf-warn-bg: rgba(251, 191, 36, 0.18);
+  // 深色下强调色是亮粉，填充块上要用深色字。
+  --tmf-accent-ink: #241016;
 }
 
 .tmf-header {
@@ -62,7 +54,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--tmf-accent);
-  color: #fff;
+  color: var(--tmf-accent-ink);
   font-size: 11.5px;
   font-weight: 600;
 }
@@ -91,7 +83,7 @@
   &.active {
     background: var(--tmf-accent);
     border-color: var(--tmf-accent);
-    color: #fff;
+    color: var(--tmf-accent-ink);
     font-weight: 600;
   }
 }
@@ -117,7 +109,7 @@
 
   &:hover:not(:disabled) {
     background: var(--tmf-accent);
-    color: #fff;
+    color: var(--tmf-accent-ink);
   }
 
   &:disabled {
@@ -162,7 +154,7 @@
     border-color: var(--tmf-accent);
     background: var(--tmf-accent-bg);
     transform: translateX(4px);
-    box-shadow: 0 0 10px rgba(128, 85, 214, 0.15);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--tmf-accent) 22%, transparent);
   }
 
   &.done {
@@ -184,7 +176,7 @@
 
   .current & {
     background: var(--tmf-accent);
-    color: #fff;
+    color: var(--tmf-accent-ink);
   }
 }
 

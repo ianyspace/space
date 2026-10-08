@@ -1,17 +1,20 @@
+// 配色统一到站点主题：中性灰 + 单一强调色（--textLink）。三笔订单用「强调色 / 深灰 / 浅灰」
+// 区分，不再用蓝橙紫多色。色值由主题变量推导，浅色深色自动适配。
 .opf {
-  --opf-text: #222222;
-  --opf-panel-bg: rgba(127, 127, 127, 0.06);
-  --opf-panel-border: rgba(127, 127, 127, 0.2);
-  --opf-card-bg: #ffffff;
-  --opf-accent: #0d9488;
-  --opf-accent-bg: rgba(13, 148, 136, 0.14);
+  --opf-text: var(--textNormal);
+  --opf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
+  --opf-panel-border: var(--hr);
+  --opf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
+  --opf-accent: var(--textLink);
+  --opf-accent-ink: #ffffff;
+  --opf-accent-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
 
-  --opf-ord-a: #2563eb;
-  --opf-ord-a-bg: rgba(37, 99, 235, 0.12);
-  --opf-ord-b: #ea580c;
-  --opf-ord-b-bg: rgba(234, 88, 12, 0.12);
-  --opf-ord-c: #8055d6;
-  --opf-ord-c-bg: rgba(128, 85, 214, 0.12);
+  --opf-ord-a: var(--textLink);
+  --opf-ord-a-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
+  --opf-ord-b: color-mix(in srgb, var(--textNormal) 72%, transparent);
+  --opf-ord-b-bg: color-mix(in srgb, var(--textNormal) 10%, transparent);
+  --opf-ord-c: color-mix(in srgb, var(--textNormal) 48%, transparent);
+  --opf-ord-c-bg: color-mix(in srgb, var(--textNormal) 7%, transparent);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -25,19 +28,8 @@
 }
 
 :global(body.dark) .opf {
-  --opf-text: rgba(255, 255, 255, 0.92);
-  --opf-panel-bg: rgba(255, 255, 255, 0.05);
-  --opf-panel-border: rgba(255, 255, 255, 0.16);
-  --opf-card-bg: rgba(255, 255, 255, 0.08);
-  --opf-accent: #2dd4bf;
-  --opf-accent-bg: rgba(45, 212, 191, 0.2);
-
-  --opf-ord-a: #60a5fa;
-  --opf-ord-a-bg: rgba(96, 165, 250, 0.18);
-  --opf-ord-b: #fb923c;
-  --opf-ord-b-bg: rgba(251, 146, 60, 0.18);
-  --opf-ord-c: #b795ff;
-  --opf-ord-c-bg: rgba(183, 149, 255, 0.18);
+  // 深色下强调色是亮粉，填充块上要用深色字。
+  --opf-accent-ink: #241016;
 }
 
 .opf-header {
@@ -62,7 +54,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   background: var(--opf-accent);
-  color: #fff;
+  color: var(--opf-accent-ink);
   font-size: 11.5px;
   font-weight: 600;
 }

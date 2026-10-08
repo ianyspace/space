@@ -1,16 +1,19 @@
+// 配色统一到站点主题：中性灰 + 单一强调色（--textLink，浅色深玫红 / 深色亮粉）。
+// 不再用蓝/橙/绿多色，避免与全站「中性 + 一点玫红」的语言打架。
+// 所有色值都由主题变量推导，浅色 / 深色自动适配，无需各写一套。
 .mqcr {
-  --mqcr-text: #222222;
-  --mqcr-muted: rgba(0, 0, 0, 0.55);
-  --mqcr-panel-bg: rgba(127, 127, 127, 0.06);
-  --mqcr-panel-border: rgba(127, 127, 127, 0.2);
-  --mqcr-card-bg: #ffffff;
+  --mqcr-text: var(--textNormal);
+  --mqcr-muted: color-mix(in srgb, var(--textNormal) 62%, transparent);
+  --mqcr-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
+  --mqcr-panel-border: var(--hr);
+  --mqcr-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
 
-  --mqcr-blue: #2b7cc7;
-  --mqcr-blue-bg: rgba(43, 124, 199, 0.12);
-  --mqcr-orange: #d97706;
-  --mqcr-orange-bg: rgba(217, 119, 6, 0.12);
-  --mqcr-green: #2f9e63;
-  --mqcr-green-bg: rgba(47, 158, 99, 0.12);
+  --mqcr-accent: var(--textLink);
+  --mqcr-accent-bg: color-mix(in srgb, var(--textLink) 14%, transparent);
+  --mqcr-accent-ink: #ffffff;
+
+  --mqcr-neutral: color-mix(in srgb, var(--textNormal) 72%, transparent);
+  --mqcr-neutral-bg: color-mix(in srgb, var(--textNormal) 10%, transparent);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -24,18 +27,8 @@
 }
 
 :global(body.dark) .mqcr {
-  --mqcr-text: rgba(255, 255, 255, 0.92);
-  --mqcr-muted: rgba(255, 255, 255, 0.62);
-  --mqcr-panel-bg: rgba(255, 255, 255, 0.05);
-  --mqcr-panel-border: rgba(255, 255, 255, 0.16);
-  --mqcr-card-bg: rgba(255, 255, 255, 0.06);
-
-  --mqcr-blue: #6cb6ff;
-  --mqcr-blue-bg: rgba(108, 182, 255, 0.16);
-  --mqcr-orange: #f59e0b;
-  --mqcr-orange-bg: rgba(245, 158, 11, 0.16);
-  --mqcr-green: #4cd98c;
-  --mqcr-green-bg: rgba(76, 217, 140, 0.16);
+  // 深色下强调色是亮粉，填充块上要用深色字才看得清。
+  --mqcr-accent-ink: #241016;
 }
 
 .mqcr-grid {
@@ -73,16 +66,8 @@
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
-  color: #fff;
-  background: var(--mqcr-blue);
-}
-
-.mqcr-peak .mqcr-num {
-  background: var(--mqcr-orange);
-}
-
-.mqcr-async .mqcr-num {
-  background: var(--mqcr-green);
+  color: var(--mqcr-accent-ink);
+  background: var(--mqcr-accent);
 }
 
 .mqcr-name {
@@ -120,14 +105,14 @@
 }
 
 .mqcr-node-a {
-  background: var(--mqcr-blue-bg);
-  color: var(--mqcr-blue);
-  border-color: var(--mqcr-blue);
+  background: var(--mqcr-neutral-bg);
+  color: var(--mqcr-neutral);
+  border-color: var(--mqcr-neutral);
 }
 
 .mqcr-node-mq {
-  background: var(--mqcr-blue);
-  color: #fff;
+  background: var(--mqcr-accent);
+  color: var(--mqcr-accent-ink);
   padding: 6px 18px;
 }
 
@@ -162,18 +147,8 @@
   font-size: 11px;
   font-weight: 600;
   background: var(--mqcr-card-bg);
-  border: 1px dashed var(--mqcr-blue);
-  color: var(--mqcr-blue);
-}
-
-.mqcr-sub-2 {
-  border-color: var(--mqcr-orange);
-  color: var(--mqcr-orange);
-}
-
-.mqcr-sub-3 {
-  border-color: var(--mqcr-green);
-  color: var(--mqcr-green);
+  border: 1px dashed var(--mqcr-neutral);
+  color: var(--mqcr-neutral);
 }
 
 /* ---- 削峰：柱状图 + 消费能力线 ---- */
@@ -196,13 +171,14 @@
   flex: 1;
   min-height: 4px;
   border-radius: 3px 3px 0 0;
-  background: var(--mqcr-orange-bg);
-  border: 1px solid var(--mqcr-orange);
+  background: var(--mqcr-neutral-bg);
+  border: 1px solid var(--mqcr-neutral);
   border-bottom: none;
 }
 
 .mqcr-bar-peak {
-  background: var(--mqcr-orange);
+  background: var(--mqcr-accent);
+  border-color: var(--mqcr-accent);
 }
 
 .mqcr-flat {
@@ -216,13 +192,13 @@
 .mqcr-flat-line {
   flex: 1;
   height: 0;
-  border-top: 2px dashed var(--mqcr-green);
+  border-top: 2px dashed var(--mqcr-accent);
 }
 
 .mqcr-flat-label {
   font-size: 10.5px;
   font-weight: 600;
-  color: var(--mqcr-green);
+  color: var(--mqcr-accent);
   white-space: nowrap;
 }
 
@@ -271,20 +247,20 @@
 }
 
 .mqcr-seg-core {
-  background: var(--mqcr-green-bg);
-  color: var(--mqcr-green);
-  border-color: var(--mqcr-green);
+  background: var(--mqcr-accent-bg);
+  color: var(--mqcr-accent);
+  border-color: var(--mqcr-accent);
 }
 
 .mqcr-seg-mq {
-  background: var(--mqcr-green);
-  color: #fff;
-  border-color: var(--mqcr-green);
+  background: var(--mqcr-accent);
+  color: var(--mqcr-accent-ink);
+  border-color: var(--mqcr-accent);
 }
 
 .mqcr-seg-bg {
   border-style: dashed;
-  opacity: 0.75;
+  color: var(--mqcr-muted);
 }
 
 .mqcr-cost {
@@ -294,11 +270,11 @@
 }
 
 .mqcr-cost-slow {
-  color: var(--mqcr-orange);
+  color: var(--mqcr-accent);
 }
 
 .mqcr-cost-fast {
-  color: var(--mqcr-green);
+  color: var(--mqcr-neutral);
 }
 
 /* ---- 底部说明 ---- */
@@ -319,14 +295,14 @@
   margin-top: 12px;
   padding: 10px 14px;
   background: var(--mqcr-panel-bg);
-  border-left: 3px solid var(--mqcr-blue);
+  border-left: 3px solid var(--mqcr-accent);
   border-radius: 0 6px 6px 0;
   font-size: 12.5px;
   line-height: 1.6;
 }
 
 .mqcr-summary strong {
-  color: var(--mqcr-blue);
+  color: var(--mqcr-accent);
 }
 
 .mqcr-caption {
