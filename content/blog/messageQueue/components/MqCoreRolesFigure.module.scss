@@ -22,10 +22,6 @@
   --mqcr-neutral-bg: color-mix(in srgb, var(--textNormal) 10%, transparent);
 
   margin: 1.6rem 0 2.2rem;
-  padding: 16px 18px;
-  border: 1px solid var(--mqcr-panel-border);
-  border-radius: 12px;
-  background: var(--mqcr-panel-bg);
   font-family: var(--systemFont, sans-serif);
   font-size: 13px;
   line-height: 1.5;
