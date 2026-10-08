@@ -1,28 +1,16 @@
-// 配色取自站点本身的一套色（橙 / 红 / 青绿 / 蓝）：危险=红、安全=青绿、信息=蓝、
-// 强调=橙，与全站标签、代码高亮同源。中性面板由主题变量推导，浅色 / 深色自动适配。
+// 消息不丢失 · 三阶段全链路防线（静态流水线）。配色取自站点同源色：风险=红、防线=青绿。
+// 中性面板由主题变量推导，浅色 / 深色自动适配。
 .mrf {
   --mrf-text: var(--textNormal);
+  --mrf-muted: color-mix(in srgb, var(--textNormal) 62%, transparent);
   --mrf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
   --mrf-panel-border: var(--hr);
   --mrf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
 
-  --mrf-orange: #cf7a1e;
-  --mrf-orange-bg: rgba(207, 122, 30, 0.14);
-  --mrf-blue: #3d76b8;
-  --mrf-blue-bg: rgba(61, 118, 184, 0.12);
-  --mrf-teal: #2b9384;
-  --mrf-teal-bg: rgba(43, 147, 132, 0.12);
   --mrf-red: #c94848;
-  --mrf-red-bg: rgba(201, 72, 72, 0.12);
-
-  --mrf-accent: var(--mrf-orange);
-  --mrf-accent-ink: #ffffff;
-  --mrf-accent-bg: var(--mrf-orange-bg);
-
-  --mrf-err: var(--mrf-red);
-  --mrf-err-bg: var(--mrf-red-bg);
-  --mrf-ok: var(--mrf-teal);
-  --mrf-ok-bg: var(--mrf-teal-bg);
+  --mrf-red-bg: rgba(201, 72, 72, 0.1);
+  --mrf-teal: #2b9384;
+  --mrf-teal-bg: rgba(43, 147, 132, 0.1);
 
   margin: 1.6rem 0 2.2rem;
   padding: 16px 18px;
@@ -30,181 +18,123 @@
   border-radius: 12px;
   background: var(--mrf-panel-bg);
   font-family: var(--systemFont, sans-serif);
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 1.5;
   color: var(--mrf-text);
 }
 
 :global(body.dark) .mrf {
-  --mrf-orange: #f0a35a;
-  --mrf-orange-bg: rgba(240, 163, 90, 0.16);
-  --mrf-blue: #82aaff;
-  --mrf-blue-bg: rgba(130, 170, 255, 0.16);
-  --mrf-teal: #6fd6c4;
-  --mrf-teal-bg: rgba(111, 214, 196, 0.16);
   --mrf-red: #ff8080;
-  --mrf-red-bg: rgba(255, 128, 128, 0.16);
-  // 深色下这些色偏亮，填充块上要用深色字。
-  --mrf-accent-ink: #241016;
+  --mrf-red-bg: rgba(255, 128, 128, 0.14);
+  --mrf-teal: #6fd6c4;
+  --mrf-teal-bg: rgba(111, 214, 196, 0.14);
 }
 
-.mrf-header {
+/* ---- 三阶段流水线 ---- */
+.mrf-pipe {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 14px;
-}
+  align-items: stretch;
+  gap: 0;
 
-.mrf-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 14.5px;
-}
-
-.mrf-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--mrf-accent);
-  color: var(--mrf-accent-ink);
-  font-size: 11.5px;
-  font-weight: 600;
-}
-
-.pipeline-nav {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 14px;
-
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
+  @media (max-width: 720px) {
+    flex-direction: column;
+    gap: 0;
   }
 }
 
-.nav-card {
-  padding: 10px 12px;
-  border: 1px solid var(--mrf-panel-border);
-  border-radius: 8px;
-  background: var(--mrf-card-bg);
-  cursor: pointer;
-  transition: all 0.2s ease;
+.mrf-arrow {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mrf-muted);
+
+  @media (max-width: 720px) {
+    padding: 5px 0;
+    transform: rotate(90deg);
+  }
+}
+
+.mrf-card {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  text-align: left;
-  position: relative;
-
-  &:hover {
-    border-color: var(--mrf-accent);
-  }
-
-  &.active {
-    border-color: var(--mrf-accent);
-    background: var(--mrf-accent-bg);
-    box-shadow: 0 0 10px color-mix(in srgb, var(--mrf-accent) 25%, transparent);
-  }
-}
-
-.nav-tag {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--mrf-accent);
-  text-transform: uppercase;
-}
-
-.nav-name {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.stage-detail {
-  padding: 16px;
+  gap: 8px;
+  padding: 14px;
   background: var(--mrf-card-bg);
   border: 1px solid var(--mrf-panel-border);
   border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
 }
 
-.detail-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-
-  @media (max-width: 680px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.box-danger {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--mrf-err);
-  background: var(--mrf-err-bg);
-}
-
-.box-secure {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid var(--mrf-ok);
-  background: var(--mrf-ok-bg);
-}
-
-.box-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.danger-title {
-  color: var(--mrf-err);
-}
-
-.secure-title {
-  color: var(--mrf-ok);
-}
-
-.point-list {
-  margin: 0;
-  padding-left: 18px;
-  font-size: 12.5px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.code-box {
-  background: rgba(0, 0, 0, 0.04);
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-family: monospace;
+.mrf-step {
   font-size: 11.5px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  margin-top: 6px;
+  font-weight: 700;
+  color: var(--mrf-muted);
+  letter-spacing: 0.02em;
 }
 
-:global(body.dark) .code-box {
-  background: rgba(255, 255, 255, 0.05);
+.mrf-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--mrf-panel-border);
 }
 
-.mrf-footer {
-  padding: 10px 14px;
-  background: var(--mrf-panel-bg);
-  border-radius: 6px;
-  font-size: 12.5px;
+.mrf-risk,
+.mrf-guard {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 7px;
+}
+
+.mrf-risk {
+  background: var(--mrf-red-bg);
+  border-left: 3px solid var(--mrf-red);
+}
+
+.mrf-guard {
+  background: var(--mrf-teal-bg);
+  border-left: 3px solid var(--mrf-teal);
+}
+
+.mrf-label {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.mrf-risk .mrf-label {
+  color: var(--mrf-red);
+}
+
+.mrf-guard .mrf-label {
+  color: var(--mrf-teal);
+}
+
+.mrf-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.mrf-config {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px dashed var(--mrf-panel-border);
+  font-family: Consolas, Menlo, Monaco, monospace;
+  font-size: 11px;
+  color: var(--mrf-muted);
+  word-break: break-word;
+}
+
+.mrf-caption {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.6;
 }
