@@ -147,9 +147,9 @@ A 构造器需要 B → B 构造器需要 A → 死循环
 | 二级（earlySingletonObjects） | 提前暴露的原始 Bean 或代理 | 解决循环依赖时 |
 | 三级（singletonFactories） | ObjectFactory | 需要提前暴露时调用 getObject() |
 
-### 面试实战：IoC
+### 问答实战：IoC
 
-#### 题目 1 ⭐⭐⭐：说说 Spring IoC 的理解
+#### ⭐⭐⭐ 说说 Spring IoC 的理解
 
 **面试官意图**：必考题，考察对 IoC 有没有自己的理解，还是只背概念。
 
@@ -161,7 +161,7 @@ A 构造器需要 B → B 构造器需要 A → 死循环
 >
 > <term>Bean</term> 的生命周期从实例化开始，经过属性注入、Aware 回调、<term>BeanPostProcessor</term> 的前后处理、初始化方法，最终就绪。AOP 代理就是在 BeanPostProcessor 的后置处理中生成的。
 
-#### 题目 2 ⭐⭐⭐：Spring 怎么解决循环依赖？为什么需要三级缓存？
+#### ⭐⭐⭐ Spring 怎么解决循环依赖？为什么需要三级缓存？
 
 **面试官意图**：经典高阶题，考察对 Spring 底层机制的理解深度。
 
@@ -176,7 +176,7 @@ A 构造器需要 B → B 构造器需要 A → 死循环
 **追问准备**：
 - "如何检测循环依赖？" → Spring 用 `singletonsCurrentlyInCreation` 这个 Set 记录正在创建中的 <term>Bean</term>。如果发现一个 Bean 已经在 Set 里了，说明出现了循环依赖。
 
-#### 题目 3 ⭐⭐：singleton 的 Bean 是线程安全的吗？为什么？
+#### ⭐⭐ singleton 的 Bean 是线程安全的吗？为什么？
 
 **面试官意图**：考察对 <term>Bean</term> 作用域和线程安全关系的理解。
 
@@ -292,9 +292,9 @@ CGLib 在运行时生成目标类的一个子类，重写所有非 final 方法�
 
 **多切面执行顺序**：可以用 `@Order(n)` 或 `@Priority` 控制，数字越小越先执行（@Around 前半段是先外后内，@Around 后半段是先内后外，像个洋葱）。
 
-### 面试实战：AOP
+### 问答实战：AOP
 
-#### 题目 1 ⭐⭐⭐：JDK 动态代理和 CGLib 代理的区别？Spring 怎么选的？
+#### ⭐⭐⭐ JDK 动态代理和 CGLib 代理的区别？Spring 怎么选的？
 
 **面试官意图**：AOP 底层高频题，必准备。
 
@@ -309,7 +309,7 @@ CGLib 在运行时生成目标类的一个子类，重写所有非 final 方法�
 **追问准备**：
 - "JDK 代理为什么只能代理接口？" → 生成的代理类已经继承了 Proxy 类（Java 单继承），只能通过实现接口来代理目标类的行为。
 
-#### 题目 2 ⭐⭐：AOP 的应用场景有哪些？
+#### ⭐⭐ AOP 的应用场景有哪些？
 
 **面试官意图**：考察对 AOP 的实际运用。
 
@@ -319,7 +319,7 @@ CGLib 在运行时生成目标类的一个子类，重写所有非 final 方法�
 >
 > 其他还有接口限流、缓存处理、统一异常处理、分布式锁注解化等。
 
-#### 题目 3 ⭐⭐：同一个类里方法 A 调方法 B，B 上的 @Transactional 会生效吗？
+#### ⭐⭐ 同一个类里方法 A 调方法 B，B 上的 @Transactional 会生效吗？
 
 **面试官意图**：考察对 AOP 代理本质的理解——这是个陷阱题。
 
@@ -405,9 +405,9 @@ Spring MVC 是基于 <term>Servlet</term> 的 MVC 框架，核心是 **Dispatche
 
 **执行链**：`Filter → DispatcherServlet → Interceptor.preHandle → Controller → Interceptor.postHandle → Interceptor.afterCompletion → Filter`
 
-### 面试实战：MVC
+### 问答实战：MVC
 
-#### 题目 1 ⭐⭐⭐：Spring MVC 处理请求的完整流程是怎样的？
+#### ⭐⭐⭐ Spring MVC 处理请求的完整流程是怎样的？
 
 **面试官意图**：经典必考题，考察是否能画一条完整的请求处理链。
 
@@ -417,7 +417,7 @@ Spring MVC 是基于 <term>Servlet</term> 的 MVC 框架，核心是 **Dispatche
 >
 > 简洁记忆就是：映射找 Handler → 适配器执行 → 视图解析渲染。
 
-#### 题目 2 ⭐⭐：过滤器和拦截器的区别？
+#### ⭐⭐ 过滤器和拦截器的区别？
 
 **面试官意图**：基础但容易混淆。
 
@@ -488,9 +488,9 @@ starter 是一个"启动器"，把一组相关依赖打包在一起，你引入�
 3. 用条件注解控制是否生效
 4. 打包发布
 
-### 面试实战：Spring Boot
+### 问答实战：Spring Boot
 
-#### 题目 1 ⭐⭐⭐：Spring Boot 自动配置的原理是什么？
+#### ⭐⭐⭐ Spring Boot 自动配置的原理是什么？
 
 **面试官意图**：Boot 最核心的机制，高频题。
 
@@ -502,7 +502,7 @@ starter 是一个"启动器"，把一组相关依赖打包在一起，你引入�
 >
 > 比如 DataSourceAutoConfiguration 上贴了 @ConditionalOnClass(DataSource.class)，只有引入了 JDBC 依赖才生效。而 @ConditionalOnMissingBean(DataSource.class) 保证如果用户自己定义了 DataSource，自动配置就不重复创建。
 
-#### 题目 2 ⭐⭐：如何自定义一个 starter？
+#### ⭐⭐ 如何自定义一个 starter？
 
 **面试官意图**：考察对 starter 机制的实操理解。
 
@@ -604,9 +604,9 @@ public void process() {
 }
 ```
 
-### 面试实战：事务
+### 问答实战：事务
 
-#### 题目 1 ⭐⭐⭐：@Transactional 什么时候会失效？
+#### ⭐⭐⭐ @Transactional 什么时候会失效？
 
 **面试官意图**：这是 Spring 面试最高频问题之一，考察实战踩坑经验。
 
@@ -618,7 +618,7 @@ public void process() {
 >
 > 实际工作中碰得最多的是第三和第四。内部调用也常见，解体方案就是把那个方法拆到另一个类里通过注入调用，或者注入自己用 self.methodB()。
 
-#### 题目 2 ⭐⭐：事务传播行为有哪几种？REQUIRED 和 REQUIRES_NEW 的区别？
+#### ⭐⭐ 事务传播行为有哪几种？REQUIRED 和 REQUIRES_NEW 的区别？
 
 **面试官意图**：考察对事务传播的理解。
 
@@ -732,9 +732,9 @@ namespace 级别的缓存，多个 SqlSession 共享。
 
 **PageHelper 原理**：MyBatis 的插件机制，拦截 <term>Executor</term> 的 query 方法。在执行 SQL 前，通过 <term>ThreadLocal</term> 拿到分页参数，往原始 SQL 上拼接 LIMIT 子句。同时自动执行一条 COUNT 查询获取总数。
 
-### 面试实战：MyBatis
+### 问答实战：MyBatis
 
-#### 题目 1 ⭐⭐：MyBatis 的工作流程？
+#### ⭐⭐ MyBatis 的工作流程？
 
 **面试官意图**：考察对整体流程的理解。
 
@@ -744,7 +744,7 @@ namespace 级别的缓存，多个 SqlSession 共享。
 >
 > 调用接口方法时，代理拦截请求，根据方法全限定名找到对应的 MappedStatement，交给 <term>Executor</term> 执行。Executor 负责缓存检查、参数处理、SQL 执行、结果映射，最终返回。
 
-#### 题目 2 ⭐⭐：`#{}` 和 `${}` 有什么区别？
+#### ⭐⭐ `#{}` 和 `${}` 有什么区别？
 
 **面试官意图**：基础但重要，SQL 注入必考点。
 
@@ -752,7 +752,7 @@ namespace 级别的缓存，多个 SqlSession 共享。
 
 > `#{}` 是预编译占位符，生成 ?，通过 PreparedStatement 传参，安全防注入。`${}` 是字符串拼接，直接替换到 SQL 里，有注入风险。所以条件参数一律用 `#{}`，只有动态表名、列名、ORDER BY 字段这种无法预编译的场景才用 `${}`。
 
-#### 题目 3 ⭐⭐：MyBatis 一级缓存和二级缓存的区别？
+#### ⭐⭐ MyBatis 一级缓存和二级缓存的区别？
 
 **面试官意图**：考察缓存机制的理解。
 
