@@ -1,9 +1,10 @@
-// 配色取自站点本身的一套色（玫红 / 橙 / 蓝 / 青绿）：三笔订单用玫红/橙/蓝区分，
-// 强调色用青绿，与全站链接、标签同源。中性面板由主题变量推导，浅色 / 深色自动适配。
+// 分区顺序消费（静态路由表）。配色取自站点同源色：三笔订单=玫红/橙/蓝，结论=青绿、坑=红。
+// 中性面板由主题变量推导，浅色 / 深色自动适配。最外层不加容器框，只做排版。
 .opf {
   --opf-text: var(--textNormal);
+  --opf-muted: color-mix(in srgb, var(--textNormal) 60%, transparent);
+  --opf-border: var(--hr);
   --opf-panel-bg: color-mix(in srgb, var(--textNormal) 6%, transparent);
-  --opf-panel-border: var(--hr);
   --opf-card-bg: color-mix(in srgb, var(--textNormal) 4%, transparent);
 
   --opf-rose: #c62f5f;
@@ -14,22 +15,13 @@
   --opf-blue-bg: rgba(61, 118, 184, 0.12);
   --opf-teal: #2b9384;
   --opf-teal-bg: rgba(43, 147, 132, 0.12);
-
-  --opf-accent: var(--opf-teal);
-  --opf-accent-ink: #ffffff;
-  --opf-accent-bg: var(--opf-teal-bg);
-
-  --opf-ord-a: var(--opf-rose);
-  --opf-ord-a-bg: var(--opf-rose-bg);
-  --opf-ord-b: var(--opf-orange);
-  --opf-ord-b-bg: var(--opf-orange-bg);
-  --opf-ord-c: var(--opf-blue);
-  --opf-ord-c-bg: var(--opf-blue-bg);
+  --opf-red: #c94848;
+  --opf-red-bg: rgba(201, 72, 72, 0.1);
 
   margin: 1.6rem 0 2.2rem;
   font-family: var(--systemFont, sans-serif);
-  font-size: 13.5px;
-  line-height: 1.5;
+  font-size: 13px;
+  line-height: 1.6;
   color: var(--opf-text);
 }
 
@@ -42,183 +34,252 @@
   --opf-blue-bg: rgba(130, 170, 255, 0.16);
   --opf-teal: #6fd6c4;
   --opf-teal-bg: rgba(111, 214, 196, 0.16);
-  // 深色下这些色偏亮，填充块上要用深色字。
-  --opf-accent-ink: #241016;
+  --opf-red: #ff8080;
+  --opf-red-bg: rgba(255, 128, 128, 0.14);
 }
 
-.opf-header {
+/* ---- 要解决的问题 ---- */
+.opf-problem {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
+  align-items: baseline;
   gap: 10px;
-  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--opf-teal);
+  border-radius: 0 7px 7px 0;
+  background: var(--opf-teal-bg);
 }
 
-.opf-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 14.5px;
-}
-
-.opf-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--opf-accent);
-  color: var(--opf-accent-ink);
+.opf-problem-tag {
+  flex: 0 0 auto;
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--opf-teal);
 }
 
-.opf-controls {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-
-.order-btn {
-  padding: 5px 12px;
-  border: 1px solid var(--opf-panel-border);
-  border-radius: 6px;
-  background: var(--opf-card-bg);
-  color: var(--opf-text);
+.opf-problem-text {
+  margin: 0;
   font-size: 12.5px;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-
-  &:hover {
-    border-color: var(--opf-accent);
-  }
 }
 
-.btn-a {
-  border-color: var(--opf-ord-a);
-  background: var(--opf-ord-a-bg);
-  color: var(--opf-ord-a);
-  font-weight: 600;
-}
-
-.btn-b {
-  border-color: var(--opf-ord-b);
-  background: var(--opf-ord-b-bg);
-  color: var(--opf-ord-b);
-  font-weight: 600;
-}
-
-.btn-reset {
-  opacity: 0.7;
-  &:hover {
-    opacity: 1;
-  }
-}
-
-.opf-stage {
+/* ---- 表头 ---- */
+.opf-head {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 104px 152px minmax(0, 1fr);
   gap: 12px;
-  margin-bottom: 12px;
+  margin: 14px 0 6px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--opf-muted);
 
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
+  @media (max-width: 720px) {
+    display: none;
   }
 }
 
-.partition-card {
-  padding: 12px;
-  background: var(--opf-card-bg);
-  border: 1px solid var(--opf-panel-border);
-  border-radius: 10px;
+/* ---- 路由表 ---- */
+.opf-routes {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.p-head {
-  display: flex;
-  justify-content: space-between;
+.opf-row {
+  display: grid;
+  grid-template-columns: 104px 152px minmax(0, 1fr);
+  gap: 12px;
   align-items: center;
+  padding: 10px 12px;
+  background: var(--opf-card-bg);
+  border: 1px solid var(--opf-border);
+  border-radius: 9px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+
+.opf-row--a {
+  --opf-row-color: var(--opf-rose);
+  --opf-row-bg: var(--opf-rose-bg);
+}
+
+.opf-row--b {
+  --opf-row-color: var(--opf-orange);
+  --opf-row-bg: var(--opf-orange-bg);
+}
+
+.opf-row--c {
+  --opf-row-color: var(--opf-blue);
+  --opf-row-bg: var(--opf-blue-bg);
+}
+
+.opf-order {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.opf-order-name {
   font-size: 12.5px;
   font-weight: 700;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--opf-panel-border);
+  color: var(--opf-row-color);
 }
 
-.p-tag {
+.opf-order-id {
+  font-family: Consolas, Menlo, Monaco, monospace;
   font-size: 11px;
-  font-weight: 500;
-  opacity: 0.75;
+  color: var(--opf-muted);
 }
 
-.msg-queue {
+.opf-hash {
+  min-width: 0;
+
+  code {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: var(--opf-panel-bg);
+    font-family: Consolas, Menlo, Monaco, monospace;
+    font-size: 11px;
+    color: var(--opf-muted);
+    white-space: nowrap;
+  }
+}
+
+/* ---- 分区队列 ---- */
+.opf-partition {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-height: 110px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--opf-row-color);
+  border-radius: 0 7px 7px 0;
+  background: var(--opf-row-bg);
 }
 
-.msg-item {
-  padding: 6px 8px;
-  border-radius: 6px;
+.opf-partition-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.opf-partition-name {
   font-size: 12px;
+  font-weight: 700;
+  color: var(--opf-row-color);
+}
+
+.opf-thread {
+  font-size: 11px;
+  color: var(--opf-muted);
+}
+
+.opf-steps {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  animation: slideIn 0.25s ease;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.item-a {
-  background: var(--opf-ord-a-bg);
-  color: var(--opf-ord-a);
-  border: 1px solid var(--opf-ord-a);
-}
-
-.item-b {
-  background: var(--opf-ord-b-bg);
-  color: var(--opf-ord-b);
-  border: 1px solid var(--opf-ord-b);
-}
-
-.item-c {
-  background: var(--opf-ord-c-bg);
-  color: var(--opf-ord-c);
-  border: 1px solid var(--opf-ord-c);
-}
-
-.consumer-badge {
-  margin-top: auto;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background: var(--opf-panel-bg);
+.opf-step {
+  padding: 3px 9px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--opf-row-color) 16%, transparent);
+  color: var(--opf-row-color);
   font-size: 11.5px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.opf-explain {
-  padding: 10px 14px;
-  background: var(--opf-panel-bg);
-  border-left: 3px solid var(--opf-accent);
-  border-radius: 0 6px 6px 0;
+.opf-step-arrow {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--opf-muted);
+}
+
+/* ---- 全局顺序 vs 分区顺序 ---- */
+.opf-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.opf-cmp {
+  padding: 10px 12px;
+  border-radius: 8px;
+
+  p {
+    margin: 4px 0 0;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+}
+
+.opf-cmp-title {
   font-size: 12.5px;
-  line-height: 1.6;
+  font-weight: 700;
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateY(-8px);
-    opacity: 0;
+.opf-cmp--bad {
+  background: var(--opf-red-bg);
+
+  .opf-cmp-title {
+    color: var(--opf-red);
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+}
+
+.opf-cmp--good {
+  background: var(--opf-teal-bg);
+
+  .opf-cmp-title {
+    color: var(--opf-teal);
   }
+}
+
+/* ---- 坑 + 一句话 ---- */
+.opf-note {
+  margin-top: 12px;
+  padding: 9px 12px;
+  border-left: 3px solid var(--opf-red);
+  border-radius: 0 7px 7px 0;
+  background: var(--opf-red-bg);
+  font-size: 12px;
+  line-height: 1.6;
+
+  code {
+    font-family: Consolas, Menlo, Monaco, monospace;
+    font-size: 11.5px;
+  }
+}
+
+.opf-note-tag {
+  margin-right: 6px;
+  font-weight: 700;
+  color: var(--opf-red);
+}
+
+.opf-key {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--opf-muted);
+}
+
+.opf-caption {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.6;
 }

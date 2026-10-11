@@ -1,192 +1,126 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 
 import styles from './OrderPartitionFigure.module.scss';
 
-const cx = (...names) => names.map((name) => styles[name]).filter(Boolean).join(' ');
-
 /**
- * Order events sequences:
- * Order A (ID: 1001) -> hash(1001) % 3 = 1 -> Partition 1
- * Order B (ID: 1002) -> hash(1002) % 3 = 2 -> Partition 2
- * Order C (ID: 1003) -> hash(1003) % 3 = 0 -> Partition 0
+ * 分区顺序消费（Partition Order）。
+ *
+ * 一屏讲清「为什么按业务 key 哈希分区，就能既保序又有吞吐」：
+ *   ① 要解决的问题 —— 同一订单的「创建 → 支付 → 发货」必须按序处理；
+ *   ② 路由表 —— 订单按 hash(orderId) % 分区数 落到某个分区，同一订单必落同一分区；
+ *   ③ 分区内 —— FIFO 队列 + 单线程串行消费，顺序天然成立；
+ *   ④ 全局顺序 vs 分区顺序的取舍，以及「分区数别随便改」这个坑。
+ *
+ * 早先这里是「点按钮发消息」的交互沙盘：要连点 6 次才看得到全貌，消息还是逐条冒出来的，
+ * 反而看不清「谁落到哪个分区」。改成静态路由表后一眼就能读完。
  */
+const ROUTES = [
+  {
+    key: 'a',
+    order: '订单 A',
+    id: '#1001',
+    hash: 'hash(1001) % 3 = 0',
+    partition: 'Partition 0',
+    thread: '消费者线程 0',
+    steps: ['创建订单', '用户支付', '商家发货'],
+  },
+  {
+    key: 'b',
+    order: '订单 B',
+    id: '#1002',
+    hash: 'hash(1002) % 3 = 1',
+    partition: 'Partition 1',
+    thread: '消费者线程 1',
+    steps: ['创建订单', '用户支付', '商家发货'],
+  },
+  {
+    key: 'c',
+    order: '订单 C',
+    id: '#1003',
+    hash: 'hash(1003) % 3 = 2',
+    partition: 'Partition 2',
+    thread: '消费者线程 2',
+    steps: ['创建订单', '用户支付', '商家发货'],
+  },
+];
+
 const OrderPartitionFigure = function ({ caption = '' }) {
-  const [p0, setP0] = useState([]);
-  const [p1, setP1] = useState([]);
-  const [p2, setP2] = useState([]);
-
-  const [stepA, setStepA] = useState(0); // 0: none, 1: create, 2: pay, 3: ship
-  const [stepB, setStepB] = useState(0);
-  const [log, setLog] = useState('点击下方按钮发送订单消息，直观感受「按 OrderId 哈希保顺序」的魔力。');
-
-  const reset = () => {
-    setP0([]);
-    setP1([]);
-    setP2([]);
-    setStepA(0);
-    setStepB(0);
-    setLog('已清空所有队列消息。请点击按钮重新发送。');
-  };
-
-  const sendOrderA = () => {
-    if (stepA >= 3) {
-      setLog('订单 A (ID: 1001) 的生命周期（创建 → 支付 → 发货）已全部发送完成！');
-      return;
-    }
-    const nextStep = stepA + 1;
-    setStepA(nextStep);
-    const actionName = nextStep === 1 ? '1. 创建订单' : nextStep === 2 ? '2. 用户支付' : '3. 商家发货';
-
-    // Route: hash("1001") % 3 = 1
-    const item = { order: 'A', id: '1001', action: actionName, step: nextStep };
-    setP1((prev) => [...prev, item]);
-    setLog(`【订单 A】发送「${actionName}」：路由到 Partition 1。由于 FIFO 队列特性，消费线程必定严格串行执行！`);
-  };
-
-  const sendOrderB = () => {
-    if (stepB >= 3) {
-      setLog('订单 B (ID: 1002) 的生命周期已全部发送完成！');
-      return;
-    }
-    const nextStep = stepB + 1;
-    setStepB(nextStep);
-    const actionName = nextStep === 1 ? '1. 创建订单' : nextStep === 2 ? '2. 用户支付' : '3. 商家发货';
-
-    // Route: hash("1002") % 3 = 2
-    const item = { order: 'B', id: '1002', action: actionName, step: nextStep };
-    setP2((prev) => [...prev, item]);
-    setLog(`【订单 B】发送「${actionName}」：路由到 Partition 2。与订单 A 完全并行处理，互不阻塞卡顿！`);
-  };
-
   return (
     <div className={styles.opf}>
-      <div className={styles['opf-header']}>
-        <div className={styles['opf-title']}>
-          <span>分区顺序消费（Partition Order）沙盘演示</span>
-          <span className={styles['opf-badge']}>高频高分题</span>
+      <div className={styles['opf-problem']}>
+        <span className={styles['opf-problem-tag']}>要解决的问题</span>
+        <p className={styles['opf-problem-text']}>
+          同一笔订单会依次发出「创建 → 支付 → 发货」三条消息，必须按这个顺序处理；
+          一旦乱序，就会出现「先发货、后创建」这种业务事故。
+        </p>
+      </div>
+
+      <div className={styles['opf-head']}>
+        <span>订单消息</span>
+        <span>哈希路由</span>
+        <span>分区（Partition）· 分区内 FIFO</span>
+      </div>
+
+      <div className={styles['opf-routes']}>
+        {ROUTES.map((route) => (
+          <div key={route.key} className={`${styles['opf-row']} ${styles[`opf-row--${route.key}`]}`}>
+            <div className={styles['opf-order']}>
+              <span className={styles['opf-order-name']}>{route.order}</span>
+              <span className={styles['opf-order-id']}>{route.id}</span>
+            </div>
+
+            <div className={styles['opf-hash']}>
+              <code>{route.hash}</code>
+            </div>
+
+            <div className={styles['opf-partition']}>
+              <div className={styles['opf-partition-head']}>
+                <span className={styles['opf-partition-name']}>{route.partition}</span>
+                <span className={styles['opf-thread']}>🧵 {route.thread} · 串行</span>
+              </div>
+              <div className={styles['opf-steps']}>
+                {route.steps.map((step, index) => (
+                  <React.Fragment key={step}>
+                    {index > 0 && <span className={styles['opf-step-arrow']}>→</span>}
+                    <span className={styles['opf-step']}>{step}</span>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className={styles['opf-compare']}>
+        <div className={`${styles['opf-cmp']} ${styles['opf-cmp--bad']}`}>
+          <div className={styles['opf-cmp-title']}>❌ 全局顺序</div>
+          <p>
+            Topic 只能留 1 个分区、1 个消费者线程，所有订单挤在一条队列里排队，
+            吞吐直接掉到几百 TPS，生产上不现实。
+          </p>
         </div>
-        <div style={{ fontSize: '12px', opacity: 0.75 }}>
-          分区哈希路由：<code>hash(orderId) % partitionCount</code>
+
+        <div className={`${styles['opf-cmp']} ${styles['opf-cmp--good']}`}>
+          <div className={styles['opf-cmp-title']}>✅ 分区顺序</div>
+          <p>
+            同一个订单 key 相同，哈希后必落同一分区，分区内单线程串行 → 顺序天然成立；
+            不同订单分散到不同分区并行消费，吞吐随分区数扩展。
+          </p>
         </div>
       </div>
 
-      <div className={styles['opf-controls']}>
-        <button
-          type="button"
-          className={cx('order-btn', 'btn-a')}
-          onClick={sendOrderA}
-          disabled={stepA >= 3}
-        >
-          <span>📦 发送订单 A (ID: 1001) 下一步事件</span>
-          <span style={{ opacity: 0.8 }}>({stepA}/3)</span>
-        </button>
-
-        <button
-          type="button"
-          className={cx('order-btn', 'btn-b')}
-          onClick={sendOrderB}
-          disabled={stepB >= 3}
-        >
-          <span>🛍️ 发送订单 B (ID: 1002) 下一步事件</span>
-          <span style={{ opacity: 0.8 }}>({stepB}/3)</span>
-        </button>
-
-        <button
-          type="button"
-          className={cx('order-btn', 'btn-reset')}
-          onClick={reset}
-        >
-          重置沙盘
-        </button>
+      <div className={styles['opf-note']}>
+        <span className={styles['opf-note-tag']}>⚠️ 别踩的坑</span>
+        分区数不要随便改：<code>hash(orderId) % 分区数</code> 的分母一变，
+        原来同 key 的消息就可能落到别的分区，顺序立刻错乱。
       </div>
 
-      <div className={styles['opf-stage']}>
-        {/* Partition 0 */}
-        <div className={styles['partition-card']}>
-          <div className={styles['p-head']}>
-            <span>Partition 0</span>
-            <span className={styles['p-tag']}>其他业务消息</span>
-          </div>
-          <div className={styles['msg-queue']}>
-            {p0.length === 0 ? (
-              <div style={{ opacity: 0.5, fontSize: '12px', margin: 'auto' }}>暂无消息</div>
-            ) : (
-              p0.map((m, idx) => (
-                <div key={idx} className={cx('msg-item', 'item-c')}>
-                  <span>{m.action}</span>
-                </div>
-              ))
-            )}
-          </div>
-          <div className={styles['consumer-badge']}>
-            <span>🧵 消费者线程 0</span>
-            <span style={{ color: 'var(--opf-accent)' }}>单线程串行</span>
-          </div>
-        </div>
-
-        {/* Partition 1 (Order A) */}
-        <div className={styles['partition-card']}>
-          <div className={styles['p-head']}>
-            <span>Partition 1</span>
-            <span className={styles['p-tag']}>绑归 订单 A (1001)</span>
-          </div>
-          <div className={styles['msg-queue']}>
-            {p1.length === 0 ? (
-              <div style={{ opacity: 0.5, fontSize: '12px', margin: 'auto' }}>点击按钮入队</div>
-            ) : (
-              p1.map((m, idx) => (
-                <div key={idx} className={cx('msg-item', 'item-a')}>
-                  <span>Order#1001</span>
-                  <strong>{m.action}</strong>
-                </div>
-              ))
-            )}
-          </div>
-          <div className={styles['consumer-badge']}>
-            <span>🧵 消费者线程 1</span>
-            <span style={{ color: 'var(--opf-ord-a)' }}>严格 FIFO 消费</span>
-          </div>
-        </div>
-
-        {/* Partition 2 (Order B) */}
-        <div className={styles['partition-card']}>
-          <div className={styles['p-head']}>
-            <span>Partition 2</span>
-            <span className={styles['p-tag']}>绑归 订单 B (1002)</span>
-          </div>
-          <div className={styles['msg-queue']}>
-            {p2.length === 0 ? (
-              <div style={{ opacity: 0.5, fontSize: '12px', margin: 'auto' }}>点击按钮入队</div>
-            ) : (
-              p2.map((m, idx) => (
-                <div key={idx} className={cx('msg-item', 'item-b')}>
-                  <span>Order#1002</span>
-                  <strong>{m.action}</strong>
-                </div>
-              ))
-            )}
-          </div>
-          <div className={styles['consumer-badge']}>
-            <span>🧵 消费者线程 2</span>
-            <span style={{ color: 'var(--opf-ord-b)' }}>严格 FIFO 消费</span>
-          </div>
-        </div>
+      <div className={styles['opf-key']}>
+        一句话记住：顺序只需要保证到「同一个业务 key」这一层，不需要全局有序。
       </div>
 
-      <div className={styles['opf-explain']}>
-        <div><strong>💡 核心流程播报：</strong> {log}</div>
-        <div style={{ marginTop: '6px', opacity: 0.85 }}>
-          <strong>为什么不能用“全局顺序”？</strong> 全局顺序要求 Topic 只能有 1 个 Partition、1 个消费者线程，系统 TPS 直接降到几百！<br />
-          <strong>分区顺序的精髓：</strong> 业务上真正需要时序的只有「同一笔订单」（你绝不希望先发货再创建）。把 <code>orderId</code> 作为 key 哈希，同订单天然落入同一分区，分区内单线程串行处理保顺序；不同订单分流到不同分区并发执行，吞吐量翻倍！
-        </div>
-      </div>
-
-      {caption && (
-        <div style={{ textAlign: 'center', fontSize: '12px', opacity: 0.6, marginTop: '8px' }}>
-          {caption}
-        </div>
-      )}
+      {caption && <div className={styles['opf-caption']}>{caption}</div>}
     </div>
   );
 };
