@@ -2,12 +2,14 @@ import React from 'react';
 import Document, { Html, Head, Main, NextScript } from 'next/document';
 
 import themeOper from 'utils/themeOper';
+import tocOper from 'utils/tocOper';
 import withBasePath from 'utils/basePath';
 
 /**
  * Custom document, replacing the Gatsby `src/html.js`.
- * Bootstraps the dark/light theme before paint to avoid a flash of the wrong
- * theme, and loads the `LXGW WenKai Screen` webfont used across the site.
+ * Bootstraps the dark/light theme and the folded article outline before paint
+ * (both would otherwise flash on load), and loads the `LXGW WenKai Screen`
+ * webfont used across the site.
  */
 export default class MyDocument extends Document {
     render() {
@@ -31,6 +33,11 @@ export default class MyDocument extends Document {
                     <script
                         dangerouslySetInnerHTML={{
                             __html: `(${themeOper.toString()})();`,
+                        }}
+                    />
+                    <script
+                        dangerouslySetInnerHTML={{
+                            __html: `(${tocOper.toString()})();`,
                         }}
                     />
                     <Main />

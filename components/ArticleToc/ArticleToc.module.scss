@@ -27,6 +27,19 @@
     transition: opacity 0.32s ease, visibility 0s 0.32s;
 }
 
+// The same folded state, keyed off <html> instead of the component. The
+// bootstrap in `utils/tocOper.js` writes this class before the first paint, so
+// the rail is already folded when the browser paints the article — without it
+// the server HTML always arrives open and the fold only happened after
+// hydration, which is the flash on every refresh. Declared flat (rather than
+// nested) to match the `:global(body.dark)` form used further down.
+:global(html.toc-collapsed) .toc-rail-label,
+:global(html.toc-collapsed) .toc-expand {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.32s ease, visibility 0s 0.32s;
+}
+
 .toc-rail-heading {
     display: flex;
     align-items: center;
@@ -76,6 +89,15 @@
 }
 
 .toc-rail-collapsed .toc-rail-body {
+    transform: translateX(12px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.32s ease, visibility 0s 0.32s,
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+// Pre-paint twin of the rule above (see the note next to `.toc-rail-label`).
+:global(html.toc-collapsed) .toc-rail-body {
     transform: translateX(12px);
     opacity: 0;
     visibility: hidden;
@@ -133,6 +155,11 @@
 }
 
 .toc-rail-collapsed .toc-collapse-icon {
+    transform: rotate(-135deg);
+}
+
+// Pre-paint twin of the rule above (see the note next to `.toc-rail-label`).
+:global(html.toc-collapsed) .toc-collapse-icon {
     transform: rotate(-135deg);
 }
 

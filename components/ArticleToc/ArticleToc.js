@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { formatMessage } from 'utils/i18n';
@@ -9,6 +9,16 @@ import styles from './ArticleToc.module.scss';
 // button itself. The choice is remembered so a reader who wants the article at
 // full width folds it once, not per post.
 const COLLAPSED_STORAGE_KEY = 'tocCollapsed';
+// Mirrored onto <html> before the first paint by `utils/tocOper.js`, which is
+// what keeps the rail from flashing open on a refresh. Kept in sync here on
+// every mount and toggle.
+const COLLAPSED_HTML_CLASS = 'toc-collapsed';
+
+// Folding the rail is a layout concern: the read of the stored choice has to
+// land in the same commit as the first render, or the reader sees the rail
+// unfold and snap shut. `useLayoutEffect` does that on the client; the server
+// has no DOM, so it falls back to `useEffect` there.
+const useIsomorphicLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
 /**
  * Article outline: the desktop rail stays visible, while this same outline can
@@ -24,8 +34,17 @@ const ArticleToc = function ({ tableOfContents }) {
     const tCollapseOutline = formatMessage('tCollapseOutline');
     const tExpandOutline = formatMessage('tExpandOutline');
 
-    useEffect(() => {
-        setCollapsed(window.localStorage.getItem(COLLAPSED_STORAGE_KEY) === '1');
+    useIsomorphicLayoutEffect(() => {
+        let stored = false;
+        try {
+            stored = window.localStorage.getItem(COLLAPSED_STORAGE_KEY) === '1';
+        } catch (err) {
+            // Storage unavailable (private mode): keep the outline open.
+        }
+        setCollapsed(stored);
+        // Re-assert the pre-paint class, so the two can never disagree — the
+        // choice may have been changed in another tab while this page loaded.
+        document.documentElement.classList.toggle(COLLAPSED_HTML_CLASS, stored);
     }, []);
 
     useEffect(() => {
@@ -53,7 +72,12 @@ const ArticleToc = function ({ tableOfContents }) {
     const toggleCollapsed = () => {
         const next = !collapsed;
         setCollapsed(next);
-        window.localStorage.setItem(COLLAPSED_STORAGE_KEY, next ? '1' : '0');
+        try {
+            window.localStorage.setItem(COLLAPSED_STORAGE_KEY, next ? '1' : '0');
+        } catch (err) {
+            // Storage unavailable: the fold still works for this page.
+        }
+        document.documentElement.classList.toggle(COLLAPSED_HTML_CLASS, next);
     };
 
     return (
