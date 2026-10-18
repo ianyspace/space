@@ -1,6 +1,6 @@
 {
-  "summary": "Implementation plan to fix React Rules of Hooks violation caused by conditional calls to i18n formatting helpers that invoke useContext under the hood.",
-  "updatedAt": "2026-10-18T16:02:59.041129671Z",
+  "summary": "Implementation plan for enhancing article body reading interactions: one-click code copy with language badge, reading progress bar with back-to-top button, and image lightbox preview.",
+  "updatedAt": "2026-10-18T16:29:56.182201036Z",
   "requestFeedback": true,
   "userFacing": true
 }

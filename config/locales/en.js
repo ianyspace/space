@@ -77,4 +77,8 @@ module.exports = {
     tConfirm: 'Apply',
     tClear: 'Clear',
     tSaved: 'Saved',
+    tCopyCode: 'Copy',
+    tCopiedCode: 'Copied',
+    tClosePreview: 'Close preview',
+    tZoomHint: 'Click image to toggle zoom · Press Esc to close',
 };

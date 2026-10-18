@@ -290,16 +290,90 @@ pre[data-line] {
 // 代码块却顶到卡片边上（0），左边缘对不齐。这里取消出血，代码块与段落、标题共用
 // 同一条左边缘；深色块不再顶到卡片边，小屏也就没必要再把圆角抹平了。
 .gatsby-highlight {
+    position: relative;
     margin-bottom: 1.75rem;
     border-radius: 10px;
     background: $code-bg;
-    -webkit-overflow-scrolling: touch;
-    overflow: auto;
+    overflow: hidden;
 
     pre[class*='language-'] {
-        float: left;
-        min-width: 100%;
+        margin: 0;
+        padding-top: 2.25rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
+
+    .code-toolbar {
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        pointer-events: auto;
+    }
+
+    .code-lang {
+        color: rgba(214, 222, 235, 0.58);
+        font-family: Consolas, Menlo, Monaco, source-code-pro, 'Courier New', monospace;
+        font-size: 11px;
+        line-height: 1;
+        letter-spacing: 0.04em;
+        text-transform: lowercase;
+        user-select: none;
+        white-space: nowrap;
+    }
+
+    .code-copy-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        height: 24px;
+        padding: 0 9px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(255, 255, 255, 0.82);
+        font-family: var(--systemFont);
+        font-size: 12px;
+        line-height: 1;
+        white-space: nowrap;
+        cursor: pointer;
+        opacity: 0.78;
+        transition: opacity 0.16s ease, border-color 0.16s ease, color 0.16s ease,
+            background 0.16s ease, transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+
+        &:hover,
+        &:focus-visible {
+            outline: none;
+            opacity: 1;
+            border-color: $pink;
+            background: rgba(255, 167, 196, 0.14);
+            color: $pink;
+        }
+
+        &:active {
+            transform: scale(0.95);
+        }
+
+        &.is-copied {
+            opacity: 1;
+            border-color: $pink;
+            background: rgba(255, 167, 196, 0.18);
+            color: $pink;
+        }
+    }
+
+    &:hover .code-copy-btn {
+        opacity: 1;
+    }
+}
+
+.css-post img {
+    cursor: zoom-in;
+    border-radius: 6px;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
 }
 
 html {

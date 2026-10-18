@@ -75,4 +75,8 @@ module.exports = {
     tConfirm: '确定',
     tClear: '清除',
     tSaved: '已保存',
+    tCopyCode: '复制',
+    tCopiedCode: '已复制',
+    tClosePreview: '关闭预览',
+    tZoomHint: '点击图片切换缩放 · 按 Esc 关闭',
 };

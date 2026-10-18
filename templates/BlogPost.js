@@ -13,6 +13,7 @@ import Private from 'components/Private';
 import Love from 'components/Love';
 import Comments from 'components/Comments';
 import ArticleToc from 'components/ArticleToc/ArticleToc';
+import PostEnhancer from 'components/PostEnhancer';
 
 import articleComponents from 'lib/generated/articleComponents';
 import sharedComponents from 'content/components';
@@ -180,6 +181,7 @@ const BlogPostTemplate = function ({
                 )}
             </div>
             {!showUnreal && <ArticleToc tableOfContents={tableOfContents} />}
+            <PostEnhancer active={!showUnreal} contentKey={`${post.slug}-${update}`} />
 
             {frontmatter.relative && (
                 <RelativePosts postNodes={[previousInSameTag, nextInSameTag]} />
