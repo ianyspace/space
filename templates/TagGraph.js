@@ -61,6 +61,9 @@ function computeLayout(tagGroups) {
         return MIN_R + (countWeight * 0.65 + degWeight * 0.35) * (MAX_R - MIN_R);
     };
 
+    const round2 = (v) => Math.round(v * 100) / 100;
+    const roundedRadiusOf = (i) => round2(radiusOf(i));
+
     let temperature = 1;
     for (let tick = 0; tick < 380; tick += 1) {
         temperature *= 0.993;
@@ -116,7 +119,12 @@ function computeLayout(tagGroups) {
         });
     }
 
-    return { nodes, links, radiusOf, degree };
+    nodes.forEach((node) => {
+        node.x = round2(node.x);
+        node.y = round2(node.y);
+    });
+
+    return { nodes, links, radiusOf: roundedRadiusOf, degree };
 }
 
 export default function TagGraph({ tagGroups, getTagUrl }) {
@@ -129,7 +137,6 @@ export default function TagGraph({ tagGroups, getTagUrl }) {
     const wrapRef = useRef(null);
 
     const tTagGraphAria = formatMessage('tTagGraphAria');
-    const articlesCountFn = (count) => formatMessage('tTagArticlesCount', count);
     const relatedText = formatMessage('tTagConnectedTo');
 
     const { nodes, links, radiusOf } = useMemo(
@@ -221,6 +228,10 @@ export default function TagGraph({ tagGroups, getTagUrl }) {
     }, [isDragging]);
 
     const activeTagData = targetIndex != null ? nodes[targetIndex] : null;
+    const activeArticlesCountText = formatMessage(
+        'tTagArticlesCount',
+        activeTagData ? activeTagData.totalCount : 0,
+    );
     const activeConnectedTags = useMemo(() => {
         if (targetIndex == null) return [];
         const neighbours = Array.from(neighbourOf.get(targetIndex) || []);
@@ -390,7 +401,7 @@ export default function TagGraph({ tagGroups, getTagUrl }) {
                                 <span className={styles['inspector-hash']}>#</span>
                                 <h4 className={styles['inspector-title']}>{activeTagData.fieldValue}</h4>
                                 <span className={styles['inspector-count']}>
-                                    {articlesCountFn(activeTagData.totalCount)}
+                                    {activeArticlesCountText}
                                 </span>
                             </div>
                             <button

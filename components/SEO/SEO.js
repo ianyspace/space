@@ -28,9 +28,16 @@ const SEO = function ({ description = '', meta = [], keywords = [], title }) {
         metaTags.push({ name: 'keywords', content: keywords.join(', ') });
     }
 
+    const currentLang = lang || site.lang;
+
+    React.useEffect(() => {
+        if (typeof document !== 'undefined') {
+            document.documentElement.lang = currentLang;
+        }
+    }, [currentLang]);
+
     return (
         <Head>
-            <html lang={lang || site.lang} />
             <title>{`${title} | ${site.title}`}</title>
             {metaTags.concat(meta).map((tag) => {
                 const attributes = { ...tag };

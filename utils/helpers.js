@@ -6,13 +6,43 @@ function formatReadingTime(minutes) {
     return `${new Array(cups || 1).fill('☕️').join('')} ${minutes} min read`;
 }
 
+const EN_MONTHS = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+];
+
 // `lang` is optional and will default to the current user agent locale
 function formatPostDate(date, lang) {
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) {
+        return date;
+    }
+
+    const year = parsed.getFullYear();
+    const month = parsed.getMonth();
+    const day = parsed.getDate();
+
+    if (typeof lang === 'string' && lang.toLowerCase().startsWith('zh')) {
+        return `${year}年${month + 1}月${day}日`;
+    }
+    if (typeof lang === 'string' && lang.toLowerCase().startsWith('en')) {
+        return `${EN_MONTHS[month]} ${day}, ${year}`;
+    }
+
     if (typeof Date.prototype.toLocaleDateString !== 'function') {
         return date;
     }
 
-    const parsed = new Date(date);
     const args = [lang, { day: 'numeric', month: 'long', year: 'numeric' }].filter(Boolean);
     return parsed.toLocaleDateString(...args);
 }

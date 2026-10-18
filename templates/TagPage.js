@@ -17,6 +17,8 @@ const TagPageTemplate = function ({ tag, posts }) {
 
     const tagHeader = formatMessage('tfTagHeader', posts.length, tag);
     const tagCount = formatMessage('tfTagCountPosts', posts.length);
+    const tTags = formatMessage('tTags');
+    const tTagConnectedTo = formatMessage('tTagConnectedTo');
 
     // Collect related tags that co-occur in these posts
     const relatedTags = useMemo(() => {
@@ -38,7 +40,7 @@ const TagPageTemplate = function ({ tag, posts }) {
     return (
         <Layout
             title={siteTitle}
-            breadcrumbs={[{ text: formatMessage('tTags'), url: `${homeLink}tags/` }, { text: tag }]}
+            breadcrumbs={[{ text: tTags, url: `${homeLink}tags/` }, { text: tag }]}
         >
             <SEO title={tagHeader} description={tagHeader} />
             <header className={styles['tag-header']}>
@@ -53,7 +55,7 @@ const TagPageTemplate = function ({ tag, posts }) {
                 {relatedTags.length > 0 && (
                     <div className={styles['related-bar']}>
                         <span className={styles['related-title']}>
-                            {formatMessage('tTagConnectedTo')}
+                            {tTagConnectedTo}
                         </span>
                         <div className={styles['related-tags']}>
                             {relatedTags.map((rt) => (

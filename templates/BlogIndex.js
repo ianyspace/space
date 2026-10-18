@@ -62,16 +62,24 @@ const BlogIndex = function ({ pageData }) {
     const listPosts = scrollMode ? allPosts.slice(0, visibleCount) : posts;
     const loadedAll = scrollMode && visibleCount >= allPosts.length;
 
+    const tIndTitle = formatMessage('tIndTitle');
+    const taIndKeywords = formatMessage('taIndKeywords');
+    const countPostsText = formatMessage(
+        'tfIndCountPosts',
+        scrollMode
+            ? { count: totalCount, from: 1, to: Math.min(visibleCount, allPosts.length) }
+            : { count: totalCount, from, to },
+    );
+    const loadedAllText = formatMessage('tfLoadedAll', allPosts.length);
+
     return (
         <Layout title={siteTitle}>
-            <SEO title={formatMessage('tIndTitle')} keywords={formatMessage('taIndKeywords')} />
+            <SEO title={tIndTitle} keywords={taIndKeywords} />
             <aside>
                 <Bio />
             </aside>
             <div style={{ fontWeight: '700', fontSize: '22px' }}>
-                {scrollMode
-                    ? formatMessage('tfIndCountPosts', { count: totalCount, from: 1, to: Math.min(visibleCount, allPosts.length) })
-                    : formatMessage('tfIndCountPosts', { count: totalCount, from, to })}
+                {countPostsText}
             </div>
             {listPosts.map((post, index) => {
                 const layoutFlag = index % 2 === 0 ? 0 : 1;
@@ -108,7 +116,7 @@ const BlogIndex = function ({ pageData }) {
                                 margin: '16px 0',
                             }}
                         >
-                            {formatMessage('tfLoadedAll', allPosts.length)}
+                            {loadedAllText}
                         </div>
                     ) : null}
                 </>

@@ -12,6 +12,8 @@ const Breadcrumbs = function ({
     langKey = 'en',
     ...restProps
 }) {
+    const tHome = formatMessage('tHome');
+
     if (data == null) {
         return null;
     }
@@ -21,7 +23,7 @@ const Breadcrumbs = function ({
         topBCli = (
             <li className={styles['breadcrumbs-item']}>
                 <Link href={base} className={styles['breadcrumbs-element']}>
-                    {formatMessage('tHome')}
+                    {tHome}
                 </Link>
             </li>
         );

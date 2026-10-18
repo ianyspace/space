@@ -1,6 +1,7 @@
 import React from 'react';
 import Document, { Html, Head, Main, NextScript } from 'next/document';
 
+import { site } from 'config';
 import themeOper from 'utils/themeOper';
 import tocOper from 'utils/tocOper';
 import withBasePath from 'utils/basePath';
@@ -14,7 +15,7 @@ import withBasePath from 'utils/basePath';
 export default class MyDocument extends Document {
     render() {
         return (
-            <Html lang="en">
+            <Html lang={site.lang}>
                 <Head>
                     <meta name="baidu-site-verification" content="codeva-1hikzyFV3T" />
                     <meta charSet="utf-8" />

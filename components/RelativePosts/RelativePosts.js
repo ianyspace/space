@@ -5,6 +5,7 @@ import { formatMessage } from 'utils/i18n';
 import RelativePost from '../RelativePost';
 
 const RelativePosts = function ({ postNodes = [] }) {
+    const tRelativePosts = formatMessage('tRelativePosts');
     const postNodesNotNull = postNodes.filter((x) => x);
 
     if (postNodesNotNull.length === 0) {
@@ -14,7 +15,7 @@ const RelativePosts = function ({ postNodes = [] }) {
     return (
         <>
             <hr />
-            <div style={{ marginTop: '-1rem' }}>{formatMessage('tRelativePosts')}:</div>
+            <div style={{ marginTop: '-1rem' }}>{tRelativePosts}:</div>
             {postNodesNotNull.map((post) => (
                 <RelativePost key={post.slug} post={post} />
             ))}

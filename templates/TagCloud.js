@@ -1,13 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Link from 'next/link';
-import { formatMessage } from 'utils/i18n';
+import { useLang } from 'context/LanguageContext';
 import styles from './TagCloud.module.scss';
 
 export default function TagCloud({ tagGroups, getTagUrl }) {
+    const { messages } = useLang();
     const maxCount = Math.max(...tagGroups.map((t) => t.totalCount), 1);
     const minCount = Math.min(...tagGroups.map((t) => t.totalCount), 1);
-    const articlesCountFn = (count) => formatMessage('tTagArticlesCount', count);
+    const articlesCountFn = (count) =>
+        typeof messages.tTagArticlesCount === 'function'
+            ? messages.tTagArticlesCount(count)
+            : count;
 
     return (
         <div className={styles['cloud-container']}>

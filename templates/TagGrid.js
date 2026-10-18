@@ -1,12 +1,17 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Link from 'next/link';
+import { useLang } from 'context/LanguageContext';
 import { formatMessage } from 'utils/i18n';
 import styles from './TagGrid.module.scss';
 
 export default function TagGrid({ tagGroups, getTagUrl }) {
+    const { messages } = useLang();
     const relatedText = formatMessage('tTagConnectedTo');
-    const articlesCountFn = (count) => formatMessage('tTagArticlesCount', count);
+    const articlesCountFn = (count) =>
+        typeof messages.tTagArticlesCount === 'function'
+            ? messages.tTagArticlesCount(count)
+            : count;
 
     return (
         <div className={styles['grid-container']}>
