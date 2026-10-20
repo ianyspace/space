@@ -274,8 +274,8 @@ export const FURNITURE = [
     { type: 'chair', at: [6.15, 4.05], rot: -90 },
     { type: 'chair', at: [5.35, 3.25], rot: 180 },
     { type: 'chair', at: [5.35, 4.85], rot: 0 },
-    { type: 'pendant', at: [5.35, 4.05], drop: 0.95 },
-    { type: 'pendant', at: [8.82, 7.5], drop: 1.45, dim: true },
+    { type: 'pendant', at: [5.35, 4.05], drop: 0.68 },
+    { type: 'pendant', at: [8.82, 7.5], drop: 1.02, dim: true },
 
     /* entrance */
     { type: 'console', at: [8.3, 4.79], rot: 180, size: [1.2, 0.34] },
@@ -289,7 +289,7 @@ export const FURNITURE = [
     { type: 'nightstand', at: [0.55, 2.78], rot: 90 },
     { type: 'wardrobe', at: [3.1, 1.9], rot: -90, size: [1.9, 0.6] },
     { type: 'rug', at: [1.95, 1.85], rot: 90, size: [1.9, 1.5], tone: 'cream' },
-    { type: 'pendant', at: [1.9, 1.8], drop: 1.35 },
+    { type: 'pendant', at: [1.9, 1.8], drop: 1.04 },
 
     /* bedroom A */
     { type: 'bed', at: [8.35, 1.45], rot: 0, size: [1.5, 2.05] },
@@ -308,7 +308,7 @@ export const FURNITURE = [
     { type: 'bench', at: [2.95, 9.3], rot: 90, size: [1.4, 0.4] },
     { type: 'armchair', at: [1.55, 10.65], rot: 180, small: true },
     { type: 'rug', at: [1.75, 9.3], rot: 90, size: [2.3, 1.7], tone: 'sand' },
-    { type: 'pendant', at: [1.8, 9.3], drop: 1.4 },
+    { type: 'pendant', at: [1.8, 9.3], drop: 1.08 },
 
     /* kitchen */
     { type: 'kitchen', at: [5.3, 0.55], rot: 0, size: [3.5, 0.62] },
@@ -341,8 +341,11 @@ export const FURNITURE = [
  */
 export const VIEWS = {
     overview: { pos: [8.6, 14.0, 16.7], target: [4.6, 0.4, 6.2] },
-    living: { pos: [5.0, 1.62, 3.3], target: [7.6, 1.15, 8.4] },
-    dining: { pos: [6.6, 1.62, 5.6], target: [4.9, 1.1, 3.7] },
+    // Eye-level views. Each one stands back far enough that no pendant lamp
+    // hangs into the top of the frame — a 2m-wide lampshade 80cm from the lens
+    // will fill a third of the screen.
+    living: { pos: [4.15, 1.6, 4.45], target: [8.0, 1.15, 8.6] },
+    dining: { pos: [6.7, 1.62, 5.75], target: [4.7, 1.15, 3.6] },
     bedB: { pos: [3.05, 1.6, 3.05], target: [0.9, 1.05, 1.3] },
     bedA: { pos: [7.55, 1.6, 3.05], target: [8.7, 1.05, 0.9] },
     bedC: { pos: [3.05, 1.6, 7.85], target: [0.9, 1.05, 9.6] },

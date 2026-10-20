@@ -47,10 +47,16 @@ const MyHomeScene = function () {
         (async () => {
             try {
                 const THREE = await import('three');
-                const [{ buildHome }, { createTextures }, { OrbitControls }] = await Promise.all([
+                const [
+                    { buildHome },
+                    { createTextures },
+                    { OrbitControls },
+                    { RoundedBoxGeometry },
+                ] = await Promise.all([
                     import('./buildHome'),
                     import('./textures'),
                     import('three/addons/controls/OrbitControls.js'),
+                    import('three/addons/geometries/RoundedBoxGeometry.js'),
                 ]);
                 if (disposed) return;
 
@@ -63,12 +69,19 @@ const MyHomeScene = function () {
                 });
                 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 renderer.shadowMap.enabled = true;
-                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                renderer.toneMapping = THREE.ACESFilmicToneMapping;
-                renderer.toneMappingExposure = 0.98;
+                // VSM blurs the shadow map for real, so wall shadows fall off
+                // instead of ending on a hard line. PCF ignores its radius
+                // setting these days, which is what made every room look cut
+                // out with scissors.
+                renderer.shadowMap.type = THREE.VSMShadowMap;
+                // Neutral (Khronos PBR Neutral) keeps interior colours honest:
+                // ACES pushes the cream walls towards pink and crushes the
+                // highlights on the marble, which made the rooms look off.
+                renderer.toneMapping = THREE.NeutralToneMapping;
+                renderer.toneMappingExposure = 1.05;
 
                 const scene = new THREE.Scene();
-                scene.background = new THREE.Color(0xf2eee6);
+                scene.background = new THREE.Color(0xefece5);
 
                 const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 160);
                 camera.rotation.order = 'YXZ';
@@ -92,42 +105,63 @@ const MyHomeScene = function () {
                 envCanvas.height = 256;
                 const envCtx = envCanvas.getContext('2d');
                 const envGradient = envCtx.createLinearGradient(0, 0, 0, 256);
-                envGradient.addColorStop(0, '#dbe7f1');
-                envGradient.addColorStop(0.46, '#f7f3eb');
-                envGradient.addColorStop(0.56, '#efe5d4');
-                envGradient.addColorStop(1, '#c9bda8');
+                // A near-white sky with a warm floor bounce. A blue sky tint here
+                // put a cold cast on every shaded wall, which read as grey paint
+                // rather than as white paint in shadow.
+                envGradient.addColorStop(0, '#e8eaec');
+                envGradient.addColorStop(0.46, '#faf6ef');
+                envGradient.addColorStop(0.56, '#f2e9db');
+                envGradient.addColorStop(1, '#c9c1b3');
                 envCtx.fillStyle = envGradient;
                 envCtx.fillRect(0, 0, 32, 256);
                 const envTexture = new THREE.CanvasTexture(envCanvas);
                 envTexture.mapping = THREE.EquirectangularReflectionMapping;
                 envTexture.colorSpace = THREE.SRGBColorSpace;
-                scene.environment = envTexture;
-                scene.environmentIntensity = 0.55;
+
+                // Pre-filter the environment. Handing the raw equirect to
+                // `scene.environment` gives every roughness the same sharp
+                // reflection, which is why the brass and marble used to look
+                // like plastic; PMREM builds the mip chain that rough surfaces
+                // are supposed to sample.
+                const pmrem = new THREE.PMREMGenerator(renderer);
+                pmrem.compileEquirectangularShader();
+                const envMap = pmrem.fromEquirectangular(envTexture).texture;
+                scene.environment = envMap;
+                // Indoors, most of the light a room sees has bounced off other
+                // surfaces. Too little here and every shadowed corner turns into
+                // a black hole, which reads as "unfinished" rather than "shaded".
+                scene.environmentIntensity = 1.45;
+                envTexture.dispose();
+                pmrem.dispose();
 
                 /* --- lights -------------------------------------------- */
 
-                const hemi = new THREE.HemisphereLight(0xeef4f8, 0xd8cbb6, 0.45);
+                const hemi = new THREE.HemisphereLight(0xf0f2f4, 0xd2c6ae, 0.7);
                 scene.add(hemi);
 
-                const sun = new THREE.DirectionalLight(0xfff3df, 2.8);
+                const sun = new THREE.DirectionalLight(0xfff7ee, 1.9);
                 sun.position.set(4.5, 12.5, 11.5);
                 sun.castShadow = true;
                 sun.shadow.mapSize.set(2048, 2048);
                 sun.shadow.bias = -0.0004;
                 sun.shadow.normalBias = 0.028;
-                sun.shadow.camera.left = -10;
-                sun.shadow.camera.right = 10;
-                sun.shadow.camera.top = 10;
-                sun.shadow.camera.bottom = -10;
+                sun.shadow.radius = 3.5;
+                sun.shadow.blurSamples = 12;
+                // A tighter frustum than the default: the same 2048² map spread
+                // over less ground means crisper contact in the shadow edges.
+                sun.shadow.camera.left = -9;
+                sun.shadow.camera.right = 9;
+                sun.shadow.camera.top = 8;
+                sun.shadow.camera.bottom = -8;
                 sun.shadow.camera.near = 1;
-                sun.shadow.camera.far = 42;
+                sun.shadow.camera.far = 40;
                 sun.shadow.camera.updateProjectionMatrix();
                 scene.add(sun);
                 scene.add(sun.target);
 
                 // Cool bounce from the north, so the shaded side of every room
                 // still reads as a room rather than a black hole.
-                const fill = new THREE.DirectionalLight(0xdfe9f4, 0.4);
+                const fill = new THREE.DirectionalLight(0xe8ecf0, 0.45);
                 fill.position.set(-7, 7, -9);
                 scene.add(fill);
 
@@ -136,7 +170,7 @@ const MyHomeScene = function () {
                 const textures = createTextures(THREE, {
                     anisotropy: Math.min(renderer.capabilities.getMaxAnisotropy(), 8),
                 });
-                const home = buildHome(THREE, { textures });
+                const home = buildHome(THREE, { textures, RoundedBoxGeometry });
                 home.root.position.set(-CENTER[0], 0, -CENTER[1]);
                 scene.add(home.root);
 
@@ -444,7 +478,7 @@ const MyHomeScene = function () {
                     if (document.pointerLockElement === canvas) document.exitPointerLock();
                     apiRef.current = null;
                     home.dispose();
-                    envTexture.dispose();
+                    envMap.dispose();
                     controls.dispose();
                     renderer.dispose();
                 };

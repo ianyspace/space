@@ -40,7 +40,9 @@ const drawParquet = function (ctx, size) {
     const plankL = 1.2 * px;
     const rows = Math.round(size / plankW);
 
-    ctx.fillStyle = '#c9a87c';
+    // Pale limed oak: low chroma on purpose. A warm orange floor fights every
+    // wall and every rug in the flat, and the tone map pushes it further.
+    ctx.fillStyle = '#c9c0ad';
     ctx.fillRect(0, 0, size, size);
 
     for (let row = 0; row < rows; row += 1) {
@@ -48,15 +50,15 @@ const drawParquet = function (ctx, size) {
         const offset = (row % 2) * (plankL / 2);
         for (let x = -plankL; x < size + plankL; x += plankL) {
             const left = x + offset;
-            const tone = 0.9 + Math.random() * 0.2;
+            const tone = 0.94 + Math.random() * 0.12;
             const r = Math.round(201 * tone);
-            const g = Math.round(168 * tone);
-            const b = Math.round(124 * tone);
+            const g = Math.round(192 * tone);
+            const b = Math.round(173 * tone);
             ctx.fillStyle = `rgb(${r},${g},${b})`;
             ctx.fillRect(left, y, plankL, plankW);
 
             // Grain: a few wandering lines that stay inside the board.
-            ctx.strokeStyle = `rgba(120, 88, 54, ${0.05 + Math.random() * 0.06})`;
+            ctx.strokeStyle = `rgba(138, 118, 92, ${0.05 + Math.random() * 0.06})`;
             ctx.lineWidth = 1;
             for (let line = 0; line < 3; line += 1) {
                 const gy = y + plankW * (0.2 + Math.random() * 0.6);
@@ -72,7 +74,7 @@ const drawParquet = function (ctx, size) {
 
             // Seam on the long edge only: the short edges are butt joints and
             // already read from the tone change.
-            ctx.fillStyle = 'rgba(96, 68, 40, 0.16)';
+            ctx.fillStyle = 'rgba(112, 96, 74, 0.14)';
             ctx.fillRect(left, y, plankL, 1);
         }
     }
