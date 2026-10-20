@@ -37,6 +37,7 @@ module.exports = {
     desc: '一个记录知识和生活的神秘小空间',
     title: 'anyspace',
     tResume: '个人简历',
+    tMyHome: '我的家',
     tThemeSetting: '主题设置',
     tListStyle: '列表样式',
     tListStyleDesc: '选择文章列表的展示方式，切换后立即生效。',

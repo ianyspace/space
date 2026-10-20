@@ -11,6 +11,7 @@ import {
 } from 'utils/themeBackground';
 
 import SettingButton from './SettingButton';
+import MyHomeButton from './MyHomeButton';
 
 /**
  * Renders the configurable page background plus the floating entry point to the
@@ -54,7 +55,12 @@ const ThemeBackground = () => {
     return (
         <>
             <div style={backgroundStyle} />
-            {isHomepageList && <SettingButton />}
+            {isHomepageList && (
+                <>
+                    <MyHomeButton />
+                    <SettingButton />
+                </>
+            )}
         </>
     );
 };

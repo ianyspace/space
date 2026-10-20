@@ -39,6 +39,7 @@ module.exports = {
     desc: 'A mysterious little space to record knowledge and life',
     title: 'anyspace',
     tResume: 'My Resume',
+    tMyHome: 'My Home',
     tThemeSetting: 'Theme Settings',
     tListStyle: 'List style',
     tListStyleDesc: 'Choose how the article list is rendered. Changes apply immediately.',

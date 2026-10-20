@@ -49,6 +49,52 @@
     animation: spin 6s linear infinite;
 }
 
+// --- 3D apartment entry --------------------------------------------------
+
+// Mirrors the theme button, but parked to its left so the two floating
+// entries read as one pair in the bottom-right corner.
+.myhome-btn {
+    position: fixed;
+    right: 118px;
+    bottom: 26px;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px 10px 15px;
+    border: 1px solid var(--hr);
+    border-radius: 999px;
+    background: var(--bg-article);
+    color: var(--textNormal);
+    box-shadow: var(--bg-article-shadow);
+    -webkit-backdrop-filter: var(--article-backdrop);
+    backdrop-filter: var(--article-backdrop);
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1;
+    transition: color 0.3s ease, border-color 0.3s ease,
+        transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+
+    &:hover {
+        color: var(--textLink);
+        border-color: var(--tag-bg);
+        transform: translateY(-2px);
+    }
+
+    &:active {
+        transform: scale(0.97);
+    }
+}
+
+.myhome-label {
+    white-space: nowrap;
+}
+
+.myhome-icon {
+    width: 17px;
+    height: 17px;
+}
+
 .setting-page {
     display: flex;
     flex-direction: column;
@@ -380,8 +426,15 @@
         padding: 12px;
     }
 
+    .myhome-btn {
+        right: 66px;
+        bottom: 16px;
+        padding: 12px;
+    }
+
     // Icon-only FAB on phones; `aria-label` keeps it announced.
-    .setting-label {
+    .setting-label,
+    .myhome-label {
         display: none;
     }
 
