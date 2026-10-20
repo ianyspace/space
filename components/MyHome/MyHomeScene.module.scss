@@ -1,0 +1,575 @@
+// French-minimal shell around the WebGL canvas: cream paper, hairlines, a
+// serif that is only allowed out for the headline, and brass as the single
+// accent. Nothing here is themed by the blog's light/dark switch on purpose —
+// the page is a printed plate, not an article.
+
+$paper: #f3efe7;
+$ink: #2b2823;
+$muted: #8b8276;
+$line: rgba(43, 40, 35, 0.14);
+$brass: #a8875c;
+$serif: 'Didot', 'Bodoni MT', 'Playfair Display', 'Cormorant Garamond', Georgia,
+    'Songti SC', 'SimSun', serif;
+$sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+
+.page {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: $paper;
+    color: $ink;
+    font-family: $sans;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    button {
+        font-family: inherit;
+        color: inherit;
+    }
+}
+
+.stage {
+    position: absolute;
+    inset: 0;
+}
+
+.canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    outline: none;
+    cursor: grab;
+    touch-action: none;
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+/* --- floating room names ------------------------------------------------ */
+
+.labels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+
+    &[data-hidden='true'] {
+        opacity: 0;
+    }
+}
+
+.label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 7px;
+    padding: 5px 11px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 999px;
+    background: rgba(255, 253, 247, 0.74);
+    -webkit-backdrop-filter: blur(7px);
+    backdrop-filter: blur(7px);
+    box-shadow: 0 2px 10px rgba(70, 58, 40, 0.06);
+    color: #3b352c;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    cursor: pointer;
+    pointer-events: auto;
+    will-change: transform;
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        border-color: rgba(168, 135, 92, 0.5);
+        background: rgba(255, 253, 247, 0.96);
+        box-shadow: 0 8px 22px rgba(70, 58, 40, 0.14);
+    }
+
+    &[data-active='true'] {
+        border-color: $brass;
+    }
+}
+
+.label-name {
+    font-weight: 500;
+}
+
+.label-area {
+    color: $muted;
+    font-size: 9.5px;
+    letter-spacing: 0.05em;
+}
+
+/* --- masthead ----------------------------------------------------------- */
+
+.head {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 24px 34px;
+    pointer-events: none;
+    background: linear-gradient(
+        180deg,
+        rgba(243, 239, 231, 0.92) 0%,
+        rgba(243, 239, 231, 0.7) 52%,
+        rgba(243, 239, 231, 0) 100%
+    );
+
+    a,
+    span {
+        pointer-events: auto;
+    }
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: inherit;
+    text-decoration: none;
+    box-shadow: none;
+}
+
+.brand-mark {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.26em;
+    color: $ink;
+}
+
+.brand-rule {
+    width: 34px;
+    height: 1px;
+    background: $line;
+}
+
+.brand-title {
+    font-family: $serif;
+    font-size: 17px;
+    letter-spacing: 0.01em;
+}
+
+.meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: $muted;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+}
+
+.dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: rgba(43, 40, 35, 0.28);
+}
+
+/* --- outline panel ------------------------------------------------------ */
+
+.panel {
+    position: absolute;
+    top: 96px;
+    left: 26px;
+    width: 254px;
+    padding: 18px 18px 14px;
+    // A whisper of paper behind the outline so the list stays legible when the
+    // camera is inside a room and the render fills the whole frame.
+    background: linear-gradient(
+        180deg,
+        rgba(243, 239, 231, 0.95) 0%,
+        rgba(243, 239, 231, 0.93) 84%,
+        rgba(243, 239, 231, 0.78) 100%
+    );
+    border-radius: 2px;
+    box-shadow: 0 18px 44px -34px rgba(43, 40, 35, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.eyebrow {
+    margin: 0;
+    color: $brass;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+}
+
+.title {
+    margin: 8px 0 0;
+    font-family: $serif;
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+
+    span {
+        display: block;
+        margin-top: 9px;
+        color: $muted;
+        font-family: $sans;
+        font-size: 9.5px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+    }
+}
+
+.rooms {
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid $line;
+}
+
+.room {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 0;
+    border: 0;
+    border-bottom: 1px solid $line;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.room-name {
+    position: relative;
+    flex: 0 0 auto;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    transition: padding 0.25s ease, color 0.2s ease;
+}
+
+.room-latin {
+    flex: 1 1 auto;
+    overflow: hidden;
+    color: $muted;
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.room-area {
+    flex: 0 0 auto;
+    color: $muted;
+    font-size: 9.5px;
+    letter-spacing: 0.04em;
+}
+
+.room:hover .room-name {
+    color: $brass;
+}
+
+.room[data-active='true'] .room-name {
+    padding-left: 15px;
+    color: $ink;
+}
+
+.room[data-active='true'] .room-name::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 8px;
+    height: 1px;
+    background: $brass;
+    content: '';
+}
+
+/* --- controls ----------------------------------------------------------- */
+
+.tools {
+    position: absolute;
+    top: 78px;
+    right: 34px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 7px;
+    max-width: 330px;
+
+    button {
+        padding: 6px 12px;
+        border: 1px solid $line;
+        border-radius: 999px;
+        background: rgba(255, 253, 248, 0.62);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        color: rgba(43, 40, 35, 0.82);
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+
+        &:hover {
+            border-color: rgba(168, 135, 92, 0.55);
+            color: $ink;
+        }
+
+        &[data-on='true'] {
+            border-color: $ink;
+            background: $ink;
+            color: #f7f2e8;
+        }
+    }
+}
+
+.group {
+    display: inline-flex;
+
+    button {
+        border-radius: 0;
+
+        &:first-child {
+            border-radius: 999px 0 0 999px;
+        }
+
+        &:last-child {
+            border-right-width: 1px;
+            border-radius: 0 999px 999px 0;
+        }
+
+        & + button {
+            border-left-width: 0;
+        }
+    }
+}
+
+/* --- plan card ---------------------------------------------------------- */
+
+.plan {
+    position: absolute;
+    right: 34px;
+    bottom: 74px;
+    width: min(290px, 32vw);
+    margin: 0;
+    padding: 10px 10px 8px;
+    border: 1px solid $line;
+    border-radius: 4px;
+    background: rgba(255, 253, 248, 0.94);
+    box-shadow: 0 20px 50px -18px rgba(60, 50, 35, 0.4);
+
+    img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 2px;
+    }
+
+    figcaption {
+        margin-top: 8px;
+        color: $muted;
+        font-size: 9px;
+        letter-spacing: 0.18em;
+        text-align: center;
+        text-transform: uppercase;
+    }
+}
+
+.plan-close {
+    position: absolute;
+    top: -11px;
+    right: -11px;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid $line;
+    border-radius: 50%;
+    background: #fffdf8;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* --- footer hint -------------------------------------------------------- */
+
+.hint {
+    position: absolute;
+    bottom: 20px;
+    left: 30px;
+    margin: 0;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: rgba(255, 253, 248, 0.6);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: $muted;
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+/* --- loading / failure -------------------------------------------------- */
+
+.loader {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    gap: 16px;
+    background: $paper;
+}
+
+.loader-text {
+    color: $muted;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.loader-bar {
+    position: relative;
+    width: 128px;
+    height: 1px;
+    overflow: hidden;
+    background: $line;
+
+    &::after {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 38%;
+        background: $brass;
+        content: '';
+        animation: loader-slide 1.15s ease-in-out infinite;
+    }
+}
+
+@keyframes loader-slide {
+    from {
+        transform: translateX(-110%);
+    }
+
+    to {
+        transform: translateX(330%);
+    }
+}
+
+.fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    gap: 14px;
+    padding: 30px;
+    background: $paper;
+    text-align: center;
+
+    p {
+        margin: 0;
+        color: $muted;
+        font-size: 12px;
+        letter-spacing: 0.06em;
+    }
+
+    img {
+        max-width: min(520px, 80vw);
+        border: 1px solid $line;
+    }
+}
+
+/* --- responsive --------------------------------------------------------- */
+
+@media screen and (max-width: 900px) {
+    .head {
+        padding: 16px 18px;
+    }
+
+    .meta {
+        display: none;
+    }
+
+    .tools {
+        top: 60px;
+        right: 18px;
+        left: 18px;
+        justify-content: flex-end;
+        max-width: none;
+    }
+
+    .panel {
+        top: auto;
+        right: 14px;
+        bottom: 54px;
+        left: 14px;
+        width: auto;
+    }
+
+    .eyebrow,
+    .title,
+    .room-latin,
+    .room-area {
+        display: none;
+    }
+
+    .rooms {
+        display: flex;
+        gap: 7px;
+        margin: 0;
+        padding: 0 0 2px;
+        overflow-x: auto;
+        border-top: 0;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        li {
+            flex: 0 0 auto;
+        }
+    }
+
+    .room {
+        width: auto;
+        padding: 7px 12px;
+        border: 1px solid $line;
+        border-radius: 999px;
+        background: rgba(255, 253, 248, 0.82);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+    }
+
+    .room[data-active='true'] {
+        border-color: $ink;
+        background: $ink;
+        color: #f7f2e8;
+    }
+
+    .room[data-active='true'] .room-name {
+        padding-left: 0;
+        color: #f7f2e8;
+    }
+
+    .room[data-active='true'] .room-name::before {
+        display: none;
+    }
+
+    .hint {
+        display: none;
+    }
+
+    .plan {
+        right: 14px;
+        bottom: 116px;
+        width: min(240px, 62vw);
+    }
+}
